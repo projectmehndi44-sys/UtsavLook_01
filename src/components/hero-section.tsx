@@ -13,7 +13,7 @@ const HeroSection = () => {
                     src={heroImage.imageUrl}
                     alt={heroImage.description}
                     fill
-                    className="object-cover opacity-20"
+                    className="object-cover"
                     priority
                     data-ai-hint={heroImage.imageHint}
                 />
