@@ -17,8 +17,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Lato', 'sans-serif'],
-        headline: ['"Mrs Saint Delafield"', 'serif'],
+        body: ['var(--font-roboto)', 'sans-serif'],
+        headline: ['var(--font-playfair-display)', 'serif'],
+        'dancing-script': ['var(--font-dancing-script)', 'cursive'],
         code: ['monospace'],
       },
       colors: {

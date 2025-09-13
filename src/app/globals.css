@@ -4,48 +4,53 @@
 
 @layer base {
   :root {
-    --background: 60 56% 91%; /* Soft Sand */
-    --foreground: 25 25% 15%; /* Dark Brown */
-    --card: 60 30% 96%; /* Lighter sand for cards */
-    --card-foreground: 25 25% 15%;
-    --popover: 60 30% 96%;
-    --popover-foreground: 25 25% 15%;
-    --primary: 25 69% 30%; /* Rich Henna */
-    --primary-foreground: 60 56% 95%; /* Lighter sand */
-    --secondary: 351 100% 86%; /* Light Pink */
-    --secondary-foreground: 25 69% 30%;
-    --muted: 60 30% 85%;
-    --muted-foreground: 25 20% 35%;
-    --accent: 30 61% 50%; /* Golden Bronze */
-    --accent-foreground: 0 0% 100%;
+    --background: 39 10% 98%;
+    --foreground: 20 14% 4%;
+    --card: 39 10% 100%;
+    --card-foreground: 20 14% 4%;
+    --popover: 39 10% 100%;
+    --popover-foreground: 20 14% 4%;
+    --primary: 25 80% 40%;
+    --primary-foreground: 35 10% 98%;
+    --secondary: 39 10% 95%;
+    --secondary-foreground: 25 75% 25%;
+    --muted: 39 5% 94%;
+    --muted-foreground: 24 5% 40%;
+    --accent: 35 80% 55%;
+    --accent-foreground: 24 10% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 60 20% 80%;
-    --input: 60 20% 85%;
-    --ring: 30 61% 50%;
-    --radius: 0.75rem;
+    --border: 39 10% 88%;
+    --input: 39 10% 88%;
+    --ring: 25 75% 35%;
+    --radius: 0.5rem;
+    
+    /* Custom theme colors */
+    --brand-rich-henna: 25 75% 32%; /* #8B4513 */
+    --brand-soft-sand: 40 55% 95%; /* #F5F5DC */
+    --brand-golden-bronze: 30 59% 51%; /* #CD7F32 */
   }
- 
+
   .dark {
-    --background: 25 15% 10%; /* Dark brown */
-    --foreground: 60 30% 90%; /* Light sand */
-    --card: 25 15% 15%;
-    --card-foreground: 60 30% 90%;
-    --popover: 25 15% 10%;
-    --popover-foreground: 60 30% 90%;
-    --primary: 25 60% 40%; /* Lighter Henna */
-    --primary-foreground: 60 30% 95%;
-    --secondary: 351 40% 30%;
-    --secondary-foreground: 60 30% 90%;
-    --muted: 25 15% 25%;
-    --muted-foreground: 60 20% 65%;
-    --accent: 30 61% 50%; /* Golden Bronze */
-    --accent-foreground: 25 15% 10%;
+    --background: 20 14% 4%;
+    --foreground: 39 10% 98%;
+    --card: 20 14% 5%;
+    --card-foreground: 39 10% 98%;
+    --popover: 20 14% 4%;
+    --popover-foreground: 39 10% 98%;
+    --primary: 25 75% 55%;
+    --primary-foreground: 35 10% 98%;
+    --secondary: 25 75% 15%;
+    --secondary-foreground: 35 10% 98%;
+    --muted: 20 10% 15%;
+    --muted-foreground: 24 5% 65%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 24 10% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 25 15% 25%;
-    --input: 25 15% 25%;
-    --ring: 30 61% 50%;
+    --border: 20 10% 20%;
+    --input: 20 10% 20%;
+    --ring: 25 75% 35%;
   }
 }
 
@@ -55,5 +60,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-roboto);
+  }
+  h1, h2, h3, h4, h5, h6, .font-headline {
+    font-family: var(--font-playfair-display);
+  }
+  .font-dancing-script {
+    font-family: var(--font-dancing-script);
   }
 }
