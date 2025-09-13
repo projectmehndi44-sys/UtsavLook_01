@@ -30,8 +30,10 @@ const dancingScript = Dancing_Script({
 export const metadata: Metadata = {
   title: 'UtsavLook: Artistry at Your Fingertips',
   description: 'Discover and book the most talented mehndi and makeup artists near you. Your perfect look for any occasion is just a click away.',
+  manifest: '/manifest.json',
   icons: {
     icon: "/favicon.ico",
+    apple: "/icons/icon-192x192.png",
   },
 };
 
@@ -42,6 +44,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+       <head>
+        <meta name="theme-color" content="#8B4513" />
+       </head>
        <body className={cn('min-h-screen bg-background font-body antialiased', playfairDisplay.variable, roboto.variable, dancingScript.variable)}>
         <Header />
         <main className="flex-grow">
