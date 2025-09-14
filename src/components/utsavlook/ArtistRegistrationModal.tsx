@@ -59,9 +59,9 @@ const registrationSchema = z.object({
   }),
   workImages: z.any()
     .refine((files) => files?.length >= 1, "At least one work image is required.")
-    .refine((files) => Array.from(files).every((file: any) => file.size <= MAX_WORK_IMAGE_SIZE), `Max file size is 5MB per image.`)
+    .refine((files) => !files || Array.from(files).every((file: any) => file.size <= MAX_WORK_IMAGE_SIZE), `Max file size is 5MB per image.`)
     .refine(
-      (files) => Array.from(files).every((file: any) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
+      (files) => !files || Array.from(files).every((file: any) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
       ".jpg, .jpeg, .png and .webp files are accepted."
     ),
   certificate: z.any().optional()
@@ -318,3 +318,5 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
     </Dialog>
   );
 }
+
+    
