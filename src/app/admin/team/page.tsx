@@ -294,4 +294,6 @@ export default function TeamManagementPage() {
                         </Card>
                     </div>
             </div>
-        </
+        </>
+    );
+}
