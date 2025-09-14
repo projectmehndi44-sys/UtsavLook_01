@@ -60,11 +60,11 @@ const NavLink = ({ href, pathname, icon: Icon, label, onClick, children }: { hre
     <Link 
         href={href} 
         onClick={onClick}
-        className={cn('flex items-center gap-3 rounded-lg px-3 py-2 transition-all', 
+        className={cn('flex items-center gap-3 rounded-lg px-3 py-2 transition-all text-sm', 
           pathname.startsWith(href) ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-primary'
         )}
     >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-4 w-4" />
         {label}
         {children}
     </Link>
@@ -225,13 +225,13 @@ export default function ArtistDashboardLayout({
                 <Palette className="w-8 h-8" />
                 <span>Artist Portal</span>
             </div>
-             <nav className="flex flex-col gap-2 text-lg font-medium px-4">
+             <nav className="flex flex-col gap-1 text-sm font-medium px-4">
                 {mainNavLinks.map(link => (
                     <NavLink key={link.href} {...link} pathname={pathname} onClick={() => setIsSidebarOpen(false)} />
                 ))}
             </nav>
             <div className="mt-4 pt-4 border-t mx-4">
-                <nav className="flex flex-col gap-2 text-lg font-medium">
+                <nav className="flex flex-col gap-1 text-sm font-medium">
                     {sidebarNavLinks.map(link => (
                          <NavLink key={link.href} {...link} pathname={pathname} onClick={() => setIsSidebarOpen(false)}>
                             {link.label === 'Notifications' && unreadCount > 0 && (
@@ -303,7 +303,7 @@ export default function ArtistDashboardLayout({
                             </Sheet>
 
                             <div className='flex-1'>
-                                <h1 className='font-semibold text-lg'>{getPageTitle()}</h1>
+                                <h1 className='font-bold text-xl'>{getPageTitle()}</h1>
                             </div>
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
