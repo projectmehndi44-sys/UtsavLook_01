@@ -140,7 +140,6 @@ export default function AdminLoginPage() {
 
     const handleCreateSuperAdmin = async () => {
         const initialAdmin = initialTeamMembers[0];
-        // This password is now hardcoded. This is a security risk.
         const insecurePassword = 'Abhi@204567';
 
         try {
