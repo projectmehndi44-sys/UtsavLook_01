@@ -89,9 +89,18 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
-      fullName: '', presentAddress: '', state: '', district: '',
-      locality: '', services: ['mehndi'], serviceAreas: [],
-      workImages: undefined, certificate: undefined, agreed: false,
+      fullName: '',
+      phone: '',
+      email: '',
+      presentAddress: '',
+      state: '',
+      district: '',
+      locality: '',
+      services: ['mehndi'],
+      serviceAreas: [],
+      workImages: undefined,
+      certificate: undefined,
+      agreed: false,
     },
   });
 
