@@ -83,6 +83,7 @@ const ServiceAreaFields = ({ form, availableLocations }: { form: UseFormReturn<R
             {fields.map((field, index) => {
                 const watchedState = form.watch(`serviceAreas.${index}.state`);
                 const districtsForSelectedState = watchedState ? (availableLocations[watchedState] || []) : [];
+                
                 return (
                     <Card key={field.id} className="p-4 bg-muted/50 relative">
                          {fields.length > 1 && <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
@@ -166,7 +167,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   }, [isOpen]);
   
   React.useEffect(() => {
-    if (isOpen && !isLoadingLocations && availableLocations && Object.keys(availableLocations).length > 0) {
+    if (isOpen && !isLoadingLocations && Object.keys(availableLocations).length > 0) {
         if (form.getValues('serviceAreas').length === 0) {
             form.reset({
                 ...form.getValues(),
@@ -174,7 +175,8 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
             });
         }
     }
-  }, [isOpen, isLoadingLocations, availableLocations, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isLoadingLocations, availableLocations]);
 
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof RegistrationFormValues)[] = [];
@@ -322,3 +324,4 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
     </Dialog>
   );
 }
+
