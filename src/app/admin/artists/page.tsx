@@ -58,6 +58,11 @@ const onboardSchema = z.object({
 });
 type OnboardFormValues = z.infer<typeof onboardSchema>;
 
+type DialogState = {
+  type: 'delete' | 'delete-pending' | 'reset-pass';
+  data: Artist | PendingArtist | null;
+};
+
 
 export default function ArtistManagementPage() {
     const router = useRouter();
@@ -66,7 +71,7 @@ export default function ArtistManagementPage() {
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [pendingArtists, setPendingArtists] = React.useState<PendingArtist[]>([]);
     const [onboardFormOpen, setOnboardFormOpen] = React.useState(false);
-    const [dialogState, setDialogState<{type: 'delete' | 'delete-pending' | 'reset-pass'; data: Artist | PendingArtist | null}> = React.useState({type: 'delete', data: null});
+    const [dialogState, setDialogState] = React.useState<DialogState>({type: 'delete', data: null});
     const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
 
 
@@ -520,5 +525,3 @@ export default function ArtistManagementPage() {
         </>
     );
 }
-
-    
