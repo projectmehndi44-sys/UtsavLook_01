@@ -25,7 +25,7 @@ if (getApps().length === 0) {
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// --- Firestore Initialization with Offline Persistence ---
+// --- Firestore Initialization with Offline Persistence (Singleton Pattern) ---
 let dbInstance: Firestore | null = null;
 let dbInitializationPromise: Promise<Firestore> | null = null;
 
