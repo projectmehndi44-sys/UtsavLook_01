@@ -84,7 +84,6 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const auth = getAuth(app);
     const { setArtist, artist } = useArtistPortal();
     const [isLoading, setIsLoading] = React.useState(true);
-    const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
 
     const handleLogout = React.useCallback(async () => {
         await signOutUser();
@@ -95,47 +94,46 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     useInactivityTimeout(handleLogout, 360000);
 
     React.useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setFirebaseUser(user);
-            } else {
-                setFirebaseUser(null);
-                setArtist(null);
-                router.push('/artist/login');
-            }
-        });
-        return () => unsubscribe();
-    }, [auth, router, setArtist]);
-
-    React.useEffect(() => {
-        const fetchArtistData = async () => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                // Only fetch if artist data is not already loaded
-                if (!artist || artist.id !== firebaseUser.uid) {
+                try {
                     const currentArtist = await getArtist(firebaseUser.uid);
                     if (currentArtist) {
                         setArtist(currentArtist);
                     } else {
-                        // This case handles when an auth user exists but has no artist profile.
+                        // User is authenticated but not in our 'artists' collection.
                         toast({
                             title: "Access Denied",
                             description: "This account is not registered as an artist.",
                             variant: "destructive"
                         });
-                        handleLogout();
+                        handleLogout(); // This will trigger a redirect via the next effect.
                     }
+                } catch (error) {
+                    console.error("Error fetching artist profile:", error);
+                    handleLogout();
                 }
+            } else {
+                // No user logged in.
+                setArtist(null);
+                router.push('/artist/login');
             }
-             // Loading is finished once we have a firebase user and have attempted to fetch artist data.
-            if(firebaseUser) {
-                setIsLoading(false);
-            }
-        };
-        fetchArtistData();
-    }, [firebaseUser, artist, setArtist, handleLogout, toast]);
+            setIsLoading(false);
+        });
 
-    if (isLoading || !firebaseUser || !artist) {
+        return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth]);
+
+
+    if (isLoading) {
         return <div className="flex items-center justify-center min-h-screen">Loading Artist Portal...</div>;
+    }
+    
+    // If not loading and still no artist, it means they are logged out or invalid.
+    // The onAuthStateChanged listener handles redirection, so this just prevents rendering children.
+    if (!artist) {
+        return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
     }
 
     return <>{children}</>;
