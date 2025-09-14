@@ -21,15 +21,29 @@ export default function ArtistDirectoryPage() {
 
     const filteredArtists = artists.filter(artist => {
         const search = searchTerm.toLowerCase();
-        return (
+        const primaryLocationMatch = (
             artist.name.toLowerCase().includes(search) ||
             artist.location.toLowerCase().includes(search) ||
             (artist.state || '').toLowerCase().includes(search) ||
             (artist.district || '').toLowerCase().includes(search) ||
-            (artist.locality || '').toLowerCase().includes(search) ||
-            (artist.servingAreas || '').toLowerCase().includes(search)
+            (artist.locality || '').toLowerCase().includes(search)
+        );
+
+        if (primaryLocationMatch) return true;
+
+        // Search in additional service areas
+        return artist.serviceAreas?.some(area => 
+            area.state.toLowerCase().includes(search) ||
+            area.district.toLowerCase().includes(search) ||
+            area.localities.toLowerCase().includes(search)
         );
     });
+
+    const getArtistServingAreas = (artist: Artist) => {
+        const areas = artist.serviceAreas?.map(area => `${area.district} (${area.localities})`);
+        return areas?.join('; ') || 'Not specified';
+    }
+
 
     return (
         <>
@@ -57,10 +71,8 @@ export default function ArtistDirectoryPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Artist Name</TableHead>
-                                <TableHead>State</TableHead>
-                                <TableHead>District</TableHead>
                                 <TableHead>Primary Locality</TableHead>
-                                <TableHead>Serving Areas</TableHead>
+                                <TableHead>Additional Serving Areas</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -71,14 +83,12 @@ export default function ArtistDirectoryPage() {
                                             {artist.name}
                                         </Link>
                                     </TableCell>
-                                    <TableCell>{artist.state || 'N/A'}</TableCell>
-                                    <TableCell>{artist.district || 'N/A'}</TableCell>
-                                    <TableCell>{artist.locality || 'N/A'}</TableCell>
-                                    <TableCell>{artist.servingAreas || 'N/A'}</TableCell>
+                                    <TableCell>{artist.locality}, {artist.district}, {artist.state}</TableCell>
+                                    <TableCell>{getArtistServingAreas(artist)}</TableCell>
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center">No artists found.</TableCell>
+                                    <TableCell colSpan={3} className="text-center">No artists found.</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>

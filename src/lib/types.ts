@@ -31,6 +31,13 @@ export type ArtistServiceOffering = {
     isEnabled: boolean;
 };
 
+export type ServiceArea = {
+  id: string; // for React key prop
+  state: string;
+  district: string;
+  localities: string; // Comma-separated string of localities
+}
+
 export type Artist = {
   id: string; // Firestore Document ID. Should be synced with Firebase Auth UID after password creation.
   name: string;
@@ -56,7 +63,7 @@ export type Artist = {
   state?: string;
   district?: string;
   locality?: string;
-  servingAreas?: string;
+  serviceAreas?: ServiceArea[]; // New structured service areas
   referralCode?: string;
   referralDiscount?: number; // Percentage, e.g., 10 for 10%
   status?: 'active' | 'suspended';
