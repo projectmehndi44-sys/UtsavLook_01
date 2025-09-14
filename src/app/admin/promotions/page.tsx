@@ -62,12 +62,17 @@ export default function PromotionsPage() {
             newPromotion.isActive = new Date(data.expiryDate) > new Date();
         }
 
-        await savePromotions([newPromotion, ...promotions]);
-        toast({ title: 'Promotion Created', description: `Code ${data.code} has been added.` });
-        form.reset({ code: '', discount: 10, usageLimit: 1, expiryDate: undefined });
+        try {
+            await savePromotions([newPromotion, ...promotions]);
+            toast({ title: 'Promotion Created', description: `Code ${data.code} has been added.` });
+            setPromotions([newPromotion, ...promotions]);
+            form.reset({ code: '', discount: 10, usageLimit: 1, expiryDate: undefined });
+        } catch (error) {
+            toast({ title: 'Creation Failed', description: 'Could not create the promotion.', variant: 'destructive' });
+        }
     };
 
-    const toggleStatus = (id: string) => {
+    const toggleStatus = async (id: string) => {
         const updated = promotions.map(p => {
             if (p.id === id) {
                 // If there's an expiry date and it's in the past, don't allow activation.
@@ -82,14 +87,25 @@ export default function PromotionsPage() {
             }
             return p;
         });
-        savePromotions(updated);
-        toast({ title: 'Status Updated' });
+
+        try {
+            await savePromotions(updated);
+            setPromotions(updated);
+            toast({ title: 'Status Updated' });
+        } catch (error) {
+            toast({ title: 'Update Failed', description: 'Could not update the promotion status.', variant: 'destructive' });
+        }
     };
 
     const deletePromotion = async (id: string) => {
         const updated = promotions.filter(p => p.id !== id);
-        await savePromotions(updated);
-        toast({ title: 'Promotion Deleted', variant: 'destructive' });
+        try {
+            await savePromotions(updated);
+            setPromotions(updated);
+            toast({ title: 'Promotion Deleted', variant: 'destructive' });
+        } catch (error) {
+            toast({ title: 'Deletion Failed', description: 'Could not delete the promotion.', variant: 'destructive' });
+        }
     };
 
 
