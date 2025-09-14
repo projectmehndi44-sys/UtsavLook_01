@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -81,9 +82,9 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { toast } = useToast();
     const auth = getAuth(app);
-    const { setArtist, fetchData } = useArtistPortal();
+    const { setArtist, artist } = useArtistPortal();
     const [isLoading, setIsLoading] = React.useState(true);
-    const [artistId, setArtistId] = React.useState<string | null>(null);
+    const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
 
     const handleLogout = React.useCallback(async () => {
         await signOutUser();
@@ -91,43 +92,49 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
         router.push('/');
     }, [router, toast]);
 
-    useInactivityTimeout(handleLogout, 300000);
+    useInactivityTimeout(handleLogout, 360000);
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                setArtistId(user.uid);
+                setFirebaseUser(user);
             } else {
+                setFirebaseUser(null);
+                setArtist(null);
                 router.push('/artist/login');
             }
         });
         return () => unsubscribe();
-    }, [auth, router]);
+    }, [auth, router, setArtist]);
 
     React.useEffect(() => {
-        if (!artistId) return;
-
         const fetchArtistData = async () => {
-            setIsLoading(true);
-            const currentArtist = await getArtist(artistId);
-            if (currentArtist) {
-                setArtist(currentArtist);
-            } else {
-                toast({
-                    title: "Access Denied",
-                    description: "This account is not registered as an artist.",
-                    variant: "destructive"
-                });
-                handleLogout();
+            if (firebaseUser) {
+                // Only fetch if artist data is not already loaded
+                if (!artist || artist.id !== firebaseUser.uid) {
+                    const currentArtist = await getArtist(firebaseUser.uid);
+                    if (currentArtist) {
+                        setArtist(currentArtist);
+                    } else {
+                        // This case handles when an auth user exists but has no artist profile.
+                        toast({
+                            title: "Access Denied",
+                            description: "This account is not registered as an artist.",
+                            variant: "destructive"
+                        });
+                        handleLogout();
+                    }
+                }
             }
-            setIsLoading(false);
+             // Loading is finished once we have a firebase user and have attempted to fetch artist data.
+            if(firebaseUser) {
+                setIsLoading(false);
+            }
         };
-
         fetchArtistData();
-    }, [artistId, setArtist, handleLogout, toast]);
+    }, [firebaseUser, artist, setArtist, handleLogout, toast]);
 
-
-    if (isLoading) {
+    if (isLoading || !firebaseUser || !artist) {
         return <div className="flex items-center justify-center min-h-screen">Loading Artist Portal...</div>;
     }
 
