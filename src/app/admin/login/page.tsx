@@ -49,6 +49,11 @@ export default function AdminLoginPage() {
     });
     const setupForm = useForm<SetupFormValues>({
         resolver: zodResolver(setupSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+        },
     });
 
     React.useEffect(() => {
