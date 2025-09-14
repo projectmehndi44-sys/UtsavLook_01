@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -366,3 +365,6 @@ export default function BookingManagementPage() {
                     onAssign={handleAssignArtist}
                 />
             )}
+        </>
+    );
+}

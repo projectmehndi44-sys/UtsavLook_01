@@ -24,7 +24,7 @@ const recommendationSchema = z.object({
 type RecommendationFormValues = z.infer<typeof recommendationSchema>;
 
 interface RecommendationsTabProps {
-  onBookingRequest: (artist: Artist) => void;
+  onViewProfile: (artist: Artist) => void;
 }
 
 /**
@@ -59,7 +59,7 @@ function transformRecommendations(recs: RawArtistRecommendation[]): Artist[] {
 }
 
 
-export function RecommendationsTab({ onBookingRequest }: RecommendationsTabProps) {
+export function RecommendationsTab({ onViewProfile }: RecommendationsTabProps) {
   const [recommendedArtists, setRecommendedArtists] = React.useState<Artist[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
@@ -173,7 +173,7 @@ export function RecommendationsTab({ onBookingRequest }: RecommendationsTabProps
           <h2 className="text-center font-headline text-5xl text-primary">Your Matches</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {recommendedArtists.map((artist) => (
-              <ArtistCard key={artist.id} artist={artist} onBookingRequest={onBookingRequest} />
+              <ArtistCard key={artist.id} artist={artist} onViewProfile={onViewProfile} />
             ))}
           </div>
          </>

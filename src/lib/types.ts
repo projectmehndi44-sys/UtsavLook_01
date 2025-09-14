@@ -86,7 +86,12 @@ export type Booking = {
   serviceAddress: string;
   date: Timestamp; // For backward compatibility & main date
   serviceDates: Timestamp[]; // For multi-day bookings
-  service: string;
+  items: {
+    id: string;
+    servicePackage: MasterServicePackage;
+    selectedTier: PackageCategory;
+    price: number;
+  }[];
   amount: number;
   status: 'Completed' | 'Confirmed' | 'Cancelled' | 'Pending Approval' | 'Needs Assignment' | 'Disputed' | 'Pending Confirmation';
   paidOut?: boolean;

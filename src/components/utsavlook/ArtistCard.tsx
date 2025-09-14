@@ -9,7 +9,7 @@ import { MakeupIcon, MehndiIcon, PhotographyIcon } from '@/components/icons';
 
 interface ArtistCardProps {
   artist: Artist;
-  onBookingRequest: (artist: Artist) => void;
+  onViewProfile: (artist: Artist) => void;
 }
 
 const getServiceIcon = (service: Artist['services'][number]) => {
@@ -25,7 +25,7 @@ const getServiceIcon = (service: Artist['services'][number]) => {
     }
 }
 
-export function ArtistCard({ artist, onBookingRequest }: ArtistCardProps) {
+export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   const primaryService = artist.services[0];
   const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
 
@@ -94,7 +94,7 @@ export function ArtistCard({ artist, onBookingRequest }: ArtistCardProps) {
                 <span className="font-bold text-sm">{artist.rating}</span>
             </div>
         </div>
-        <Button onClick={() => onBookingRequest(artist)} className="bg-accent hover:bg-accent/90">Book Now</Button>
+        <Button onClick={() => onViewProfile(artist)} className="bg-accent hover:bg-accent/90">View Profile</Button>
       </CardFooter>
     </Card>
   );
