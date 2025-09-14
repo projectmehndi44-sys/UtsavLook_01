@@ -27,6 +27,7 @@ import { getAvailableLocations, createPendingArtist } from '@/lib/services';
 import { Progress } from '../ui/progress';
 import { INDIA_LOCATIONS } from '@/lib/india-locations';
 import { v4 as uuidv4 } from 'uuid';
+import { Card } from '@/components/ui/card';
 
 const MAX_WORK_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_CERTIFICATE_SIZE = 500 * 1024; // 500KB
@@ -319,4 +320,3 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   );
 }
 
-    
