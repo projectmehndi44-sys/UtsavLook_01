@@ -203,6 +203,7 @@ export default function Home() {
         )}
 
         <div className="mt-8">
+            <h2 className="text-center font-headline text-5xl text-primary mb-8">Our Services</h2>
             <Tabs defaultValue="mehndi" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
                     <TabsTrigger value="mehndi" className="py-2.5 flex items-center gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
