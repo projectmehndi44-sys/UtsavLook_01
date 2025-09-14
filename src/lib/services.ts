@@ -229,7 +229,7 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
         return (data.members || []) as TeamMember[];
     }
     // If the document doesn't exist, seed it with initial data.
-    await setDoc(docRef, { members: initialTeamMembers });
+    await setConfigDocument('teamMembers', initialTeamMembers);
     return initialTeamMembers;
 };
 export const saveTeamMembers = (members: TeamMember[]) => setConfigDocument('teamMembers', members);
