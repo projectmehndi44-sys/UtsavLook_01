@@ -2,7 +2,7 @@
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder } from '@/lib/types';
-import { teamMembers as initialTeamMembers } from './team-data';
+import { initialTeamMembers } from './team-data';
 
 
 // Generic function to get a single document
@@ -224,11 +224,11 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
     const db = await getDb();
     const docRef = doc(db, 'config', 'teamMembers');
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
+    if (docSnap.exists() && docSnap.data()?.members?.length > 0) {
         const data = docSnap.data();
         return (data.members || []) as TeamMember[];
     }
-    // If the document doesn't exist, seed it with initial data.
+    // If the document doesn't exist or has no members, seed it with initial data.
     await setConfigDocument('teamMembers', initialTeamMembers);
     return initialTeamMembers;
 };

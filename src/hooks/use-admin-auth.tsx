@@ -1,12 +1,14 @@
 
-      'use client';
+'use client';
 
 import * as React from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { app } from '@/lib/firebase';
-import { getTeamMembers } from '@/lib/services';
-import type { TeamMember, Permissions, Permission } from '@/lib/types';
+import { getTeamMembers, saveTeamMembers } from '@/lib/services';
+import type { TeamMember, Permissions } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
+import { initialTeamMembers } from '@/lib/team-data';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 interface AdminAuthContextType {
     user: TeamMember | null;
@@ -25,6 +27,42 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     const pathname = usePathname();
 
     React.useEffect(() => {
+        const initializeAdmin = async () => {
+             try {
+                const teamMembers = await getTeamMembers();
+                const superAdmin = teamMembers.find(m => m.role === 'Super Admin');
+
+                if (superAdmin && superAdmin.id === 'user_001') {
+                     // Check if the user exists in Firebase Auth
+                    const defaultAdminEmail = 'utsavlook01@gmail.com';
+                     try {
+                        // This will create the user if they don't exist.
+                        const userCredential = await createUserWithEmailAndPassword(auth, defaultAdminEmail, 'Abhi@204567');
+                        const uid = userCredential.user.uid;
+                        
+                        // Update the team member with the correct Firebase UID
+                        const updatedMembers = teamMembers.map(m => 
+                            m.id === 'user_001' ? { ...m, id: uid } : m
+                        );
+                        await saveTeamMembers(updatedMembers);
+                        console.log("Super Admin user created in Firebase Auth and database record updated.");
+
+                    } catch (error: any) {
+                        if (error.code === 'auth/email-already-exists') {
+                            // User already exists, which is fine. The logic will proceed to check onAuthStateChanged.
+                            console.log("Super Admin user already exists in Firebase Auth.");
+                        } else {
+                            console.error("Error creating superadmin in auth:", error);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error during admin initialization:", error);
+            }
+        };
+
+        initializeAdmin();
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
             if (firebaseUser) {
                 try {
@@ -34,7 +72,6 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     if (memberProfile) {
                         setUser(memberProfile);
                     } else {
-                        // User is authenticated with Firebase but not a valid team member.
                         await auth.signOut();
                         setUser(null);
                         if (pathname !== '/admin/login') {
@@ -47,9 +84,6 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                 }
             } else {
                 setUser(null);
-                 if (pathname !== '/admin/login') {
-                    router.push('/admin/login');
-                }
             }
             setIsLoading(false);
         });
