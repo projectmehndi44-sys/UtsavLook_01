@@ -161,16 +161,20 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         getAvailableLocations().then(locations => {
             setAvailableLocations(locations);
             setIsLoadingLocations(false);
-            // Initialize the form with one service area only after locations are loaded
-            if (form.getValues('serviceAreas').length === 0) {
-              form.reset({
-                ...form.getValues(),
-                serviceAreas: [{ id: uuidv4(), state: '', district: '', localities: '' }],
-              });
-            }
         });
     }
-  }, [isOpen, form]);
+  }, [isOpen]);
+  
+  React.useEffect(() => {
+    if (isOpen && !isLoadingLocations && availableLocations && Object.keys(availableLocations).length > 0) {
+        if (form.getValues('serviceAreas').length === 0) {
+            form.reset({
+                ...form.getValues(),
+                serviceAreas: [{ id: uuidv4(), state: '', district: '', localities: '' }],
+            });
+        }
+    }
+  }, [isOpen, isLoadingLocations, availableLocations, form]);
 
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof RegistrationFormValues)[] = [];
