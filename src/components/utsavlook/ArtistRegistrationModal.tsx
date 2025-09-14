@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -17,7 +17,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Terminal, Upload, ArrowLeft, PlusCircle, Trash2 } from 'lucide-react';
@@ -47,7 +46,6 @@ const serviceAreaSchema = z.object({
 
 const registrationSchema = z.object({
   fullName: z.string().min(1, { message: 'Full name is required.' }),
-  presentAddress: z.string().min(1, { message: 'Present address is required.' }),
   phone: z.string().regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit phone number.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   services: z.array(z.string()).refine(value => value.some(item => item), {
@@ -70,6 +68,47 @@ const registrationSchema = z.object({
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
+// Helper component for Service Area fields
+const ServiceAreaFields = ({ form, availableLocations }: { form: UseFormReturn<RegistrationFormValues>, availableLocations: Record<string, string[]> }) => {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "serviceAreas"
+    });
+
+    const availableStates = Object.keys(availableLocations);
+
+    return (
+        <div className="p-4 border rounded-lg space-y-4">
+            <h4 className="font-semibold">Service Areas</h4>
+            <FormDescription>Add all the areas where you are willing to provide services. You must add at least one.</FormDescription>
+            {fields.map((field, index) => {
+                const watchedState = form.watch(`serviceAreas.${index}.state`);
+                const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
+                return (
+                    <Card key={field.id} className="p-4 bg-muted/50 relative">
+                        <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
+                                <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                            )} />
+                             <FormField control={form.control} name={`serviceAreas.${index}.district`} render={({ field }) => (
+                                <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedState || districtsForWatchedState.length === 0}><FormControl><SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger></FormControl><SelectContent>{districtsForWatchedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                            )} />
+                        </div>
+                        <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
+                            <FormItem className="mt-4"><FormLabel>Localities Served</FormLabel><FormControl><Input placeholder="e.g., Bandra, Juhu, Andheri" {...field}/></FormControl><FormDescription>Enter a comma-separated list.</FormDescription><FormMessage /></FormItem>
+                        )} />
+                    </Card>
+                )
+            })}
+            <Button type="button" variant="outline" onClick={() => append({ id: uuidv4(), state: '', district: '', localities: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4"/> Add Another Service Area
+            </Button>
+            <FormMessage>{form.formState.errors.serviceAreas?.message || form.formState.errors.serviceAreas?.root?.message}</FormMessage>
+        </div>
+    );
+};
+
 
 interface ArtistRegistrationModalProps {
   isOpen: boolean;
@@ -89,7 +128,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
       fullName: '',
       phone: '',
       email: '',
-      presentAddress: '',
       services: ['mehndi'],
       serviceAreas: [],
       workImages: undefined,
@@ -98,30 +136,20 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
     },
   });
 
-   const { fields: serviceAreaFields, append: appendServiceArea, remove: removeServiceArea } = useFieldArray({
-        control: form.control,
-        name: "serviceAreas"
-    });
-
-
   React.useEffect(() => {
     if (isOpen) {
         getAvailableLocations().then(locations => {
             setAvailableLocations(locations);
-            const states = Object.keys(locations);
-            if (states.length > 0 && form.getValues('serviceAreas').length === 0) {
-              // Optionally pre-fill the first service area
-              appendServiceArea({ id: uuidv4(), state: '', district: '', localities: '' });
+            if (Object.keys(locations).length > 0 && form.getValues('serviceAreas').length === 0) {
+              form.setValue('serviceAreas', [{ id: uuidv4(), state: '', district: '', localities: '' }]);
             }
         });
     }
-  }, [isOpen, form, appendServiceArea]);
+  }, [isOpen, form]);
   
-  const availableStates = Object.keys(availableLocations);
-
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof RegistrationFormValues)[] = [];
-    if(step === 1) fieldsToValidate = ['fullName', 'email', 'phone', 'presentAddress'];
+    if(step === 1) fieldsToValidate = ['fullName', 'email', 'phone'];
     if(step === 2) fieldsToValidate = ['serviceAreas', 'services'];
 
     const isValid = await form.trigger(fieldsToValidate);
@@ -131,17 +159,11 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   const onSubmit = async (data: RegistrationFormValues) => {
     const { workImages, certificate, ...dataToStore } = data;
 
-    // In a real app, you'd upload files to a storage bucket and get URLs
-    // For this demo, we'll just acknowledge that they were submitted.
     console.log("Work Images to upload:", workImages);
     console.log("Certificate to upload:", certificate);
 
     const newPendingArtist = {
         ...dataToStore,
-        // The first service area determines the primary location string for display purposes
-        state: dataToStore.serviceAreas[0].state,
-        district: dataToStore.serviceAreas[0].district,
-        locality: dataToStore.serviceAreas[0].localities.split(',')[0].trim(),
         location: `${dataToStore.serviceAreas[0].localities.split(',')[0].trim()}, ${dataToStore.serviceAreas[0].district}`,
         status: 'Pending',
         submissionDate: new Date().toISOString(),
@@ -213,43 +235,14 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                                     <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="9876543210" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
                             </div>
-                            <FormField control={form.control} name="presentAddress" render={({ field }) => (
-                                <FormItem><FormLabel>Present Address</FormLabel><FormControl><Textarea placeholder="Enter your current residential address" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
                         </div>
                       )}
 
                       {step === 2 && (
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg text-primary">Step 2: Service Areas & Offerings</h3>
-                             <div className="p-4 border rounded-lg space-y-4">
-                                <h4 className="font-semibold">Service Areas</h4>
-                                <FormDescription>Add all the areas where you are willing to provide services. You must add at least one.</FormDescription>
-                                {serviceAreaFields.map((field, index) => {
-                                    const watchedState = form.watch(`serviceAreas.${index}.state`);
-                                    const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
-                                    return (
-                                        <Card key={field.id} className="p-4 bg-muted/50 relative">
-                                            {serviceAreaFields.length > 1 && <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => removeServiceArea(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                 <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
-                                                    <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                                                )} />
-                                                 <FormField control={form.control} name={`serviceAreas.${index}.district`} render={({ field }) => (
-                                                    <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedState}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{districtsForWatchedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                                                )} />
-                                            </div>
-                                            <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
-                                                <FormItem className="mt-4"><FormLabel>Localities Served</FormLabel><FormControl><Input placeholder="e.g., Bandra, Juhu, Andheri" {...field}/></FormControl><FormDescription>Enter a comma-separated list.</FormDescription><FormMessage /></FormItem>
-                                            )} />
-                                        </Card>
-                                    )
-                                })}
-                                <Button type="button" variant="outline" onClick={() => appendServiceArea({ id: uuidv4(), state: '', district: '', localities: '' })}>
-                                    <PlusCircle className="mr-2 h-4 w-4"/> Add Another Service Area
-                                </Button>
-                                 <FormMessage>{form.formState.errors.serviceAreas?.message}</FormMessage>
-                             </div>
+                             
+                             <ServiceAreaFields form={form} availableLocations={availableLocations} />
 
                             <FormField control={form.control} name="services" render={() => (
                                 <FormItem><FormLabel>Which services do you offer?</FormLabel><div className="flex items-center gap-4">{serviceItems.map((item) => (<FormField key={item.id} control={form.control} name="services" render={({ field }) => (<FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || []).filter((value) => value !== item.id)) }} /></FormControl><FormLabel className="font-normal">{item.label}</FormLabel></FormItem>)} />))}</div><FormMessage /></FormItem>
