@@ -1,5 +1,12 @@
 import type { Timestamp } from 'firebase/firestore';
 
+export type ImagePlaceholder = {
+  id: string;
+  description: string;
+  imageUrl: string;
+  imageHint: string;
+}
+
 export type PackageCategory = {
   name: 'Normal' | 'Premium' | 'ULTRA PREMIUM';
   description: string;

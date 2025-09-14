@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
-import type { Artist, Customer, CartItem, MasterServicePackage } from '@/lib/types';
-import { getCustomer, listenToCollection } from '@/lib/services';
+import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder } from '@/lib/types';
+import { getCustomer, getPlaceholderImages, listenToCollection } from '@/lib/services';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -29,26 +30,6 @@ import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 
-
-const galleryImages = [
-    { src: 'https://picsum.photos/seed/gal1/600/400', alt: 'Intricate bridal mehndi', hint: 'bridal mehndi' },
-    { src: 'https://picsum.photos/seed/gal2/600/400', alt: 'Glamorous makeup look', hint: 'glamorous makeup' },
-    { src: 'https://picsum.photos/seed/gal3/600/400', alt: 'Arabic mehndi design', hint: 'arabic mehndi' },
-    { src: 'https://picsum.photos/seed/gal4/600/400', alt: 'Full hand traditional mehndi', hint: 'traditional mehndi' },
-    { src: 'https://picsum.photos/seed/gal5/600/400', alt: 'Natural makeup for a daytime event', hint: 'natural makeup' },
-    { src: 'https://picsum.photos/seed/gal6/600/400', alt: 'Minimalist mehndi pattern', hint: 'minimalist mehndi' },
-    { src: 'https://picsum.photos/seed/gal7/600/400', alt: 'Peacock feather mehndi design', hint: 'peacock mehndi' },
-    { src: 'https://picsum.photos/seed/gal8/600/400', alt: 'Bold party makeup', hint: 'party makeup' },
-    { src: 'https://picsum.photos/seed/gal9/600/400', alt: 'Simple finger mehndi design', hint: 'finger mehndi' },
-];
-
-const backgroundImages = [
-  'https://picsum.photos/seed/bg1/1200/800',
-  'https://picsum.photos/seed/bg2/1200/800',
-  'https://picsum.photos/seed/bg3/1200/800',
-  'https://picsum.photos/seed/bg4/1200/800',
-];
-
 export default function Home() {
   const router = useRouter();
   const [artists, setArtists] = React.useState<Artist[]>([]);
@@ -68,6 +49,9 @@ export default function Home() {
 
   const [isArtistModalOpen, setIsArtistModalOpen] = React.useState(false);
   const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
+  
+  const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
+  const [backgroundImages, setBackgroundImages] = React.useState<ImagePlaceholder[]>([]);
 
 
   const { toast } = useToast();
@@ -124,8 +108,14 @@ export default function Home() {
         setMasterServices(updatedServices);
     });
 
+    getPlaceholderImages().then(images => {
+        setGalleryImages(images.filter(img => img.id.startsWith('our-work')));
+        setBackgroundImages(images.filter(img => img.id.startsWith('hero-background')));
+    });
+
+
     const intervalId = setInterval(() => {
-      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % (backgroundImages.length || 1));
     }, 5000); 
 
     return () => {
@@ -133,7 +123,7 @@ export default function Home() {
         unsubscribeArtists();
         unsubscribePackages();
     };
-  }, [checkLoggedInCustomer]);
+  }, [checkLoggedInCustomer, backgroundImages.length]);
   
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
@@ -175,7 +165,7 @@ export default function Home() {
     }, 0);
   }
 
-  const CategoryTabContent = ({ serviceType }: { serviceType: "Mehndi" | "Makeup" | "Photography" }) => {
+  const CategoryTabContent = ({ serviceType }: { serviceType: "mehndi" | "makeup" | "photography" }) => {
     const relevantPackages = masterServices.filter(p => p.service === serviceType);
     
     return (
@@ -188,18 +178,18 @@ export default function Home() {
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
       <div className="fixed inset-0 -z-10 h-full w-full">
-          {backgroundImages.map((src, index) => (
+          {backgroundImages.map((image, index) => (
               <Image
-                  key={src}
-                  src={src}
-                  alt="Background Image"
+                  key={image.id}
+                  src={image.imageUrl}
+                  alt={image.description}
                   fill
                   className={cn(
                       'object-cover transition-opacity duration-1000 ease-in-out',
                       index === currentBgIndex ? 'opacity-20' : 'opacity-0'
                   )}
                   priority={index === 0}
-                  data-ai-hint="mehndi makeup"
+                  data-ai-hint={image.imageHint}
               />
           ))}
       </div>
@@ -259,13 +249,13 @@ export default function Home() {
                     <TabsTrigger value="photography" className="py-2.5 flex items-center gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
                 </TabsList>
                 <TabsContent value="mehndi">
-                    <CategoryTabContent serviceType="Mehndi" />
+                    <CategoryTabContent serviceType="mehndi" />
                 </TabsContent>
                 <TabsContent value="makeup">
-                    <CategoryTabContent serviceType="Makeup" />
+                    <CategoryTabContent serviceType="makeup" />
                 </TabsContent>
                 <TabsContent value="photography">
-                    <CategoryTabContent serviceType="Photography" />
+                    <CategoryTabContent serviceType="photography" />
                 </TabsContent>
             </Tabs>
         </div>
@@ -293,12 +283,12 @@ export default function Home() {
                                 <Card className="overflow-hidden">
                                     <CardContent className="flex aspect-video items-center justify-center p-0">
                                         <Image 
-                                            src={image.src} 
-                                            alt={image.alt}
+                                            src={image.imageUrl} 
+                                            alt={image.description}
                                             width={600}
                                             height={400}
                                             className="w-full h-full object-cover"
-                                            data-ai-hint={image.hint}
+                                            data-ai-hint={image.imageHint}
                                         />
                                     </CardContent>
                                 </Card>

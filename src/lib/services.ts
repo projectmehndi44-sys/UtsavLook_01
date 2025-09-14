@@ -1,6 +1,6 @@
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
-import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion } from '@/lib/types';
+import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder } from '@/lib/types';
 import { teamMembers as initialTeamMembers } from './team-data';
 
 
@@ -34,6 +34,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
         if (data && data.hasOwnProperty('members')) return data.members as T;
         if (data && data.hasOwnProperty('promos')) return data.promos as T;
         if (data && data.hasOwnProperty('locations')) return data.locations as T;
+        if (data && data.hasOwnProperty('images')) return data.images as T;
         return data as T; // Fallback for flat config docs
     }
     return null;
@@ -49,6 +50,7 @@ async function setConfigDocument(docId: string, data: any): Promise<void> {
     else if (docId === 'masterServices') dataToSet = { packages: data };
     else if (docId === 'promotions') dataToSet = { promos: data };
     else if (docId === 'availableLocations') dataToSet = { locations: data };
+    else if (docId === 'placeholderImages') dataToSet = { images: data };
     
     await setDoc(docRef, dataToSet);
 }
@@ -182,6 +184,12 @@ export const createCustomer = async (data: Omit<Customer, 'id'> & {id: string}):
 };
 
 // Config
+export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
+    const config = await getConfigDocument<any>('placeholderImages');
+    return (config as any)?.images || [];
+};
+export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', images);
+
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
     const config = await getConfigDocument<any>('availableLocations');
     return (config as any)?.locations || {};

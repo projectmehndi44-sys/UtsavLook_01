@@ -2,165 +2,169 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle } from 'lucide-react';
 import NextImage from 'next/image';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import type { ImagePlaceholder } from '@/lib/placeholder-images';
+import { getPlaceholderImages, savePlaceholderImages } from '@/lib/services';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
-// Mock data for existing images. In a real app, this would come from a database or file storage.
-const initialGalleryImages = [
-    { src: 'https://picsum.photos/600/400?random=101', alt: 'Intricate bridal mehndi' },
-    { src: 'https://picsum.photos/600/400?random=102', alt: 'Glamorous makeup look' },
-    { src: 'https://picsum.photos/600/400?random=103', alt: 'Arabic mehndi design' },
-    { src: 'https://picsum.photos/600/400?random=107', alt: 'Full hand traditional mehndi' },
-];
+const imageSchema = z.object({
+    id: z.string(),
+    description: z.string().min(1, 'Description is required'),
+    imageUrl: z.string().url('Must be a valid URL'),
+    imageHint: z.string().min(1, 'AI Hint is required'),
+});
 
-const initialBackgroundImages = [
-  'https://picsum.photos/1200/800?random=201',
-  'https://picsum.photos/1200/800?random=202',
-  'https://picsum.photos/1200/800?random=203',
-  'https://picsum.photos/1200/800?random=204',
-];
-
+const formSchema = z.object({
+    images: z.array(imageSchema),
+});
 
 export default function ImageManagementPage() {
-    const router = useRouter();
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
-    
-    // State to manage images.
-    const [galleryImages, setGalleryImages] = React.useState(initialGalleryImages);
-    const [backgroundImages, setBackgroundImages] = React.useState(initialBackgroundImages);
-    const [isUploading, setIsUploading] = React.useState(false);
-    
-    const handleImageUpload = (type: 'gallery' | 'background') => (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [imageToDelete, setImageToDelete] = React.useState<number | null>(null);
 
-        setIsUploading(true);
-        // Mock upload process
-        setTimeout(() => {
-            const newImageUrls = Array.from(files).map(file => ({
-                src: URL.createObjectURL(file),
-                alt: 'Newly uploaded image'
-            }));
-
-            if (type === 'gallery') {
-                setGalleryImages(prev => [...prev, ...newImageUrls]);
-            } else {
-                setBackgroundImages(prev => [...prev, ...newImageUrls.map(f => f.src)]);
-            }
-
-            toast({
-                title: 'Upload Successful',
-                description: `${files.length} image(s) have been added to the ${type}.`,
-            });
-            setIsUploading(false);
-        }, 1500);
-    };
-
-    const handleImageDelete = (type: 'gallery' | 'background', index: number) => {
-        // In a real app, you'd also delete the file from your storage bucket.
-        if (type === 'gallery') {
-            setGalleryImages(prev => prev.filter((_, i) => i !== index));
-        } else {
-            setBackgroundImages(prev => prev.filter((_, i) => i !== index));
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            images: [],
         }
-        toast({
-            title: 'Image Deleted',
-            description: `The selected image has been removed.`,
-            variant: 'destructive'
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "images"
+    });
+
+    React.useEffect(() => {
+        setIsLoading(true);
+        getPlaceholderImages().then(data => {
+            form.reset({ images: data });
+            setIsLoading(false);
         });
+    }, [form]);
+
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        try {
+            await savePlaceholderImages(data.images);
+            toast({
+                title: 'Images Saved',
+                description: 'Your image library has been updated successfully.',
+            });
+        } catch (error) {
+            console.error("Failed to save images:", error);
+            toast({
+                title: 'Error Saving Images',
+                description: 'Could not update the image library.',
+                variant: 'destructive',
+            });
+        }
     };
+    
+    const confirmDelete = () => {
+        if (imageToDelete !== null) {
+            remove(imageToDelete);
+            setImageToDelete(null);
+            toast({ title: "Image Removed", description: "Click 'Save Changes' to finalize the deletion." });
+        }
+    };
+
+    if (isLoading) {
+        return <p>Loading images...</p>;
+    }
 
     return (
         <>
             <div className="flex items-center justify-between">
                 <h1 className="text-lg font-semibold md:text-2xl">Site Image Management</h1>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <ImageIcon className="w-6 h-6 text-primary"/> Image Management
-                    </CardTitle>
-                    <CardDescription>
-                        Add or remove images displayed in the "Our Works" gallery and on the site's background.
-                    </CardDescription>
-                </CardHeader>
-                    <CardContent>
-                    <Tabs defaultValue="gallery">
-                        <TabsList>
-                            <TabsTrigger value="gallery">Gallery Images</TabsTrigger>
-                            <TabsTrigger value="background">Background Images</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="gallery" className="mt-4">
-                                <Card>
-                                <CardHeader>
-                                    <CardTitle>Gallery Images</CardTitle>
-                                    <CardDescription>These images appear in the "Our Works" carousel on the homepage.</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
-                                        {galleryImages.map((image, index) => (
-                                            <div key={index} className="relative group">
-                                                <NextImage src={image.src} alt={image.alt} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
-                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="destructive" size="icon" onClick={() => handleImageDelete('gallery', index)} disabled={!hasPermission('settings', 'edit')}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                        <span className="sr-only">Delete Image</span>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
+             <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ImageIcon className="w-6 h-6 text-primary"/> Image Library
+                            </CardTitle>
+                            <CardDescription>
+                                Add, edit, or remove the placeholder and marketing images used throughout the site.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {fields.map((field, index) => (
+                                <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                    <div className="md:col-span-1">
+                                        <NextImage src={form.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                     </div>
-                                    <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 text-center hover:border-accent">
-                                        <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
-                                        <p className="mt-2 text-muted-foreground">Click to upload or drag and drop</p>
-                                        <Button asChild className="mt-2">
-                                                <label htmlFor="gallery-upload">
-                                                {isUploading ? 'Uploading...' : 'Add Gallery Images'}
-                                                </label>
+                                    <div className="md:col-span-2 space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FormField control={form.control} name={`images.${index}.id`} render={({ field }) => (
+                                                <FormItem><FormLabel>Image ID</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
+                                            )} />
+                                            <FormField control={form.control} name={`images.${index}.imageHint`} render={({ field }) => (
+                                                <FormItem><FormLabel>AI Hint</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                            )} />
+                                        </div>
+                                         <FormField control={form.control} name={`images.${index}.imageUrl`} render={({ field }) => (
+                                            <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
+                                        )} />
+                                        <FormField control={form.control} name={`images.${index}.description`} render={({ field }) => (
+                                            <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
+                                        )} />
+                                         <Button type="button" variant="destructive" size="sm" onClick={() => setImageToDelete(index)} disabled={!hasPermission('settings', 'edit')}>
+                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
                                         </Button>
-                                        <Input id="gallery-upload" type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" multiple onChange={handleImageUpload('gallery')} disabled={isUploading || !hasPermission('settings', 'edit')} />
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="background" className="mt-4">
-                                <Card>
-                                <CardHeader>
-                                    <CardTitle>Background Images</CardTitle>
-                                    <CardDescription>These images fade in and out as the background of the homepage.</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
-                                        {backgroundImages.map((src, index) => (
-                                            <div key={index} className="relative group">
-                                                <NextImage src={src} alt={`Background ${index + 1}`} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
-                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="destructive" size="icon" onClick={() => handleImageDelete('background', index)} disabled={!hasPermission('settings', 'edit')}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                        <span className="sr-only">Delete Image</span>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 text-center hover:border-accent">
-                                        <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
-                                        <p className="mt-2 text-muted-foreground">Click to upload or drag and drop</p>
-                                        <Button asChild className="mt-2">
-                                                <label htmlFor="background-upload">
-                                                {isUploading ? 'Uploading...' : 'Add Background Images'}
-                                                </label>
-                                        </Button>
-                                        <Input id="background-upload" type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" multiple onChange={handleImageUpload('background')} disabled={isUploading || !hasPermission('settings', 'edit')} />
-                                    </div>
-                                </CardContent>
-                            
+                                </Card>
+                            ))}
+                             <Button type="button" variant="outline" onClick={() => append({ id: `new-image-${Date.now()}`, description: '', imageUrl: 'https://picsum.photos/800/600', imageHint: '' })}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add New Image
+                            </Button>
+                        </CardContent>
+                    </Card>
+                    <div className="mt-6">
+                        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || !hasPermission('settings', 'edit')}>
+                            <Save className="mr-2 h-4 w-4" /> Save All Changes
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+            <AlertDialog open={imageToDelete !== null} onOpenChange={() => setImageToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will remove the image entry from the form. You must click "Save Changes" to make it permanent.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                            Yes, Remove
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
+}

@@ -1,90 +1,67 @@
+
 {
   "placeholderImages": [
     {
-      "id": "hero-background",
-      "description": "A vibrant and festive background for a hero section.",
-      "imageUrl": "https://picsum.photos/seed/utsavHero/1920/1080",
+      "id": "hero-background-1",
+      "description": "Vibrant festive background for the hero section.",
+      "imageUrl": "https://picsum.photos/seed/bg1/1200/800",
       "imageHint": "festive background"
     },
     {
+      "id": "hero-background-2",
+      "description": "Elegant background for hero section.",
+      "imageUrl": "https://picsum.photos/seed/bg2/1200/800",
+      "imageHint": "wedding decor"
+    },
+    {
+      "id": "hero-background-3",
+      "description": "Soft focus lights background.",
+      "imageUrl": "https://picsum.photos/seed/bg3/1200/800",
+      "imageHint": "bokeh lights"
+    },
+    {
+      "id": "hero-background-4",
+      "description": "Traditional pattern background.",
+      "imageUrl": "https://picsum.photos/seed/bg4/1200/800",
+      "imageHint": "traditional pattern"
+    },
+    {
       "id": "our-work-1",
-      "description": "Intricate mehndi design on a bride's hands.",
-      "imageUrl": "https://picsum.photos/seed/utsav1/800/600",
-      "imageHint": "mehndi design"
+      "description": "Intricate bridal mehndi on a bride's hands.",
+      "imageUrl": "https://picsum.photos/seed/gal1/600/400",
+      "imageHint": "bridal mehndi"
     },
     {
       "id": "our-work-2",
       "description": "A bride with stunning makeup and jewelry.",
-      "imageUrl": "https://picsum.photos/seed/utsav2/800/600",
+      "imageUrl": "https://picsum.photos/seed/gal2/600/400",
       "imageHint": "bridal makeup"
     },
     {
       "id": "our-work-3",
-      "description": "A candid moment captured during a wedding ceremony.",
-      "imageUrl": "https://picsum.photos/seed/utsav3/800/600",
-      "imageHint": "wedding photography"
+      "description": "Arabic mehndi design on hands.",
+      "imageUrl": "https://picsum.photos/seed/gal3/600/400",
+      "imageHint": "arabic mehndi"
     },
     {
       "id": "our-work-4",
-      "description": "Detailed henna art on feet.",
-      "imageUrl": "https://picsum.photos/seed/utsav4/800/600",
-      "imageHint": "henna art"
+      "description": "Full hand traditional mehndi.",
+      "imageUrl": "https://picsum.photos/seed/gal4/600/400",
+      "imageHint": "traditional mehndi"
     },
     {
       "id": "our-work-5",
-      "description": "Glamorous party makeup look.",
-      "imageUrl": "https://picsum.photos/seed/utsav5/800/600",
-      "imageHint": "party makeup"
+      "description": "Natural makeup for a daytime event.",
+      "imageUrl": "https://picsum.photos/seed/gal5/600/400",
+      "imageHint": "natural makeup"
     },
     {
       "id": "our-work-6",
-      "description": "Couple during a pre-wedding photoshoot.",
-      "imageUrl": "https://picsum.photos/seed/utsav6/800/600",
-      "imageHint": "couple photoshoot"
+      "description": "Minimalist mehndi pattern.",
+      "imageUrl": "https://picsum.photos/seed/gal6/600/400",
+      "imageHint": "minimalist mehndi"
     },
     {
-      "id": "service-mehndi-bridal",
-      "description": "Close-up of a bridal mehndi design.",
-      "imageUrl": "https://picsum.photos/seed/smb/400/300",
-      "imageHint": "bridal mehndi"
-    },
-    {
-      "id": "service-mehndi-guest",
-      "description": "Simple and elegant mehndi for a guest.",
-      "imageUrl": "https://picsum.photos/seed/smg/400/300",
-      "imageHint": "guest mehndi"
-    },
-    {
-      "id": "service-makeup-bridal",
-      "description": "A bride with flawless makeup.",
-      "imageUrl": "https://picsum.photos/seed/sumb/400/300",
-      "imageHint": "bridal makeup"
-    },
-    {
-      "id": "service-makeup-party",
-      "description": "A woman with party makeup.",
-      "imageUrl": "https://picsum.photos/seed/sump/400/300",
-      "imageHint": "party makeup"
-    },
-    {
-      "id": "service-photo-prewedding",
-      "description": "A couple in a scenic location for a pre-wedding shoot.",
-      "imageUrl": "https://picsum.photos/seed/spp/400/300",
-      "imageHint": "pre wedding"
-    },
-    {
-      "id": "service-photo-wedding",
-      "description": "A photographer capturing a wedding event.",
-      "imageUrl": "https://picsum.photos/seed/spw/400/300",
-      "imageHint": "wedding event"
-    },
-    {
-      "id": "footer-logo",
-      "description": "UtsavLook logo for the footer.",
-      "imageUrl": "https://picsum.photos/seed/logo/150/50",
-      "imageHint": "logo"
-    },
-     {
       "id": "user-avatar",
       "description": "Placeholder for user avatar.",
       "imageUrl": "https://picsum.photos/seed/avatar1/40/40",
