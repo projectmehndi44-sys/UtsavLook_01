@@ -19,16 +19,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Terminal, Upload, ArrowLeft, PlusCircle, Trash2 } from 'lucide-react';
+import { Terminal, ArrowLeft, PlusCircle, Trash2, Phone, Mail } from 'lucide-react';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getAvailableLocations, createPendingArtist } from '@/lib/services';
+import { getAvailableLocations, createPendingArtist, getCompanyProfile } from '@/lib/services';
 import { Progress } from '../ui/progress';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent } from '@/components/ui/card';
-
-const MAX_CERTIFICATE_SIZE = 500 * 1024; // 500KB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const serviceItems = [
     { id: 'mehndi', label: 'Mehndi' },
@@ -51,9 +48,6 @@ const registrationSchema = z.object({
     message: "You have to select at least one service.",
   }),
   serviceAreas: z.array(serviceAreaSchema).min(1, "You must add at least one service area."),
-  certificate: z.any().optional()
-    .refine((files) => !files || files.length === 0 || files?.[0]?.size <= MAX_CERTIFICATE_SIZE, `Certificate max file size is 500KB.`)
-    .refine((files) => !files || files.length === 0 || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted."),
   agreed: z.boolean().refine((val) => val === true, { message: 'You must agree to the terms and conditions.' }),
 });
 
@@ -133,6 +127,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   const [isLoadingLocations, setIsLoadingLocations] = React.useState(true);
   const [step, setStep] = React.useState(1);
   const totalSteps = 3;
+  const [companyProfile, setCompanyProfile] = React.useState({ phone: '', email: '' });
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
@@ -142,7 +137,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
       email: '',
       services: ['mehndi'],
       serviceAreas: [],
-      certificate: undefined,
       agreed: false,
     },
   });
@@ -150,8 +144,12 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   React.useEffect(() => {
     if (isOpen) {
         setIsLoadingLocations(true);
-        getAvailableLocations().then(locations => {
+        Promise.all([
+            getAvailableLocations(),
+            getCompanyProfile()
+        ]).then(([locations, profile]) => {
             setAvailableLocations(locations);
+            setCompanyProfile(profile);
             setIsLoadingLocations(false);
         });
     }
@@ -166,8 +164,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
             });
         }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isLoadingLocations, availableLocations]);
+  }, [isOpen, isLoadingLocations, availableLocations, form]);
 
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof RegistrationFormValues)[] = [];
@@ -179,23 +176,16 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   }
 
   const onSubmit = async (data: RegistrationFormValues) => {
-    const { certificate, agreed, ...dataToStore } = data;
+    const { agreed, ...dataToStore } = data;
 
     const firstServiceArea = dataToStore.serviceAreas[0];
     const locationString = `${firstServiceArea.localities.split(',')[0].trim()}, ${firstServiceArea.district}`;
     
-    // In a real app, you would upload files to cloud storage here and get URLs
-    const workImageUrls: string[] = []; // No images on registration
-    const certificateUrl = "https://picsum.photos/seed/cert1/200/300";
-
     const newPendingArtist = {
         ...dataToStore,
-        location: locationString, // Add the generated location string
+        location: locationString,
         status: 'Pending',
         submissionDate: new Date().toISOString(),
-        workImages: workImageUrls, // Empty array
-        hasCertificate: certificate && certificate.length > 0,
-        certificateUrl: (certificate && certificate.length > 0) ? certificateUrl : null
     };
 
     try {
@@ -229,9 +219,14 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                  <Alert>
                     <Terminal className="h-4 w-4" />
                     <AlertTitle>Registration Submitted!</AlertTitle>
-                    <AlertDescription className="space-y-2">
-                      <p>Thank you! Your profile is now under review.</p>
-                      <p className="font-semibold">You will receive an email to create your password once your application is approved.</p>
+                    <AlertDescription className="space-y-4">
+                      <p>Thank you for registering! Your profile is now under review by our admin team and should be approved within 24 hours.</p>
+                      <p className="font-semibold">Once approved, you will receive an email to create your password and log in.</p>
+                       <div className="border-t pt-4 mt-4">
+                            <h4 className="font-semibold">Questions? Contact Admin</h4>
+                            <p className="flex items-center gap-2 mt-1"><Phone className="h-4 w-4"/> {companyProfile.phone} (WhatsApp available)</p>
+                            <p className="flex items-center gap-2 mt-1"><Mail className="h-4 w-4"/> {companyProfile.email}</p>
+                       </div>
                     </AlertDescription>
                 </Alert>
                  <Button onClick={handleClose} className="w-full">Close</Button>
@@ -281,9 +276,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                       {step === 3 && (
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg text-primary">Step 3: Verification & Agreement</h3>
-                             <FormField control={form.control} name="certificate" render={({ field: { onChange, ...rest } }) => (
-                                <FormItem><FormLabel>Certificate (Optional)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload certificate</p><p className="text-xs text-muted-foreground">Max 500KB</p><Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => onChange(e.target.files)} {...rest} /></div></FormControl><FormMessage /></FormItem>
-                            )} />
                             <Alert>
                                 <Terminal className="h-4 w-4" />
                                 <AlertTitle>Portfolio Upload</AlertTitle>
@@ -319,4 +311,3 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
     </Dialog>
   );
 }
-
