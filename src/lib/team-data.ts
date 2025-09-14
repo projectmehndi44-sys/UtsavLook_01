@@ -1,3 +1,4 @@
+
 import type { Permissions } from '@/lib/types';
 
 export type TeamMember = {
@@ -30,7 +31,7 @@ export const teamMembers: TeamMember[] = [
     {
         id: 'user_001',
         name: 'Abhishek Jaiswal',
-        username: 'projectmehndi44@gmail.com',
+        username: 'utsavlook01@gmail.com',
         role: 'Super Admin',
         permissions: { // Admin has all rights by default, this is illustrative
             dashboard: 'edit',
