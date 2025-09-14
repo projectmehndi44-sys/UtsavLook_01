@@ -12,23 +12,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Home, AlertTriangle, KeyRound } from 'lucide-react';
+import { Home, AlertTriangle, KeyRound, ShieldPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { getTeamMembers, saveTeamMembers } from '@/lib/services';
-import { teamMembers as initialTeamMembers } from '@/lib/team-data';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { TeamMember } from '@/lib/types';
-import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
-
 type LoginFormValues = z.infer<typeof loginSchema>;
+
+const setupSchema = z.object({
+    name: z.string().min(2, "Name is required."),
+    email: z.string().email("Please enter a valid email address."),
+    password: z.string().min(8, "Password must be at least 8 characters long."),
+});
+type SetupFormValues = z.infer<typeof setupSchema>;
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -37,254 +41,183 @@ export default function AdminLoginPage() {
     
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
-    const [superAdminExists, setSuperAdminExists] = React.useState<boolean | null>(null); // Start as null
+    const [pageState, setPageState] = React.useState<'loading' | 'setup' | 'login'>('loading');
 
-    const form = useForm<LoginFormValues>({
+    const loginForm = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
-        defaultValues: { email: 'utsavlook01@gmail.com', password: '' },
+        defaultValues: { email: '', password: '' },
+    });
+    const setupForm = useForm<SetupFormValues>({
+        resolver: zodResolver(setupSchema),
     });
 
-    // Check if super admin exists when component mounts
     React.useEffect(() => {
-        const checkAdmin = async () => {
+        const checkAdminExists = async () => {
             try {
                 const members = await getTeamMembers();
-                const initialAdmin = initialTeamMembers[0];
-                const adminInDb = members.some(m => m.username === initialAdmin.username && m.role === 'Super Admin');
-                setSuperAdminExists(adminInDb);
+                const superAdminExists = members.some(m => m.role === 'Super Admin');
+                setPageState(superAdminExists ? 'login' : 'setup');
             } catch (error) {
                 console.error("Failed to check for super admin:", error);
-                setSuperAdminExists(false);
+                setPageState('setup'); // Fallback to setup if check fails
+                toast({ title: 'Error', description: 'Could not verify admin status.', variant: 'destructive'});
             }
         };
-        checkAdmin();
-    }, []);
+        checkAdminExists();
+    }, [toast]);
 
     const handleLogin = async (data: LoginFormValues) => {
-        const { email, password } = data;
-        
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const authUser = userCredential.user;
-
+            const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
             const teamMembers = await getTeamMembers();
-            const memberProfile = teamMembers.find(m => m.id === authUser.uid);
+            const memberProfile = teamMembers.find(m => m.id === userCredential.user.uid);
             
             if (memberProfile) {
-                toast({
-                    title: 'Login Successful',
-                    description: `Welcome, ${memberProfile.name}! Redirecting...`,
-                });
+                toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
                 router.push('/admin'); 
             } else {
                 await auth.signOut();
-                toast({
-                    title: 'Access Denied',
-                    description: 'This user account does not have admin privileges.',
-                    variant: 'destructive',
-                });
+                toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
             }
-
         } catch (error: any) {
-            console.error("Admin Login Error:", error);
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            if (error.code === 'auth/invalid-credential') {
                 description = 'Invalid credentials. Please check your username and password.';
             }
-            toast({
-                title: 'Authentication Failed',
-                description: description,
-                variant: 'destructive',
-            });
+            toast({ title: 'Authentication Failed', description, variant: 'destructive' });
         }
     };
     
     const handlePasswordReset = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!forgotPasswordEmail) return;
-
         try {
             await sendPasswordResetEmail(auth, forgotPasswordEmail);
-            toast({
-                title: 'Password Reset Email Sent',
-                description: `If an account exists for ${forgotPasswordEmail}, a password reset link has been sent. Please check your inbox.`,
-            });
+            toast({ title: 'Password Reset Email Sent', description: `If an account exists, a reset link has been sent.` });
             setIsForgotPasswordOpen(false);
         } catch (error: any) {
-            console.error("Password Reset Error:", error);
-            let description = 'An error occurred. Please try again.';
-             if (error.code === 'auth/user-not-found') {
-                description = 'This email address is not registered in our system.';
-             }
-            toast({ title: 'Error', description, variant: 'destructive' });
-        }
-    };
-    
-    const handleSuperAdminPasswordReset = async () => {
-        const adminEmail = "utsavlook01@gmail.com";
-        try {
-            await sendPasswordResetEmail(auth, adminEmail);
-            toast({
-                title: 'Superadmin Reset Email Sent',
-                description: `A password reset link has been sent to ${adminEmail}. Please check your inbox to set a new password.`,
-                duration: 9000,
-            });
-        } catch (error: any) {
-            let description = 'An error occurred. Please try again.';
-             if (error.code === 'auth/user-not-found') {
-                description = `The user ${adminEmail} does not exist. Please create the account first.`;
-             }
-            toast({ title: 'Error', description, variant: 'destructive' });
+            toast({ title: 'Error', description: 'Could not send password reset email.', variant: 'destructive' });
         }
     };
 
-    const handleCreateSuperAdmin = async () => {
-        const initialAdmin = initialTeamMembers[0];
-        const insecurePassword = 'Abhi@204567';
-
+    const handleSetup = async (data: SetupFormValues) => {
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, initialAdmin.username, insecurePassword);
+            // Step 1: Create the Firebase Auth user
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const authUser = userCredential.user;
-            
+
+            // Step 2: Create the team member document in Firestore
             const newAdminMember: TeamMember = {
                 id: authUser.uid,
-                name: initialAdmin.name,
-                username: initialAdmin.username,
-                role: initialAdmin.role,
-                permissions: initialAdmin.permissions,
+                name: data.name,
+                username: data.email,
+                role: 'Super Admin',
+                permissions: {
+                    dashboard: 'edit', bookings: 'edit', artists: 'edit',
+                    customers: 'edit', artistDirectory: 'edit', payouts: 'edit',
+                    transactions: 'edit', packages: 'edit', settings: 'edit',
+                    notifications: 'edit',
+                },
             };
             
+            // Get existing members (should be empty, but good practice)
             const currentMembers = await getTeamMembers();
-            const existingMembers = currentMembers.filter(m => m.username !== newAdminMember.username);
-            const updatedMembers = [...existingMembers, newAdminMember];
-            await saveTeamMembers(updatedMembers);
-            
-            setSuperAdminExists(true);
+            await saveTeamMembers([...currentMembers, newAdminMember]);
             
             toast({
-                title: "Super Admin Account Created!",
-                description: `User ${newAdminMember.username} created directly with the specified password. Please log in.`,
-                duration: 9000,
+                title: "Super Admin Created!",
+                description: "Your account is set up. You can now log in.",
             });
+            setPageState('login'); // Switch to login view
+            loginForm.setValue('email', data.email); // Pre-fill email for convenience
 
         } catch (error: any) {
+            let description = 'An unexpected error occurred.';
             if (error.code === 'auth/email-already-in-use') {
-                 toast({
-                    title: "Admin Already Exists",
-                    description: "The admin account seems to exist. Try using 'Forgot Password' or logging in directly.",
-                    variant: 'destructive'
-                });
-                setSuperAdminExists(true);
-            } else {
-                toast({ title: 'Creation Failed', description: error.message, variant: 'destructive'});
+                description = 'This email is already in use. Please try logging in or use a different email.';
             }
+            toast({ title: 'Setup Failed', description, variant: 'destructive' });
         }
     };
 
+    const renderLoading = () => (
+        <Card className="mx-auto grid w-[400px] gap-6 p-8 text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+            <CardTitle>Verifying Admin Setup</CardTitle>
+            <CardDescription>Please wait...</CardDescription>
+        </Card>
+    );
+
+    const renderSetup = () => (
+        <Card className="mx-auto grid w-[400px] gap-6">
+            <CardHeader className="text-center">
+                <ShieldPlus className="w-12 h-12 mx-auto text-primary" />
+                <CardTitle className="text-2xl font-bold text-primary">Super Admin Setup</CardTitle>
+                <CardDescription>This is a one-time setup to create the first administrator account for your platform.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...setupForm}>
+                    <form onSubmit={setupForm.handleSubmit(handleSetup)} className="grid gap-4">
+                        <FormField control={setupForm.control} name="name" render={({ field }) => (
+                            <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Your Name" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={setupForm.control} name="email" render={({ field }) => (
+                            <FormItem><FormLabel>Login Email</FormLabel><FormControl><Input type="email" placeholder="admin@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={setupForm.control} name="password" render={({ field }) => (
+                            <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <Button type="submit" className="w-full" disabled={setupForm.formState.isSubmitting}>
+                            {setupForm.formState.isSubmitting ? 'Creating...' : 'Create Super Admin'}
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    );
+
+    const renderLogin = () => (
+        <div className="mx-auto grid w-[400px] gap-6">
+             <div className="grid gap-2 text-center">
+                <h1 className="text-3xl font-bold text-primary">Admin Portal Login</h1>
+                <p className="text-balance text-muted-foreground">Enter your team credentials to access your dashboard.</p>
+            </div>
+            <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="grid gap-4">
+                    <FormField control={loginForm.control} name="email" render={({ field }) => (
+                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={loginForm.control} name="password" render={({ field }) => (
+                        <FormItem>
+                            <div className="flex items-center">
+                                <FormLabel>Password</FormLabel>
+                                <Button variant="link" type="button" className="ml-auto inline-block text-sm underline" onClick={() => setIsForgotPasswordOpen(true)}>
+                                    Forgot Password?
+                                </Button>
+                            </div>
+                            <FormControl><Input type="password" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                        {loginForm.formState.isSubmitting ? 'Logging in...' : 'Login'}
+                    </Button>
+                </form>
+            </Form>
+            <div className="mt-4 text-center text-sm">
+                <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
+                    <Home className="mr-1 h-4 w-4" /> Back to Home
+                </Link>
+            </div>
+        </div>
+    );
 
     return (
         <>
             <div className="w-full flex items-center justify-center min-h-screen bg-muted/30">
-                <div className="mx-auto grid w-[400px] gap-6">
-                    <div className="grid gap-2 text-center">
-                        <h1 className="text-3xl font-bold text-primary">Admin Portal Login</h1>
-                        <p className="text-balance text-muted-foreground">
-                            Enter your team credentials to access your dashboard.
-                        </p>
-                    </div>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleLogin)} className="grid gap-4">
-                             <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="email"
-                                            placeholder="your.email@example.com"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-center">
-                                        <FormLabel>Password</FormLabel>
-                                        <Button 
-                                            variant="link" 
-                                            type="button" 
-                                            className="ml-auto inline-block text-sm underline" 
-                                            onClick={() => {
-                                                setForgotPasswordEmail(form.getValues('email'));
-                                                setIsForgotPasswordOpen(true);
-                                            }}
-                                        >
-                                            Forgot Password?
-                                        </Button>
-                                    </div>
-                                    <FormControl>
-                                        <Input
-                                            type="password"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                                {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
-                            </Button>
-                        </form>
-                    </Form>
-                     <div className="mt-4 text-center text-sm">
-                        <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
-                            <Home className="mr-1 h-4 w-4" />
-                            Back to Home
-                        </Link>
-                    </div>
-
-                    {superAdminExists === false && (
-                        <Card className="mt-6 bg-yellow-50 border-yellow-300">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base"><AlertTriangle className="text-yellow-600"/> One-Time Super Admin Setup</CardTitle>
-                                <CardDescription>The primary Super Admin account needs to be created.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Alert variant="destructive">
-                                    <AlertTriangle className="h-4 w-4" />
-                                    <AlertTitle>Security Warning</AlertTitle>
-                                    <AlertDescriptionComponent>
-                                       This will create the superadmin with a hardcoded password. This is insecure and not recommended for production.
-                                    </AlertDescriptionComponent>
-                                </Alert>
-                            </CardContent>
-                            <CardFooter>
-                                <Button className="w-full" onClick={handleCreateSuperAdmin}>Create Super Admin Account</Button>
-                            </CardFooter>
-                        </Card>
-                    )}
-
-                     {superAdminExists && (
-                        <Card className="mt-6 bg-blue-50 border-blue-200">
-                           <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base"><KeyRound className="text-blue-600"/> Admin Recovery</CardTitle>
-                                <CardDescription>If you're having trouble logging in, you can securely reset the superadmin password.</CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="secondary" className="w-full" onClick={handleSuperAdminPasswordReset}>Reset Superadmin Password</Button>
-                            </CardFooter>
-                        </Card>
-                    )}
-                </div>
+                {pageState === 'loading' && renderLoading()}
+                {pageState === 'setup' && renderSetup()}
+                {pageState === 'login' && renderLogin()}
             </div>
            
             <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
@@ -292,9 +225,7 @@ export default function AdminLoginPage() {
                     <form onSubmit={handlePasswordReset}>
                         <DialogHeader>
                             <DialogTitle>Forgot Password</DialogTitle>
-                            <DialogDescription>
-                                Enter your registered login email to receive a password reset link.
-                            </DialogDescription>
+                            <DialogDescription>Enter your registered login email to receive a password reset link.</DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
                             <Label htmlFor="forgot-email">Email Address</Label>
