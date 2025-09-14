@@ -14,14 +14,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from '@/hooks/use-toast';
 import { Download, ChevronDown, CheckCircle, XCircle, MoreHorizontal, Eye, Trash2, UserPlus, ShieldOff, KeyRound, ShieldCheck, Star } from 'lucide-react';
 import type { Artist } from '@/lib/types';
-import { listenToCollection, createArtistWithId, deletePendingArtist, deleteArtist, updateArtist } from '@/lib/services';
+import { listenToCollection, createArtistWithId, deletePendingArtist, updateArtist } from '@/lib/services';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { exportToExcel } from '@/lib/export';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import {
   AlertDialog,
@@ -35,11 +34,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { app } from '@/lib/firebase';
+import { INDIA_LOCATIONS } from '@/lib/india-locations';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
-type PendingArtist = Omit<Artist, 'id'> & {
+type PendingArtist = Omit<Artist, 'id' | 'services'> & {
   id: string; // email is used as ID here
   status: 'Pending';
+  services: ('mehndi' | 'makeup' | 'photography')[];
   [key: string]: any;
 };
 
@@ -47,8 +49,13 @@ const onboardSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().regex(/^\d{10}$/, "Must be a 10-digit phone number"),
-  location: z.string().min(3, "Location is required"),
+  state: z.string().min(1, "State is required"),
+  district: z.string().min(1, "District is required"),
+  locality: z.string().min(1, "Locality is required"),
   charge: z.coerce.number().min(0, "Charge must be a positive number"),
+  services: z.array(z.string()).refine(value => value.some(item => item), {
+    message: "You have to select at least one service.",
+  }),
 });
 type OnboardFormValues = z.infer<typeof onboardSchema>;
 
@@ -74,8 +81,12 @@ export default function ArtistManagementPage() {
     
     const form = useForm<OnboardFormValues>({
         resolver: zodResolver(onboardSchema),
-        defaultValues: { name: '', email: '', phone: '', location: '', charge: 0 },
+        defaultValues: { name: '', email: '', phone: '', state: '', district: '', locality: '', charge: 5000, services: ["mehndi"] },
     });
+
+    const selectedState = form.watch('state');
+    const allStates = Object.keys(INDIA_LOCATIONS);
+    const districtsInSelectedState = selectedState ? (INDIA_LOCATIONS[selectedState] || []) : [];
     
     const handleDownload = (selectedArtists?: Artist[]) => {
         const artistsToExport = selectedArtists || artists;
@@ -107,15 +118,15 @@ export default function ArtistManagementPage() {
                 name: pendingArtist.fullName,
                 email: pendingArtist.email,
                 phone: pendingArtist.phone,
-                location: pendingArtist.locality,
+                location: `${pendingArtist.locality}, ${pendingArtist.state}`,
                 state: pendingArtist.state,
                 district: pendingArtist.district,
                 locality: pendingArtist.locality,
                 servingAreas: pendingArtist.servingAreas,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${pendingArtist.fullName}`,
                 workImages: [], // This would be URLs from storage in a real app
-                services: ['mehndi', 'makeup', 'photography'], // Default services
-                charge: 5000,
+                services: pendingArtist.services, 
+                charge: 5000, // Default value
                 charges: { mehndi: 5000, makeup: 7000, photography: 10000 },
                 rating: 0,
                 styleTags: ['bridal', 'traditional'],
@@ -198,15 +209,18 @@ export default function ArtistManagementPage() {
                 name: data.name,
                 email: data.email,
                 phone: data.phone,
-                location: data.location,
+                location: `${data.locality}, ${data.state}`,
+                state: data.state,
+                district: data.district,
+                locality: data.locality,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${data.name}`,
                 workImages: [],
-                services: ['mehndi'], // Default
+                services: data.services as ('mehndi' | 'makeup' | 'photography')[],
                 charge: data.charge,
-                charges: { mehndi: data.charge },
+                charges: { mehndi: data.charge, makeup: data.charge, photography: data.charge },
                 rating: 0,
                 styleTags: [],
-                verified: false,
+                verified: true, // Admin-onboarded artists are auto-verified
                 isFoundersClubMember: false,
             };
             await createArtistWithId({ id: uid, ...newArtist });
@@ -223,6 +237,13 @@ export default function ArtistManagementPage() {
         }
     }
     
+    const serviceItems = [
+        { id: 'mehndi', label: 'Mehndi' },
+        { id: 'makeup', label: 'Makeup' },
+        { id: 'photography', label: 'Photography' },
+    ] as const;
+
+
     return (
         <>
             <div className="flex items-center justify-between">
@@ -343,6 +364,7 @@ export default function ArtistManagementPage() {
                                     <TableRow>
                                         <TableHead>Applicant</TableHead>
                                         <TableHead>Location</TableHead>
+                                        <TableHead>Services</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
@@ -355,6 +377,11 @@ export default function ArtistManagementPage() {
                                                 <div className="text-sm text-muted-foreground">{pa.email}</div>
                                             </TableCell>
                                             <TableCell>{pa.locality}, {pa.district}, {pa.state}</TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {(pa.services || []).map(service => <Badge key={service} variant="outline" className="capitalize">{service}</Badge>)}
+                                                </div>
+                                            </TableCell>
                                             <TableCell>{new Date(pa.submissionDate).toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <Button size="sm" variant="outline" onClick={() => handleReject(pa.id)}>
@@ -367,7 +394,7 @@ export default function ArtistManagementPage() {
                                         </TableRow>
                                     )) : (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="text-center h-24">No pending applications.</TableCell>
+                                            <TableCell colSpan={5} className="text-center h-24">No pending applications.</TableCell>
                                         </TableRow>
                                     )}
                                 </TableBody>
@@ -397,7 +424,7 @@ export default function ArtistManagementPage() {
             </AlertDialog>
             
             <AlertDialog open={onboardFormOpen} onOpenChange={setOnboardFormOpen}>
-                 <AlertDialogContent>
+                 <AlertDialogContent className="sm:max-w-2xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Onboard New Artist</AlertDialogTitle>
                         <AlertDialogDescription>Manually create a new artist profile. They will be sent an email to set their password.</AlertDialogDescription>
@@ -405,13 +432,80 @@ export default function ArtistManagementPage() {
                      <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleOnboardSubmit)} className="space-y-4">
                             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field}/></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><FormLabel>Phone</FormLabel><FormControl><Input type="tel" {...field}/></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField control={form.control} name="location" render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem> )}/>
+                             <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field}/></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><FormLabel>Phone</FormLabel><FormControl><Input type="tel" {...field}/></FormControl><FormMessage/></FormItem> )}/>
+                            </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <FormField control={form.control} name="state" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>State</FormLabel>
+                                    <Select onValueChange={(value) => { field.onChange(value); form.setValue('district', ''); }} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
+                                        <SelectContent>{allStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}/>
+                                <FormField control={form.control} name="district" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>District</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger></FormControl>
+                                        <SelectContent>{districtsInSelectedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}/>
+                            </div>
+                            <FormField control={form.control} name="locality" render={({ field }) => ( <FormItem><FormLabel>Locality</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem> )}/>
                             <FormField control={form.control} name="charge" render={({ field }) => ( <FormItem><FormLabel>Default Base Charge</FormLabel><FormControl><Input type="number" {...field}/></FormControl><FormMessage/></FormItem> )}/>
+                             <FormField
+                                control={form.control}
+                                name="services"
+                                render={() => (
+                                    <FormItem>
+                                        <FormLabel>Services Offered</FormLabel>
+                                        <div className="flex items-center gap-4">
+                                            {serviceItems.map((item) => (
+                                            <FormField
+                                                key={item.id}
+                                                control={form.control}
+                                                name="services"
+                                                render={({ field }) => {
+                                                return (
+                                                    <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                        checked={field.value?.includes(item.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            return checked
+                                                            ? field.onChange([...(field.value || []), item.id])
+                                                            : field.onChange(
+                                                                (field.value || []).filter(
+                                                                    (value) => value !== item.id
+                                                                )
+                                                                )
+                                                        }}
+                                                        />
+                                                    </FormControl>
+                                                    <FormLabel className="font-normal">
+                                                        {item.label}
+                                                    </FormLabel>
+                                                    </FormItem>
+                                                )
+                                                }}
+                                            />
+                                            ))}
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
                             <AlertDialogFooter>
-                                <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                                <AlertDialogAction type="submit">Onboard Artist</AlertDialogAction>
+                                <AlertDialogCancel type="button" onClick={() => setOnboardFormOpen(false)}>Cancel</AlertDialogCancel>
+                                <Button type="submit">Onboard Artist</Button>
                             </AlertDialogFooter>
                         </form>
                     </Form>

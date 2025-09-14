@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -27,6 +28,13 @@ import { getAvailableLocations, createPendingArtist } from '@/lib/services';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
+const serviceItems = [
+    { id: 'mehndi', label: 'Mehndi' },
+    { id: 'makeup', label: 'Makeup' },
+    { id: 'photography', label: 'Photography' },
+] as const;
+
+
 const registrationSchema = z.object({
   fullName: z.string().min(1, { message: 'Full name is required.' }),
   aadharAddress: z.string().min(1, { message: 'Aadhaar address is required.' }),
@@ -37,6 +45,9 @@ const registrationSchema = z.object({
   servingAreas: z.string().min(1, { message: 'Please list at least one serving area.' }),
   phone: z.string().regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit phone number.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
+  services: z.array(z.string()).refine(value => value.some(item => item), {
+    message: "You have to select at least one service.",
+  }),
   workImages: z.any()
     .refine((files) => files?.length >= 1, "At least one work image is required.")
     .refine((files) => Array.from(files).every((file: any) => file.size <= MAX_FILE_SIZE), `Max file size is 5MB per image.`)
@@ -73,6 +84,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
       servingAreas: '',
       phone: '',
       email: '',
+      services: ['mehndi'],
       workImages: undefined,
       agreed: false,
     },
@@ -189,7 +201,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
 
                     {/* Service Location Section */}
                      <div className="space-y-4">
-                        <h3 className="font-semibold text-lg text-primary">Step 2: Service Location</h3>
+                        <h3 className="font-semibold text-lg text-primary">Step 2: Service Location & Offerings</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <FormField control={form.control} name="state" render={({ field }) => (
                                 <FormItem>
@@ -208,7 +220,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                             <FormField control={form.control} name="district" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>District</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState}>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState || districtsInSelectedState.length === 0}>
                                         <FormControl>
                                             <SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger>
                                         </FormControl>
@@ -217,6 +229,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                                         </SelectContent>
                                     </Select>
                                      { !selectedState && <FormDescription>Please select a state first.</FormDescription> }
+                                     { selectedState && districtsInSelectedState.length === 0 && <FormDescription className="text-destructive">No districts enabled for this state.</FormDescription> }
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -231,6 +244,48 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                         <FormField control={form.control} name="servingAreas" render={({ field }) => (
                              <FormItem><FormLabel>Other Serving Areas</FormLabel><FormControl><Input placeholder="e.g., South Mumbai, Navi Mumbai, Thane" {...field} /></FormControl><FormDescription>Comma-separated list of other areas you serve.</FormDescription><FormMessage /></FormItem>
                         )} />
+                        <FormField
+                            control={form.control}
+                            name="services"
+                            render={() => (
+                                <FormItem>
+                                    <FormLabel>Which services do you offer?</FormLabel>
+                                    <div className="flex items-center gap-4">
+                                        {serviceItems.map((item) => (
+                                        <FormField
+                                            key={item.id}
+                                            control={form.control}
+                                            name="services"
+                                            render={({ field }) => {
+                                            return (
+                                                <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <Checkbox
+                                                    checked={field.value?.includes(item.id)}
+                                                    onCheckedChange={(checked) => {
+                                                        return checked
+                                                        ? field.onChange([...(field.value || []), item.id])
+                                                        : field.onChange(
+                                                            (field.value || []).filter(
+                                                                (value) => value !== item.id
+                                                            )
+                                                            )
+                                                    }}
+                                                    />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">
+                                                    {item.label}
+                                                </FormLabel>
+                                                </FormItem>
+                                            )
+                                            }}
+                                        />
+                                        ))}
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
                     <Separator/>

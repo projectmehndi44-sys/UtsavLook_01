@@ -51,7 +51,7 @@ async function setConfigDocument(docId: string, data: any): Promise<void> {
     if(docId === 'teamMembers') dataToSet = { members: data };
     else if (docId === 'masterServices') dataToSet = { packages: data };
     else if (docId === 'promotions') dataToSet = { promos: data };
-    else if (docId === 'availableLocations') dataToSet = { locations: data };
+    else if (docId === 'availableLocations') dataToSet = data; // Locations are now stored at the root of the doc
     else if (docId === 'placeholderImages') dataToSet = { images: data };
     
     await setDoc(docRef, dataToSet);
@@ -193,11 +193,11 @@ export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
 export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', images);
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
-    const config = await getConfigDocument<any>('availableLocations');
-    return (config as any)?.locations || {};
+    const config = await getConfigDocument<Record<string, string[]>>('availableLocations');
+    return config || {};
 };
 export const saveAvailableLocations = async (locations: Record<string, string[]>): Promise<void> => {
-    await setConfigDocument('availableLocations', { locations });
+    await setConfigDocument('availableLocations', locations);
 };
 
 export const getCompanyProfile = async () => {
