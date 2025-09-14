@@ -19,13 +19,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Terminal, Upload } from 'lucide-react';
+import { Terminal, Upload, ArrowLeft } from 'lucide-react';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
 import { getAvailableLocations, createPendingArtist } from '@/lib/services';
+import { Progress } from '../ui/progress';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_WORK_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_CERTIFICATE_SIZE = 500 * 1024; // 500KB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const serviceItems = [
@@ -50,11 +52,14 @@ const registrationSchema = z.object({
   }),
   workImages: z.any()
     .refine((files) => files?.length >= 1, "At least one work image is required.")
-    .refine((files) => Array.from(files).every((file: any) => file.size <= MAX_FILE_SIZE), `Max file size is 5MB per image.`)
+    .refine((files) => Array.from(files).every((file: any) => file.size <= MAX_WORK_IMAGE_SIZE), `Max file size is 5MB per image.`)
     .refine(
       (files) => Array.from(files).every((file: any) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
       ".jpg, .jpeg, .png and .webp files are accepted."
     ),
+  certificate: z.any().optional()
+    .refine((files) => !files || files.length === 0 || files?.[0]?.size <= MAX_CERTIFICATE_SIZE, `Certificate max file size is 500KB.`)
+    .refine((files) => !files || files.length === 0 || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted."),
   agreed: z.boolean().refine((val) => val === true, { message: 'You must agree to the terms and conditions.' }),
 });
 
@@ -71,32 +76,21 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   const { toast } = useToast();
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
-  
+  const [step, setStep] = React.useState(1);
+  const totalSteps = 3;
+
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
-      fullName: '',
-      aadharAddress: '',
-      presentAddress: '',
-      state: '',
-      district: '',
-      locality: '',
-      servingAreas: '',
-      phone: '',
-      email: '',
-      services: ['mehndi'],
-      workImages: undefined,
-      agreed: false,
+      fullName: '', aadharAddress: '', presentAddress: '', state: '', district: '',
+      locality: '', servingAreas: '', phone: '', email: '', services: ['mehndi'],
+      workImages: undefined, certificate: undefined, agreed: false,
     },
   });
 
-  // Effect to load available locations from localStorage when the modal opens
   React.useEffect(() => {
     if (isOpen) {
         getAvailableLocations().then(locations => {
-            if (Object.keys(locations).length === 0) {
-               console.log("No service locations configured by admin.");
-            }
             setAvailableLocations(locations);
         });
     }
@@ -106,38 +100,54 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   const availableStates = Object.keys(availableLocations);
   const districtsInSelectedState = selectedState ? (availableLocations[selectedState] || []) : [];
 
+  const handleNextStep = async () => {
+    let fieldsToValidate: (keyof RegistrationFormValues)[] = [];
+    if(step === 1) fieldsToValidate = ['fullName', 'email', 'phone', 'aadharAddress', 'presentAddress'];
+    if(step === 2) fieldsToValidate = ['state', 'district', 'locality', 'servingAreas', 'services'];
+
+    const isValid = await form.trigger(fieldsToValidate);
+    if(isValid) setStep(prev => prev + 1);
+  }
 
   const onSubmit = async (data: RegistrationFormValues) => {
-    // In a real app with file uploads, you'd handle the files here, e.g., upload to Firebase Storage.
-    // For this example, we'll store form data without the files.
-    const { workImages, ...dataToStore } = data;
+    const { workImages, certificate, ...dataToStore } = data;
+
+    // In a real app, you'd upload files to a storage bucket and get URLs
+    // For this demo, we'll just acknowledge that they were submitted.
+    console.log("Work Images to upload:", workImages);
+    console.log("Certificate to upload:", certificate);
 
     const newPendingArtist = {
         ...dataToStore,
         status: 'Pending',
         submissionDate: new Date().toISOString(),
+        hasCertificate: certificate && certificate.length > 0
     };
 
-    await createPendingArtist(newPendingArtist);
-    setIsSubmitted(true);
+    try {
+        await createPendingArtist(newPendingArtist);
+        setIsSubmitted(true);
+    } catch (error) {
+        toast({ title: "Submission Failed", description: "Could not submit your registration. Please try again later.", variant: "destructive" });
+    }
   };
 
   const handleClose = () => {
     onOpenChange(false);
-    // Reset form after a short delay to allow the dialog to close
     setTimeout(() => {
         setIsSubmitted(false);
+        setStep(1);
         form.reset();
     }, 300);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-primary font-bold text-2xl">Register as an Artist on UtsavLook</DialogTitle>
+          <DialogTitle className="text-primary font-bold text-2xl">Register as an Artist</DialogTitle>
           <DialogDescription>
-            Join our community of talented artists. Fill out the form below to get started. Your account will be created upon admin approval.
+            Join our community of talented artists. Your account will be created upon admin approval.
           </DialogDescription>
         </DialogHeader>
         {isSubmitted ? (
@@ -146,206 +156,117 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                     <Terminal className="h-4 w-4" />
                     <AlertTitle>Registration Submitted!</AlertTitle>
                     <AlertDescription className="space-y-2">
-                      <p>Thank you for registering! Your profile is now under review.</p>
-                      <p className="font-semibold">You will receive an email to create your password once your application is approved. This may take up to 24 hours.</p>
-                      <p>For more details, contact our admin at <a href="mailto:admin@utsavlook.com" className="underline">admin@utsavlook.com</a>.</p>
+                      <p>Thank you! Your profile is now under review.</p>
+                      <p className="font-semibold">You will receive an email to create your password once your application is approved.</p>
                     </AlertDescription>
                 </Alert>
-                 <Button onClick={handleClose} className="w-full">
-                    Close
-                </Button>
+                 <Button onClick={handleClose} className="w-full">Close</Button>
             </div>
         ) : (
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Progress value={(step / totalSteps) * 100} className="w-full mb-4" />
                 <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4 space-y-6">
                    {Object.keys(availableLocations).length === 0 ? (
                         <Alert variant="destructive">
                             <Terminal className="h-4 w-4" />
                             <AlertTitle>Registration Currently Unavailable</AlertTitle>
-                            <AlertDescription>
-                                We are not currently accepting new artist registrations. The admin has not configured any service locations yet. Please check back later or contact support for more information.
-                            </AlertDescription>
+                            <AlertDescription>We are not currently accepting new artist registrations.</AlertDescription>
                         </Alert>
                    ) : (
                     <>
-                    {/* Personal Details Section */}
-                    <div className="space-y-4">
-                        <h3 className="font-semibold text-lg text-primary">Step 1: Personal & Contact Details</h3>
-                         <FormField control={form.control} name="fullName" render={({ field }) => (
-                            <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Your full name" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField control={form.control} name="email" render={({ field }) => (
-                                <FormItem><FormLabel>Email Address (This will be your username)</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                      {step === 1 && (
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-lg text-primary">Step 1: Personal & Contact Details</h3>
+                            <FormField control={form.control} name="fullName" render={({ field }) => (
+                                <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Your full name" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
-                           <FormField control={form.control} name="phone" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Phone Number</FormLabel>
-                                    <FormControl>
-                                        <Input type="tel" placeholder="9876543210" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="email" render={({ field }) => (
+                                    <FormItem><FormLabel>Email Address (This will be your username)</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="phone" render={({ field }) => (
+                                    <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" placeholder="9876543210" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                            </div>
+                            <FormField control={form.control} name="aadharAddress" render={({ field }) => (
+                                <FormItem><FormLabel>Address (As per Aadhaar)</FormLabel><FormControl><Textarea placeholder="Enter your official address" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
-                        </div>
-                        <FormField control={form.control} name="aadharAddress" render={({ field }) => (
-                             <FormItem><FormLabel>Address (As per Aadhaar)</FormLabel><FormControl><Textarea placeholder="Enter your official address" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="presentAddress" render={({ field }) => (
-                            <FormItem><FormLabel>Present Address</FormLabel><FormControl><Textarea placeholder="Enter your current residential address" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                    </div>
-
-                    <Separator/>
-
-                    {/* Service Location Section */}
-                     <div className="space-y-4">
-                        <h3 className="font-semibold text-lg text-primary">Step 2: Service Location & Offerings</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <FormField control={form.control} name="state" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>State</FormLabel>
-                                    <Select onValueChange={(value) => { field.onChange(value); form.setValue('district', ''); }} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger><SelectValue placeholder="Select an available state" /></SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <FormField control={form.control} name="district" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>District</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState || districtsInSelectedState.length === 0}>
-                                        <FormControl>
-                                            <SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {districtsInSelectedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                     { !selectedState && <FormDescription>Please select a state first.</FormDescription> }
-                                     { selectedState && districtsInSelectedState.length === 0 && <FormDescription className="text-destructive">No districts enabled for this state.</FormDescription> }
-                                    <FormMessage />
-                                </FormItem>
+                            <FormField control={form.control} name="presentAddress" render={({ field }) => (
+                                <FormItem><FormLabel>Present Address</FormLabel><FormControl><Textarea placeholder="Enter your current residential address" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                         </div>
-                        <FormField control={form.control} name="locality" render={({ field }) => (
-                             <FormItem>
-                                <FormLabel>Primary Locality / Area</FormLabel>
-                                <FormControl><Input placeholder="e.g., Koregaon Park" {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="servingAreas" render={({ field }) => (
-                             <FormItem><FormLabel>Other Serving Areas</FormLabel><FormControl><Input placeholder="e.g., South Mumbai, Navi Mumbai, Thane" {...field} /></FormControl><FormDescription>Comma-separated list of other areas you serve.</FormDescription><FormMessage /></FormItem>
-                        )} />
-                        <FormField
-                            control={form.control}
-                            name="services"
-                            render={() => (
-                                <FormItem>
-                                    <FormLabel>Which services do you offer?</FormLabel>
-                                    <div className="flex items-center gap-4">
-                                        {serviceItems.map((item) => (
-                                        <FormField
-                                            key={item.id}
-                                            control={form.control}
-                                            name="services"
-                                            render={({ field }) => {
-                                            return (
-                                                <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                                <FormControl>
-                                                    <Checkbox
-                                                    checked={field.value?.includes(item.id)}
-                                                    onCheckedChange={(checked) => {
-                                                        return checked
-                                                        ? field.onChange([...(field.value || []), item.id])
-                                                        : field.onChange(
-                                                            (field.value || []).filter(
-                                                                (value) => value !== item.id
-                                                            )
-                                                            )
-                                                    }}
-                                                    />
-                                                </FormControl>
-                                                <FormLabel className="font-normal">
-                                                    {item.label}
-                                                </FormLabel>
-                                                </FormItem>
-                                            )
-                                            }}
-                                        />
-                                        ))}
-                                    </div>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+                      )}
 
-                    <Separator/>
+                      {step === 2 && (
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-lg text-primary">Step 2: Service Location & Offerings</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="state" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>State</FormLabel>
+                                        <Select onValueChange={(value) => { field.onChange(value); form.setValue('district', ''); }} defaultValue={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select an available state" /></SelectTrigger></FormControl>
+                                            <SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="district" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>District</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState || districtsInSelectedState.length === 0}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger></FormControl>
+                                            <SelectContent>{districtsInSelectedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                        {!selectedState && <FormDescription>Please select a state first.</FormDescription>}
+                                        {selectedState && districtsInSelectedState.length === 0 && <FormDescription className="text-destructive">No districts enabled for this state.</FormDescription>}
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            </div>
+                            <FormField control={form.control} name="locality" render={({ field }) => (
+                                <FormItem><FormLabel>Primary Locality / Area</FormLabel><FormControl><Input placeholder="e.g., Koregaon Park" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="servingAreas" render={({ field }) => (
+                                <FormItem><FormLabel>Other Serving Areas</FormLabel><FormControl><Input placeholder="e.g., South Mumbai, Navi Mumbai, Thane" {...field} /></FormControl><FormDescription>Comma-separated list of other areas you serve.</FormDescription><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="services" render={() => (
+                                <FormItem><FormLabel>Which services do you offer?</FormLabel><div className="flex items-center gap-4">{serviceItems.map((item) => (<FormField key={item.id} control={form.control} name="services" render={({ field }) => (<FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => { return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || []).filter((value) => value !== item.id)) }} /></FormControl><FormLabel className="font-normal">{item.label}</FormLabel></FormItem>)} />))}</div><FormMessage /></FormItem>
+                            )} />
+                        </div>
+                      )}
 
-                    {/* Portfolio */}
-                     <div className="space-y-4">
-                         <h3 className="font-semibold text-lg text-primary">Step 3: Portfolio & Agreement</h3>
-                         <FormField
-                            control={form.control}
-                            name="workImages"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Work Images</FormLabel>
-                                    <FormControl>
-                                        <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer">
-                                            <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                                            <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
-                                            <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 5MB</p>
-                                            <Input 
-                                                type="file" 
-                                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-                                                accept=".jpg,.jpeg,.png,.webp"
-                                                multiple
-                                                onChange={(e) => field.onChange(e.target.files)}
-                                            />
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="agreed"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
-                                <FormControl>
-                                    <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                    />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                    <FormLabel>
-                                         I agree to the <a href="/terms" target="_blank" className="underline">Terms & Conditions</a> of UtsavLook.
-                                    </FormLabel>
-                                    <FormMessage />
-                                </div>
-                                </FormItem>
-                            )}
-                        />
-                     </div>
+                      {step === 3 && (
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-lg text-primary">Step 3: Portfolio & Verification</h3>
+                            <FormField control={form.control} name="workImages" render={({ field }) => (
+                                <FormItem><FormLabel>Work Images (Required)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p><p className="text-xs text-muted-foreground">At least 1 image, max 5MB each</p><Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" multiple onChange={(e) => field.onChange(e.target.files)} /></div></FormControl><FormMessage /></FormItem>
+                            )} />
+                             <FormField control={form.control} name="certificate" render={({ field }) => (
+                                <FormItem><FormLabel>Certificate (Optional)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload certificate</p><p className="text-xs text-muted-foreground">Max 500KB</p><Input type="file" className="absolute top-0 left-0 w-null h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => field.onChange(e.target.files)} /></div></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="agreed" render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the <a href="/terms" target="_blank" className="underline">Terms & Conditions</a> of UtsavLook.</FormLabel><FormMessage /></div></FormItem>
+                            )} />
+                        </div>
+                      )}
                     </>
                    )}
                 </div>
-            <DialogFooter>
-                <Button type="submit" className="bg-accent hover:bg-accent/90 w-full" disabled={Object.keys(availableLocations).length === 0 || form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Submitting...' : 'Submit for Review'}
-                </Button>
-            </DialogFooter>
+                <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full pt-4">
+                  <div>
+                    {step > 1 && <Button type="button" variant="outline" onClick={() => setStep(prev => prev - 1)}><ArrowLeft className="mr-2"/> Back</Button>}
+                  </div>
+                  <div>
+                    {step < totalSteps && <Button type="button" onClick={handleNextStep}>Next</Button>}
+                    {step === totalSteps && (
+                        <Button type="submit" className="bg-accent hover:bg-accent/90" disabled={Object.keys(availableLocations).length === 0 || form.formState.isSubmitting}>
+                            {form.formState.isSubmitting ? 'Submitting...' : 'Submit for Review'}
+                        </Button>
+                    )}
+                  </div>
+                </DialogFooter>
             </form>
             </Form>
         )}
