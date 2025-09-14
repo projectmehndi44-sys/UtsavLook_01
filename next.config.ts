@@ -33,8 +33,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA({
+const pwaConfig = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-})(nextConfig);
+  disable: process.env.NODE_ENV === 'development',
+})
+
+export default pwaConfig(nextConfig);
