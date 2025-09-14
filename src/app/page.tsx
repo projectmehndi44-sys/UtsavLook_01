@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
-import { CustomerRegistrationModal } from '@/components/utsavlook/CustomerRegistrationModal';
 import { CustomerLoginModal } from '@/components/utsavlook/CustomerLoginModal';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
@@ -35,7 +34,6 @@ export default function Home() {
   const [artists, setArtists] = React.useState<Artist[]>([]);
   const [masterServices, setMasterServices] = React.useState<MasterServicePackage[]>([]);
   
-  const [isCustomerRegistrationModalOpen, setIsCustomerRegistrationModalOpen] = React.useState(false);
   const [isCustomerLoginModalOpen, setIsCustomerLoginModalOpen] = React.useState(false);
   
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -142,10 +140,6 @@ export default function Home() {
     router.push('/artist');
   };
 
-  const handleCustomerRegister = () => {
-    setIsCustomerRegistrationModalOpen(true);
-  };
-
   const handleCustomerLogin = () => {
     setIsCustomerLoginModalOpen(true);
   };
@@ -154,7 +148,6 @@ export default function Home() {
     setIsCustomerLoggedIn(true);
     setCustomer(loggedInCustomer);
     setIsCustomerLoginModalOpen(false);
-    setIsCustomerRegistrationModalOpen(false);
     const storedCart = localStorage.getItem(`cart_${loggedInCustomer.id}`);
     setCart(storedCart ? JSON.parse(storedCart) : []);
     setTimeout(() => {
@@ -218,11 +211,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 px-4 w-full">
                 <Button onClick={handleCustomerLogin} size="lg" className="w-full">
                     <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                </Button>
-                <Button onClick={handleCustomerRegister} size="lg" variant="outline" className="w-full">
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Sign Up
+                    Login / Sign Up
                 </Button>
             </div>
             <Separator className="my-4 w-4/5" />
@@ -301,19 +290,10 @@ export default function Home() {
 
         <PwaInstallBanner />
 
-        <CustomerRegistrationModal
-            isOpen={isCustomerRegistrationModalOpen}
-            onOpenChange={setIsCustomerRegistrationModalOpen}
-            onSuccessfulRegister={onSuccessfulLogin}
-        />
         <CustomerLoginModal
             isOpen={isCustomerLoginModalOpen}
             onOpenChange={setIsCustomerLoginModalOpen}
             onSuccessfulLogin={onSuccessfulLogin}
-            onSwitchToRegister={() => {
-                setIsCustomerLoginModalOpen(false);
-                setIsCustomerRegistrationModalOpen(true);
-            }}
         />
         {selectedService && (
             <ServiceSelectionModal

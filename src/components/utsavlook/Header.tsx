@@ -9,7 +9,8 @@ import {
   LogOut,
   LayoutGrid,
   ShoppingBag,
-  Palette
+  Palette,
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import type { Customer } from '@/lib/types';
+import { CustomerLoginModal } from './CustomerLoginModal';
 
 interface HeaderProps {
   isCustomerLoggedIn: boolean;
@@ -38,6 +40,13 @@ export function Header({
   cartCount,
 }: HeaderProps) {
   const router = useRouter();
+  const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
+  
+  const onSuccessfulLogin = () => {
+      // This is handled by the parent page, we just need to close the modal
+      setIsLoginModalOpen(false);
+      // We might need to reload or re-fetch data, parent component handles this.
+  }
 
   return (
     <header className="flex items-center justify-between w-full px-4 md:px-8 py-2 bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
@@ -90,19 +99,31 @@ export function Header({
           </>
         ) : (
            <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" onClick={() => setIsLoginModalOpen(true)}>
+                <LogIn className="mr-2 h-4 w-4" />
+                Login / Sign Up
+              </Button>
+              <Button variant="outline" asChild>
                 <Link href="/artist">
                   <Palette className="mr-2 h-4 w-4"/> For Artists
                 </Link>
               </Button>
               <Link href="/admin/login">
-                <Button variant="outline">
-                    <ShieldCheck className="mr-2 h-4 w-4" /> Admin
+                <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
+                    <ShieldCheck className="h-5 w-5" />
+                    <span className="sr-only">Admin</span>
                 </Button>
               </Link>
            </div>
         )}
       </div>
+       {!isCustomerLoggedIn && (
+        <CustomerLoginModal
+            isOpen={isLoginModalOpen}
+            onOpenChange={setIsLoginModalOpen}
+            onSuccessfulLogin={onSuccessfulLogin}
+        />
+       )}
     </header>
   );
 }
