@@ -90,7 +90,7 @@ export default function CompanyProfilePage() {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                             <div className="grid md:grid-cols-2 gap-6">
                                 <FormField control={form.control} name="companyName" render={({ field }) => (
-                                    <FormItem><FormLabel>Company Name</FormLabel><FormControl><Input placeholder="MehendiFy" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>Company Name</FormLabel><FormControl><Input placeholder="UtsavLook" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
                                 <FormField control={form.control} name="ownerName" render={({ field }) => (
                                     <FormItem><FormLabel>Owner Name</FormLabel><FormControl><Input placeholder="Your Name" {...field} /></FormControl><FormMessage /></FormItem>
@@ -123,4 +123,6 @@ export default function CompanyProfilePage() {
                     </Form>
                 </CardContent>
             </Card>
-        </
+        </>
+    );
+}
