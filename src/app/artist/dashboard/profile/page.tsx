@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Artist, ServiceArea } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { updateArtist } from '@/lib/services';
+import { getAvailableLocations, updateArtist } from '@/lib/services';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useArtistPortal } from '../layout';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { INDIA_LOCATIONS } from '@/lib/india-locations';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -86,6 +86,7 @@ export default function ArtistProfilePage() {
     const router = useRouter();
     const { toast } = useToast();
     const [tagInput, setTagInput] = React.useState('');
+    const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
     
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -108,6 +109,10 @@ export default function ArtistProfilePage() {
             referralDiscount: 10,
         },
     });
+    
+    React.useEffect(() => {
+        getAvailableLocations().then(setAvailableLocations);
+    }, []);
 
     const { fields: styleTagFields, append: appendTag, remove: removeTag } = useFieldArray({
         control: form.control,
@@ -121,6 +126,7 @@ export default function ArtistProfilePage() {
 
     const watchServices = form.watch('services');
     const watchReferralDiscount = form.watch('referralDiscount');
+    const availableStates = Object.keys(availableLocations);
 
     React.useEffect(() => {
         if (artist) {
@@ -241,7 +247,7 @@ export default function ArtistProfilePage() {
             
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-7', 'item-3', 'item-5', 'item-6']} className="w-full space-y-4">
+                    <Accordion type="multiple" defaultValue={['item-1', 'item-7', 'item-2', 'item-5', 'item-6']} className="w-full space-y-4">
                         <AccordionItem value="item-1">
                             <Card>
                                 <AccordionTrigger className="p-6 hover:no-underline">
@@ -278,10 +284,10 @@ export default function ArtistProfilePage() {
                                         <h4 className="font-semibold text-primary">Primary Location</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                              <FormField control={form.control} name="state" render={({ field }) => (
-                                                <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{Object.keys(INDIA_LOCATIONS).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                                             )} />
                                              <FormField control={form.control} name="district" render={({ field }) => (
-                                                <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{(INDIA_LOCATIONS[form.watch('state') || ''] || []).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{(availableLocations[form.watch('state') || ''] || []).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                                             )} />
                                             <FormField control={form.control} name="locality" render={({ field }) => (
                                                 <FormItem><FormLabel>Locality</FormLabel><FormControl><Input placeholder="e.g. Koregaon Park" {...field}/></FormControl><FormMessage /></FormItem>
@@ -292,6 +298,7 @@ export default function ArtistProfilePage() {
                                          <div className="space-y-4">
                                             {serviceAreaFields.map((field, index) => {
                                                 const watchedState = form.watch(`serviceAreas.${index}.state`);
+                                                const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
                                                 return (
                                                 <Card key={field.id} className="p-4 bg-muted/50">
                                                     <div className="flex justify-end mb-2">
@@ -299,10 +306,10 @@ export default function ArtistProfilePage() {
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                          <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
-                                                            <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{Object.keys(INDIA_LOCATIONS).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                                            <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                                                         )} />
                                                          <FormField control={form.control} name={`serviceAreas.${index}.district`} render={({ field }) => (
-                                                            <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{(INDIA_LOCATIONS[watchedState || ''] || []).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                                            <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedState}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{districtsForWatchedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                                                         )} />
                                                     </div>
                                                     <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
@@ -514,26 +521,7 @@ export default function ArtistProfilePage() {
                                 </AccordionContent>
                             </Card>
                         </AccordionItem>
-                        <AccordionItem value="item-4">
-                             <Card>
-                                <AccordionTrigger className="p-6 hover:no-underline">
-                                    <CardTitle className="flex items-center gap-2 text-lg"><Lock /> Change Password</CardTitle>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <CardHeader className="pt-0">
-                                        <CardDescription>Leave blank to keep your current password.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="grid md:grid-cols-2 gap-6 pt-2">
-                                        <FormField control={form.control} name="password" render={({ field }) => (
-                                            <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name="confirmPassword" render={({ field }) => (
-                                            <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-                                        )} />
-                                    </CardContent>
-                                </AccordionContent>
-                            </Card>
-                        </AccordionItem>
+                        
                     </Accordion>
                     <Button type="submit" size="lg" disabled={form.formState.isSubmitting} className="w-full">Save Profile Changes</Button>
                 </form>

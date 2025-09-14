@@ -1,4 +1,5 @@
 
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type ImagePlaceholder = {
@@ -74,6 +75,7 @@ export type Artist = {
   password?: string; // This is a temporary client-side property, it should not be stored in Firestore
   verified?: boolean;
   isFoundersClubMember?: boolean;
+  role?: string;
 };
 
 export type Customer = {

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -290,11 +291,11 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                       {step === 3 && (
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg text-primary">Step 3: Portfolio & Verification</h3>
-                            <FormField control={form.control} name="workImages" render={({ field }) => (
-                                <FormItem><FormLabel>Work Images (Required)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p><p className="text-xs text-muted-foreground">At least 1 image, max 5MB each</p><Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" multiple onChange={(e) => field.onChange(e.target.files)} /></div></FormControl><FormMessage /></FormItem>
+                            <FormField control={form.control} name="workImages" render={({ field: { onChange, ...rest } }) => (
+                                <FormItem><FormLabel>Work Images (Required)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p><p className="text-xs text-muted-foreground">At least 1 image, max 5MB each</p><Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" multiple onChange={(e) => onChange(e.target.files)} {...rest} /></div></FormControl><FormMessage /></FormItem>
                             )} />
-                             <FormField control={form.control} name="certificate" render={({ field }) => (
-                                <FormItem><FormLabel>Certificate (Optional)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload certificate</p><p className="text-xs text-muted-foreground">Max 500KB</p><Input type="file" className="absolute top-0 left-0 w-null h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => field.onChange(e.target.files)} /></div></FormControl><FormMessage /></FormItem>
+                             <FormField control={form.control} name="certificate" render={({ field: { onChange, ...rest } }) => (
+                                <FormItem><FormLabel>Certificate (Optional)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload certificate</p><p className="text-xs text-muted-foreground">Max 500KB</p><Input type="file" className="absolute top-0 left-0 w-null h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => onChange(e.target.files)} {...rest} /></div></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="agreed" render={({ field }) => (
                                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the <a href="/terms" target="_blank" className="underline">Terms & Conditions</a> of UtsavLook.</FormLabel><FormMessage /></div></FormItem>
