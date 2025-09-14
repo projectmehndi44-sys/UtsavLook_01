@@ -151,7 +151,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
             setAvailableLocations(locations);
             setCompanyProfile(profile);
             setIsLoadingLocations(false);
-        });
+        }).catch(() => setIsLoadingLocations(false));
     }
   }, [isOpen]);
   
@@ -221,7 +221,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                     <AlertTitle>Registration Submitted!</AlertTitle>
                     <AlertDescription className="space-y-4">
                       <p>Thank you for registering! Your profile is now under review by our admin team and should be approved within 24 hours.</p>
-                      <p className="font-semibold">Once approved, you will receive an email to create your password and log in.</p>
+                      <p className="font-semibold">Once approved, you will receive an email to create your password and log in. Please be sure to check your main inbox and your spam/junk folder.</p>
                        <div className="border-t pt-4 mt-4">
                             <h4 className="font-semibold">Questions? Contact Admin</h4>
                             <p className="flex items-center gap-2 mt-1"><Phone className="h-4 w-4"/> {companyProfile.phone} (WhatsApp available)</p>

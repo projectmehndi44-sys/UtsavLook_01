@@ -55,16 +55,16 @@ export default function SetPasswordPage() {
 
         } catch (err: any) {
             console.error("Set password error:", err);
+            let errorMessage = "An unknown error occurred. Please try again.";
             if (err.code === 'auth/expired-action-code') {
-                setError("This link has expired. Please request a new password reset link from the login page.");
+                errorMessage = "This link has expired. Please request a new password reset link from the login page.";
             } else if (err.code === 'auth/invalid-action-code') {
-                setError("This link is invalid or has already been used. Please request a new one from the login page.");
-            } else {
-                setError("An unknown error occurred. Please try again.");
+                errorMessage = "This link is invalid or has already been used. Please request a new one from the login page.";
             }
+             setError(errorMessage);
              toast({
                 title: "Error Setting Password",
-                description: error,
+                description: errorMessage,
                 variant: "destructive",
             });
         } finally {
