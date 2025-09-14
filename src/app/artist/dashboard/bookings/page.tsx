@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -230,7 +231,7 @@ export default function ArtistBookingsPage() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <MapPin className="w-4 h-4 text-muted-foreground"/>
-                                                <span>{booking.location}, {booking.district}</span>
+                                                <span>{booking.locality}, {booking.district}</span>
                                             </div>
                                         </div>
                                     </CardContent>

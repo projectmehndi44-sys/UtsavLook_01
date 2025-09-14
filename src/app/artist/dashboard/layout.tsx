@@ -91,7 +91,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
         router.push('/');
     }, [router, toast]);
 
-    useInactivityTimeout(handleLogout, 360000);
+    useInactivityTimeout(handleLogout, 360000); // 6 minutes
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -101,22 +101,22 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
                     if (currentArtist) {
                         setArtist(currentArtist);
                     } else {
-                        // User is authenticated but not in our 'artists' collection.
                         toast({
                             title: "Access Denied",
                             description: "This account is not registered as an artist.",
                             variant: "destructive"
                         });
-                        handleLogout(); // This will trigger a redirect via the next effect.
+                        handleLogout();
                     }
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
                     handleLogout();
                 }
             } else {
-                // No user logged in.
                 setArtist(null);
-                router.push('/artist/login');
+                 if (window.location.pathname.startsWith('/artist/dashboard')) {
+                    router.push('/artist/login');
+                 }
             }
             setIsLoading(false);
         });
@@ -130,8 +130,6 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
         return <div className="flex items-center justify-center min-h-screen">Loading Artist Portal...</div>;
     }
     
-    // If not loading and still no artist, it means they are logged out or invalid.
-    // The onAuthStateChanged listener handles redirection, so this just prevents rendering children.
     if (!artist) {
         return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
     }
@@ -149,7 +147,6 @@ export default function ArtistDashboardLayout({
     const pathname = usePathname();
     const isMobile = useIsMobile();
     
-    // Centralized state for the portal
     const [artist, setArtist] = React.useState<Artist | null>(null);
     const [artistBookings, setArtistBookings] = React.useState<Booking[]>([]);
     const [notifications, setNotifications] = React.useState<Notification[]>([]);
@@ -175,7 +172,6 @@ export default function ArtistDashboardLayout({
         
         const db = getFirestore(app);
 
-        // Fetch only bookings relevant to this artist
         const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
         const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
             const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
@@ -183,7 +179,6 @@ export default function ArtistDashboardLayout({
         }, bookingsQuery);
 
 
-        // Fetch only notifications relevant to this artist
         const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
         const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
             const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -219,8 +214,8 @@ export default function ArtistDashboardLayout({
         const allLinks = [...mainNavLinks, ...sidebarNavLinks];
         const sortedLinks = allLinks.sort((a, b) => b.href.length - a.href.length);
         const currentLink = sortedLinks.find(l => pathname.startsWith(l.href));
+        if (pathname === '/artist/dashboard') return 'Dashboard';
         if (currentLink) return currentLink.label;
-        if (pathname.startsWith('/artist/dashboard')) return 'Dashboard';
         return 'Dashboard';
     }
 

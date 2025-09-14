@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,9 +17,9 @@ interface PackagesProps {
 
 const getServiceIcon = (service: MasterServicePackage['service']) => {
     switch(service) {
-        case 'Mehndi': return <MehndiIcon className="w-3.5 h-3.5"/>;
-        case 'Makeup': return <MakeupIcon className="w-3.5 h-3.5"/>;
-        case 'Photography': return <PhotographyIcon className="w-3.5 h-3.5"/>;
+        case 'mehndi': return <MehndiIcon className="w-3.5 h-3.5"/>;
+        case 'makeup': return <MakeupIcon className="w-3.5 h-3.5"/>;
+        case 'photography': return <PhotographyIcon className="w-3.5 h-3.5"/>;
         default: return null;
     }
 }

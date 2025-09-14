@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type ImagePlaceholder = {
@@ -110,7 +111,7 @@ export type Booking = {
   serviceDates: Date[];
   state: string;
   district: string;
-  location: string; // Locality/Area
+  locality: string;
   mapLink?: string;
   note?: string;
   instagramId?: string;
