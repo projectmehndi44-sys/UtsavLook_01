@@ -2,13 +2,13 @@
 'use client';
 
 import * as React from 'react';
-import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, type User, createUserWithEmailAndPassword } from 'firebase/auth';
 import { app } from '@/lib/firebase';
-import { getTeamMembers, saveTeamMembers } from '@/lib/services';
+import { getTeamMembers, saveTeamMembers, getCustomerByEmail } from '@/lib/services';
 import type { TeamMember, Permissions } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
 import { initialTeamMembers } from '@/lib/team-data';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+
 
 interface AdminAuthContextType {
     user: TeamMember | null;
@@ -28,29 +28,26 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
 
     React.useEffect(() => {
         const initializeAdmin = async () => {
-             try {
-                const teamMembers = await getTeamMembers();
+            try {
+                let teamMembers = await getTeamMembers();
                 const superAdmin = teamMembers.find(m => m.role === 'Super Admin');
 
                 if (superAdmin && superAdmin.id === 'user_001') {
-                     // Check if the user exists in Firebase Auth
                     const defaultAdminEmail = 'utsavlook01@gmail.com';
-                     try {
-                        // This will create the user if they don't exist.
+                    try {
                         const userCredential = await createUserWithEmailAndPassword(auth, defaultAdminEmail, 'Abhi@204567');
                         const uid = userCredential.user.uid;
                         
-                        // Update the team member with the correct Firebase UID
                         const updatedMembers = teamMembers.map(m => 
-                            m.id === 'user_001' ? { ...m, id: uid } : m
+                            m.id === 'user_001' ? { ...m, id: uid, username: defaultAdminEmail } : m
                         );
                         await saveTeamMembers(updatedMembers);
-                        console.log("Super Admin user created in Firebase Auth and database record updated.");
-
+                         console.log("Super Admin user created and database record updated.");
                     } catch (error: any) {
-                        if (error.code === 'auth/email-already-exists') {
-                            // User already exists, which is fine. The logic will proceed to check onAuthStateChanged.
-                            console.log("Super Admin user already exists in Firebase Auth.");
+                        if (error.code === 'auth/email-already-in-use') {
+                            console.log("Super Admin email already exists in Auth. Attempting to sync UID.");
+                             // This is tricky without signing in. We will rely on the onAuthStateChanged logic to fix this.
+                             // For a more direct fix, you would need to sign in to get the UID.
                         } else {
                             console.error("Error creating superadmin in auth:", error);
                         }
@@ -66,10 +63,17 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
             if (firebaseUser) {
                 try {
-                    const teamMembers = await getTeamMembers();
-                    const memberProfile = teamMembers.find(m => m.id === firebaseUser.uid);
+                    let teamMembers = await getTeamMembers();
+                    let memberProfile = teamMembers.find(m => m.id === firebaseUser.uid || m.username === firebaseUser.email);
                     
                     if (memberProfile) {
+                        // Sync UID if it was a placeholder or mismatched
+                        if (memberProfile.id !== firebaseUser.uid) {
+                            memberProfile.id = firebaseUser.uid;
+                            const updatedMembers = teamMembers.map(m => m.username === memberProfile.username ? memberProfile : m);
+                            await saveTeamMembers(updatedMembers);
+                            console.log("Synced Super Admin UID.");
+                        }
                         setUser(memberProfile);
                     } else {
                         await auth.signOut();
