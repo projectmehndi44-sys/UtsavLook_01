@@ -5,12 +5,12 @@ import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/fi
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
-  projectId: "utsavlook",
-  appId: "1:453887083411:web:e459c513a80c98f98c8a77",
-  storageBucket: "utsavlook.appspot.com",
-  apiKey: "YOUR_API_KEY",
-  authDomain: "utsavlook.in",
-  messagingSenderId: "453887083411",
+  "projectId": "studio-163529036-f9a8c",
+  "appId": "1:240526745218:web:807f89ba03731495cf9e9b",
+  "storageBucket": "studio-163529036-f9a8c.firebasestorage.app",
+  "apiKey": "AIzaSyBLauxXUk2zR5VBRrl2_9PBpDJLMB9gGOI",
+  "authDomain": "studio-163529036-f9a8c.firebaseapp.com",
+  "messagingSenderId": "240526745218"
 };
 
 
