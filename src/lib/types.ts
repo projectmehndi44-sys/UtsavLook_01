@@ -8,24 +8,28 @@ export interface Artist {
     phone: string;
     profilePicture: string; // URL to image in Firebase Storage
     workImages: string[]; // URLs
-    services: string[]; // e.g., "mehndi", "makeup"
-    serviceOfferings: ArtistServiceOffering[];
+    services: ("mehndi" | "makeup" | "photography")[];
+    serviceOfferings?: ArtistServiceOffering[];
     location: string; // City, State
-    charges: Map<string, number>;
+    charges?: { [key: string]: number };
+    charge?: number; // Fallback for base charge
     rating: number;
     styleTags: string[];
-    unavailableDates: string[]; // ISO date strings
-    reviews: Review[];
+    unavailableDates?: string[]; // ISO date strings
+    reviews?: Review[];
     state?: string;
     district?: string;
     locality?: string;
     servingAreas?: string;
+    verified?: boolean;
+    isFoundersClubMember?: boolean;
 }
 
 export interface ArtistServiceOffering {
     servicePackageId: string;
     tierName: string; // e.g., "Normal", "Premium"
     price: number;
+    isEnabled?: boolean;
 }
 
 export interface Review {
@@ -43,13 +47,14 @@ export interface Customer {
     name: string;
     phone: string;
     email?: string;
+    fcmToken?: string; // Firebase UID
 }
 
 
 // bookings collection:
 export interface Booking {
     id: string;
-    artistIds: string[];
+    artistIds: (string | null)[];
     customerId: string;
     customerName: string;
     serviceAddress: string;
@@ -60,6 +65,7 @@ export interface Booking {
     eventDate: Date;
     completionCode: string;
     items: CartItem[];
+    district?: string; // For artist assignment logic
 }
 
 
