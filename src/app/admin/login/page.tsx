@@ -20,7 +20,7 @@ import { getTeamMembers, saveTeamMembers } from '@/lib/services';
 import { teamMembers as initialTeamMembers } from '@/lib/team-data';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { TeamMember } from '@/lib/types';
-import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertTitle, AlertDescription as AlertDescriptionComponent } from '@/components/ui/alert';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -121,8 +121,11 @@ export default function AdminLoginPage() {
 
     const handleCreateSuperAdmin = async () => {
         const initialAdmin = initialTeamMembers[0];
+        // This password is now hardcoded. This is a security risk.
+        const insecurePassword = 'Abhi@204567';
+
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, initialAdmin.username, `temp-password-${Date.now()}`);
+            const userCredential = await createUserWithEmailAndPassword(auth, initialAdmin.username, insecurePassword);
             const authUser = userCredential.user;
             
             const newAdminMember: TeamMember = {
@@ -138,13 +141,11 @@ export default function AdminLoginPage() {
             const updatedMembers = [...existingMembers, newAdminMember];
             await saveTeamMembers(updatedMembers);
             
-            await sendPasswordResetEmail(auth, initialAdmin.username);
-
             setSuperAdminExists(true);
             
             toast({
                 title: "Super Admin Account Created!",
-                description: `User ${newAdminMember.username} created. A password creation email has been sent to them.`,
+                description: `User ${newAdminMember.username} created directly with the specified password. Please log in.`,
                 duration: 9000,
             });
 
@@ -240,10 +241,12 @@ export default function AdminLoginPage() {
                                 <CardDescription>The primary Super Admin account needs to be created.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Alert>
-                                    <AlertTitle className="text-xs">
-                                        Clicking this will create the user <strong>{initialTeamMembers[0].username}</strong> and send them an email to create a secure password.
-                                    </AlertTitle>
+                                <Alert variant="destructive">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle>Security Warning</AlertTitle>
+                                    <AlertDescriptionComponent>
+                                       This will create the superadmin with a hardcoded password. This is insecure and not recommended for production.
+                                    </AlertDescriptionComponent>
                                 </Alert>
                             </CardContent>
                             <CardFooter>
