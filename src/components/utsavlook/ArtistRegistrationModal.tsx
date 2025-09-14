@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getAvailableLocations, createPendingArtist } from '@/lib/services';
 import { Progress } from '../ui/progress';
 import { v4 as uuidv4 } from 'uuid';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 const MAX_WORK_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_CERTIFICATE_SIZE = 500 * 1024; // 500KB
@@ -240,7 +240,9 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <Progress value={(step / totalSteps) * 100} className="w-full mb-4" />
                 <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4 space-y-6">
-                   {isLoadingLocations ? <p>Loading available locations...</p> : Object.keys(availableLocations).length === 0 ? (
+                   {isLoadingLocations ? (
+                       <Card><CardContent className="p-4">Loading available locations...</CardContent></Card>
+                   ) : Object.keys(availableLocations).length === 0 ? (
                         <Alert variant="destructive">
                             <Terminal className="h-4 w-4" />
                             <AlertTitle>Registration Currently Unavailable</AlertTitle>
