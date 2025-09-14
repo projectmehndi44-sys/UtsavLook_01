@@ -1,18 +1,20 @@
+
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { useToast } from './use-toast';
 
-const useInactivityTimeout = (logoutAction: () => void, timeout = 300000) => { // Default to 5 minutes
+const useInactivityTimeout = (logoutAction: () => void, timeout = 360000) => { // Default to 6 minutes
     const { toast } = useToast();
-    const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    const timeoutId = React.useRef<NodeJS.Timeout>();
 
     const resetTimer = React.useCallback(() => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
+        if (timeoutId.current) {
+            clearTimeout(timeoutId.current);
         }
-        timeoutRef.current = setTimeout(() => {
+        
+        timeoutId.current = setTimeout(() => {
+             // Use a stable toast function call inside the timeout
             toast({
                 title: "Session Expired",
                 description: "You have been logged out due to inactivity.",
@@ -23,33 +25,28 @@ const useInactivityTimeout = (logoutAction: () => void, timeout = 300000) => { /
     }, [timeout, logoutAction, toast]);
 
     React.useEffect(() => {
-        // Do not run this hook on the server
-        if (typeof window === 'undefined') {
-            return;
-        }
-
-        const events = ['mousemove', 'keydown', 'click', 'scroll'];
+        const events: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
         
         const eventListener = () => {
             resetTimer();
         };
 
-        // Set up event listeners
+        // Set up event listeners for user activity
         events.forEach(event => window.addEventListener(event, eventListener));
         
         // Initialize timer
         resetTimer();
 
-        // Cleanup
+        // Cleanup function to remove event listeners and clear timeout
         return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
+            if (timeoutId.current) {
+                clearTimeout(timeoutId.current);
             }
             events.forEach(event => window.removeEventListener(event, eventListener));
         };
     }, [resetTimer]);
 
-    return null;
+    return null; // This hook does not render anything
 };
 
 export { useInactivityTimeout };
