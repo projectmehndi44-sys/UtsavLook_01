@@ -85,7 +85,7 @@ const ServiceAreaFields = ({ form, availableLocations }: { form: UseFormReturn<R
                 const districtsForSelectedState = watchedState ? (availableLocations[watchedState] || []) : [];
                 return (
                     <Card key={field.id} className="p-4 bg-muted/50 relative">
-                        {fields.length > 1 && <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
+                         {fields.length > 1 && <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
                                 <FormItem>
@@ -108,10 +108,10 @@ const ServiceAreaFields = ({ form, availableLocations }: { form: UseFormReturn<R
                                 </FormItem>
                             )} />
                         </div>
-                        <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
+                         <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
                             <FormItem className="mt-4">
                                 <FormLabel>Localities Served</FormLabel>
-                                <FormControl><Input placeholder="e.g., Bandra, Juhu, Andheri" {...field}/></FormControl>
+                                <FormControl><Input placeholder="e.g., Koregaon Park, Viman Nagar" {...field}/></FormControl>
                                 <FormDescription>Enter a comma-separated list.</FormDescription>
                                 <FormMessage />
                             </FormItem>
@@ -160,10 +160,14 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         setIsLoadingLocations(true);
         getAvailableLocations().then(locations => {
             setAvailableLocations(locations);
-             if (form.getValues('serviceAreas').length === 0) {
-              form.setValue('serviceAreas', [{ id: uuidv4(), state: '', district: '', localities: '' }]);
-            }
             setIsLoadingLocations(false);
+            // Initialize the form with one service area only after locations are loaded
+            if (form.getValues('serviceAreas').length === 0) {
+              form.reset({
+                ...form.getValues(),
+                serviceAreas: [{ id: uuidv4(), state: '', district: '', localities: '' }],
+              });
+            }
         });
     }
   }, [isOpen, form]);
