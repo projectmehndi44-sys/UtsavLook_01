@@ -2,8 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
@@ -16,25 +15,19 @@ import { Textarea } from "../ui/textarea";
 const bookingFormSchema = z.object({
     eventType: z.string().min(2, { message: "Event type is required." }),
     eventDate: z.date({ required_error: "Event date is required." }),
+    serviceDates: z.array(z.date()).min(1, { message: "At least one service date is required." }),
     address: z.string().min(10, { message: "Please enter a valid address." }),
     notes: z.string().optional(),
 });
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
-export const BookingForm = () => {
-    const form = useForm<BookingFormValues>({
-        resolver: zodResolver(bookingFormSchema),
-        defaultValues: {
-            eventType: "",
-            address: "",
-            notes: "",
-        }
-    });
+interface BookingFormProps {
+    form: UseFormReturn<BookingFormValues>;
+}
 
-    const onSubmit = (data: BookingFormValues) => {
-        console.log(data);
-    };
+
+export const BookingForm = ({ form }: BookingFormProps) => {
 
     return (
         <Card className="shadow-lg rounded-lg">
@@ -44,7 +37,7 @@ export const BookingForm = () => {
             </CardHeader>
             <CardContent>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
                                 control={form.control}
@@ -64,7 +57,7 @@ export const BookingForm = () => {
                                 name="eventDate"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
-                                        <FormLabel>Event Date</FormLabel>
+                                        <FormLabel>Main Event Date</FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <FormControl>
@@ -99,6 +92,47 @@ export const BookingForm = () => {
                                 )}
                             />
                         </div>
+
+                        <FormField
+                            control={form.control}
+                            name="serviceDates"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Service Delivery Dates</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full pl-3 text-left font-normal",
+                                                        !field.value?.length && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value?.length > 0 ? (
+                                                        field.value.map(d => format(d, "PPP")).join(', ')
+                                                    ) : (
+                                                        <span>Select service dates</span>
+                                                    )}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="multiple"
+                                                selected={field.value}
+                                                onSelect={field.onChange}
+                                                disabled={(date) => date < new Date()}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
 
                          <FormField
                             control={form.control}

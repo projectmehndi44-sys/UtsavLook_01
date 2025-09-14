@@ -11,8 +11,20 @@ import { Button } from '@/components/ui/button';
 import { useArtistPortal } from './layout';
 import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie, Cell } from 'recharts';
 import { BarChart as BarChartComponent, PieChart as PieChartComponent } from 'recharts';
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
+import { Timestamp } from 'firebase/firestore';
 
+
+function getSafeDate(date: any): Date {
+    if (!date) return new Date();
+    if (date instanceof Date && isValid(date)) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') {
+        const parsed = parseISO(date);
+        if (isValid(parsed)) return parsed;
+    }
+    return new Date();
+}
 
 export default function ArtistDashboardPage() {
     const { artist, artistBookings } = useArtistPortal();
@@ -26,7 +38,7 @@ export default function ArtistDashboardPage() {
     const totalRevenue = completedBookings.reduce((sum, b) => sum + b.amount, 0);
     const totalBookings = artistBookings.length;
     const averageRating = artist.rating;
-    const upcomingBookingsCount = artistBookings.filter(b => b.status === 'Confirmed' && b.eventDate.toDate() > new Date()).length;
+    const upcomingBookingsCount = artistBookings.filter(b => b.status === 'Confirmed' && getSafeDate(b.eventDate) > new Date()).length;
 
     // Recent activity data
     const recentBookings = [...artistBookings].slice(0, 5);
@@ -46,7 +58,8 @@ export default function ArtistDashboardPage() {
 
     // 1. Bookings over time
     const monthlyData = artistBookings.reduce((acc, booking) => {
-        const month = booking.date.toDate().toLocaleString('default', { month: 'short', year: 'numeric' });
+        const date = getSafeDate(booking.eventDate);
+        const month = format(date, 'MMM yyyy');
         if (!acc[month]) {
             acc[month] = { name: month, bookings: 0 };
         }
@@ -58,14 +71,15 @@ export default function ArtistDashboardPage() {
 
     // 2. Service Popularity
     const serviceData = artistBookings.reduce((acc, booking) => {
-        const serviceType = booking.items.map(i => i.servicePackage.name).join(', ');
-        
-        const existing = acc.find(item => item.name === serviceType);
-        if (existing) {
-            existing.value += 1;
-        } else {
-            acc.push({ name: serviceType, value: 1 });
-        }
+        booking.items.forEach(item => {
+            const serviceType = item.servicePackage.name;
+            const existing = acc.find(item => item.name === serviceType);
+            if (existing) {
+                existing.value += 1;
+            } else {
+                acc.push({ name: serviceType, value: 1 });
+            }
+        });
         return acc;
     }, [] as {name: string, value: number}[]);
 
@@ -188,7 +202,7 @@ export default function ArtistDashboardPage() {
                             {recentBookings.length > 0 ? recentBookings.map(booking => (
                                 <TableRow key={booking.id}>
                                     <TableCell>{booking.customerName}</TableCell>
-                                    <TableCell>{booking.date.toDate().toLocaleDateString()}</TableCell>
+                                    <TableCell>{getSafeDate(booking.eventDate).toLocaleDateString()}</TableCell>
                                     <TableCell>{booking.items.map(i => i.servicePackage.name).join(', ')}</TableCell>
                                     <TableCell>
                                         <Badge variant={getStatusVariant(booking.status)}>{booking.status}</Badge>

@@ -26,8 +26,8 @@ const getServiceIcon = (service: Artist['services'][number]) => {
 }
 
 export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
-  const primaryService = artist.services[0];
-  const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
+  const primaryService = artist.services?.[0];
+  const baseCharge = (primaryService && artist.charges?.[primaryService]) || artist.charge || 0;
 
 
   return (
@@ -35,7 +35,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
       <CardHeader className="p-0 relative">
         <Carousel className="w-full">
           <CarouselContent>
-            {artist.workImages.map((src, index) => (
+            {(artist.workImages || []).map((src, index) => (
               <CarouselItem key={index}>
                 <div className="aspect-[4/3]">
                    <Image
@@ -75,7 +75,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
           <span>{artist.location}</span>
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
-          {artist.services.map((service) => (
+          {(artist.services || []).map((service) => (
             <Badge key={service} variant="secondary" className="gap-1.5 pl-2">
               {getServiceIcon(service)}
               <span className="capitalize">{service}</span>

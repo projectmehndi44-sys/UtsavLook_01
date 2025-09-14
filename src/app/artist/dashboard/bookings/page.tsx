@@ -118,7 +118,6 @@ const BookingDetailsModal = ({ booking, isOpen, onOpenChange, platformFeePercent
                             <p className="text-xs text-muted-foreground">This is an estimate. Final payout will be processed by admin after job completion.</p>
                         </CardFooter>
                     </Card>
-
                 </div>
                  <DialogClose asChild>
                     <Button type="button" variant="secondary" className="w-full">Close</Button>

@@ -84,14 +84,7 @@ export type Booking = {
   customerName: string;
   customerContact?: string;
   serviceAddress: string;
-  date: Timestamp; // For backward compatibility & main date
-  serviceDates: Timestamp[]; // For multi-day bookings
-  items: {
-    id: string;
-    servicePackage: MasterServicePackage;
-    selectedTier: PackageCategory;
-    price: number;
-  }[];
+  items: CartItem[];
   amount: number;
   status: 'Completed' | 'Confirmed' | 'Cancelled' | 'Pending Approval' | 'Needs Assignment' | 'Disputed' | 'Pending Confirmation';
   paidOut?: boolean;
@@ -99,7 +92,8 @@ export type Booking = {
   
   // New detailed fields
   eventType: string;
-  eventDate: Timestamp;
+  eventDate: Date;
+  serviceDates: Date[];
   state: string;
   district: string;
   location: string; // Locality/Area

@@ -10,6 +10,17 @@ import { getBookings } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 
 
+function getSafeDate(date: any): string {
+    if (!date) return 'N/A';
+    if (date instanceof Timestamp) {
+        return date.toDate().toLocaleDateString();
+    }
+    if (date instanceof Date) {
+        return date.toLocaleDateString();
+    }
+    return 'Invalid Date';
+}
+
 interface NotificationCardProps {
     notification: Notification;
     allBookings: Booking[];
@@ -26,18 +37,6 @@ function NotificationCard({ notification, allBookings, onMarkAsRead }: Notificat
         }
         router.push('/artist/dashboard/bookings');
     }
-    
-    const getSafeDate = (date: Date | Timestamp | undefined): string => {
-        if (!date) return 'N/A';
-        if (date instanceof Timestamp) {
-            return date.toDate().toLocaleDateString();
-        }
-        if (date instanceof Date) {
-            return date.toLocaleDateString();
-        }
-        return 'Invalid Date';
-    }
-
 
     return (
         <div 

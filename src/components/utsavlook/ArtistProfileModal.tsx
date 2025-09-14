@@ -91,7 +91,7 @@ export function ArtistProfileModal({ artist, isOpen, onOpenChange }: ArtistProfi
               <span>{artist.location}</span>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
-              {artist.services.map((service) => (
+              {(artist.services || []).map((service) => (
                 <Badge key={service} variant="secondary" className="gap-1.5 pl-2">
                   {getServiceIcon(service)}
                   <span className="capitalize">{service}</span>

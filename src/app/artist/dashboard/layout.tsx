@@ -21,8 +21,16 @@ import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 import { signOutUser } from '@/lib/firebase';
 import { onAuthStateChanged, getAuth, User as FirebaseUser } from 'firebase/auth';
 import { app } from '@/lib/firebase';
-import { collection, query, where, getFirestore } from 'firebase/firestore';
+import { collection, query, where, getFirestore, Timestamp } from 'firebase/firestore';
 
+
+function getSafeDate(date: any): Date {
+    if (!date) return new Date();
+    if (date instanceof Date) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') return new Date(date);
+    return new Date();
+}
 
 // 1. Create a context for the artist portal
 interface ArtistPortalContextType {
@@ -83,7 +91,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
         router.push('/');
     }, [router, toast]);
 
-    useInactivityTimeout(handleLogout);
+    useInactivityTimeout(handleLogout, 300000);
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -165,7 +173,7 @@ export default function ArtistDashboardLayout({
         // Fetch only bookings relevant to this artist
         const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
         const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
-            const sortedBookings = artistSpecificBookings.sort((a,b) => b.date.toMillis() - a.date.toMillis());
+            const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
             setArtistBookings(sortedBookings);
         }, bookingsQuery);
 

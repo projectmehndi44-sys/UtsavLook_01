@@ -136,16 +136,15 @@ export default function AdminPage() {
     const bookingsChartData = Object.values(monthlyData).sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
     const serviceData = bookings.reduce((acc, booking) => {
-        const serviceNames = booking.items.map(i => i.servicePackage.service).join(', ');
-        const serviceType = serviceNames.toLowerCase().includes('mehndi') && serviceNames.toLowerCase().includes('makeup') 
-            ? 'Mehndi & Makeup'
-            : serviceNames.toLowerCase().includes('mehndi') ? 'Mehndi' 
-            : serviceNames.toLowerCase().includes('makeup') ? 'Makeup' 
-            : 'Other';
-
-        const existing = acc.find(item => item.name === serviceType);
-        if (existing) existing.value += 1;
-        else acc.push({ name: serviceType, value: 1 });
+        booking.items.forEach(item => {
+            const serviceType = item.servicePackage.service;
+            const existing = acc.find(item => item.name === serviceType);
+            if (existing) {
+                existing.value += 1;
+            } else {
+                acc.push({ name: serviceType, value: 1 });
+            }
+        });
         return acc;
     }, [] as {name: string, value: number}[]);
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];

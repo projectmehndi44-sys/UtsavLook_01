@@ -26,7 +26,7 @@ interface ServiceSelectionModalProps {
   artists: Artist[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddToCart: (item: Omit<CartItem, 'id' | 'price'> & { price?: number }) => void;
+  onAddToCart: (item: Omit<CartItem, 'id'> & { price?: number }) => void;
 }
 
 export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, onAddToCart }: ServiceSelectionModalProps) {
@@ -117,8 +117,8 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
   const ArtistsForTier = ({ category }: { category: PackageCategory }) => {
     const offeringArtists = artists.filter(artist =>
         artist.serviceOfferings?.some(offering =>
-            offering.servicePackageId === service.id &&
-            offering.tierName === category.name
+            offering.masterPackageId === service.id &&
+            offering.categoryName === category.name
         )
     );
 
@@ -139,7 +139,7 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                  <div className="space-y-3 pr-4">
                  {offeringArtists.length > 0 ? (
                     offeringArtists.map(artist => {
-                        const offering = artist.serviceOfferings?.find(o => o.servicePackageId === service.id && o.tierName === category.name);
+                        const offering = artist.serviceOfferings?.find(o => o.masterPackageId === service.id && o.categoryName === category.name);
                         if (!offering) return null;
                         return (
                              <div key={artist.id} className="flex items-center justify-between p-2 border rounded-lg hover:bg-muted/50">
@@ -158,10 +158,10 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="text-right">
-                                        <p className="font-bold flex items-center"><IndianRupee className="w-3.5 h-3.5 mr-0.5"/>{offering.price.toLocaleString()}</p>
+                                        <p className="font-bold flex items-center"><IndianRupee className="w-3.5 h-3.5 mr-0.5"/>{offering.artistPrice.toLocaleString()}</p>
                                         <p className="text-xs text-muted-foreground">Total Price</p>
                                     </div>
-                                    <Button size="sm" onClick={() => handleArtistBooking(artist, offering.price)}>Select</Button>
+                                    <Button size="sm" onClick={() => handleArtistBooking(artist, offering.artistPrice)}>Select</Button>
                                 </div>
                             </div>
                         )

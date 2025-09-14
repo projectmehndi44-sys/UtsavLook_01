@@ -7,10 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
-import { formatISO, isSameDay, parseISO } from 'date-fns';
+import { formatISO, isSameDay, parseISO, isValid } from 'date-fns';
 import { useArtistPortal } from '../layout';
 import { updateArtist } from '@/lib/services';
+import { Timestamp } from 'firebase/firestore';
 
+function getSafeDate(date: any): Date {
+    if (!date) return new Date();
+    if (date instanceof Date && isValid(date)) return date;
+    if (date instanceof Timestamp) return date.toDate();
+    if (typeof date === 'string') {
+        const parsed = parseISO(date);
+        if (isValid(parsed)) return parsed;
+    }
+    return new Date();
+}
 
 export default function ArtistAvailabilityPage() {
     const { artist, setArtist, artistBookings } = useArtistPortal();
@@ -28,7 +39,7 @@ export default function ArtistAvailabilityPage() {
     const bookedDates = React.useMemo(() => {
         return artistBookings
             .filter(b => b.status === 'Confirmed' || b.status === 'Completed')
-            .flatMap(b => b.serviceDates.map(d => d.toDate()));
+            .flatMap(b => b.serviceDates.map(d => getSafeDate(d)));
     }, [artistBookings]);
 
     const handleSave = async () => {

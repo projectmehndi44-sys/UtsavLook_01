@@ -58,19 +58,15 @@ export default function AnalyticsPage() {
 
     // 2. Service Popularity
     const serviceData = bookings.reduce((acc, booking) => {
-        const serviceNames = booking.items.map(i => i.servicePackage.service).join(', ');
-        const serviceType = serviceNames.toLowerCase().includes('mehndi') && serviceNames.toLowerCase().includes('makeup') 
-            ? 'Mehndi & Makeup'
-            : serviceNames.toLowerCase().includes('mehndi') ? 'Mehndi' 
-            : serviceNames.toLowerCase().includes('makeup') ? 'Makeup'
-            : 'Other';
-
-        const existing = acc.find(item => item.name === serviceType);
-        if (existing) {
-            existing.value += 1;
-        } else {
-            acc.push({ name: serviceType, value: 1 });
-        }
+        booking.items.forEach(item => {
+            const serviceType = item.servicePackage.service; // 'mehndi', 'makeup', etc.
+            const existing = acc.find(item => item.name === serviceType);
+            if (existing) {
+                existing.value += 1;
+            } else {
+                acc.push({ name: serviceType, value: 1 });
+            }
+        });
         return acc;
     }, [] as {name: string, value: number}[]);
 
