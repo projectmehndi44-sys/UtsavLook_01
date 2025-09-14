@@ -1,4 +1,5 @@
 
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
@@ -85,14 +86,14 @@ const signInWithGoogle = (): Promise<User> => {
   return signInWithPopup(auth, googleProvider).then(result => result.user);
 };
 
-const setupRecaptcha = (containerId: string): RecaptchaVerifier => {
-    if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
+const setupRecaptcha = (button: HTMLButtonElement): RecaptchaVerifier => {
+    if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
     }
-    const verifier = new RecaptchaVerifier(auth, containerId, {
+    const verifier = new RecaptchaVerifier(auth, button, {
         'size': 'invisible',
         'callback': (response: any) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
+            // reCAPTCHA solved.
         },
     });
     return verifier;

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -60,6 +61,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
   const [isEmailLinkSent, setIsEmailLinkSent] = React.useState(false);
+  const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
 
 
   const phoneForm = useForm<PhoneLoginFormValues>({
@@ -74,7 +76,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
 
   const handlePhoneVerify = async () => {
     const phone = phoneForm.getValues('phone');
-    if (!/^\d{10}$/.test(phone)) {
+    if (!/^\d{10}$/.test(phone) || !sendOtpButtonRef.current) {
         phoneForm.setError('phone', { type: 'manual', message: 'Please enter a valid 10-digit phone number to verify.' });
         return;
     }
@@ -84,11 +86,10 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     setIsNewUser(!existingCustomer);
     
     try {
-      if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = setupRecaptcha('recaptcha-container-login');
-          await window.recaptchaVerifier.render(); // Explicitly render the verifier
-      }
-      const confirmationResult = await sendOtp(phone, window.recaptchaVerifier);
+      // Pass the button ref to setupRecaptcha
+      const verifier = setupRecaptcha(sendOtpButtonRef.current);
+      const confirmationResult = await sendOtp(phone, verifier);
+
       window.confirmationResult = confirmationResult;
       setIsOtpSent(true);
       toast({
@@ -99,7 +100,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
        console.error("OTP Error:", error);
        toast({
            title: 'Failed to Send OTP',
-           description: 'Could not send OTP. Please check your phone number or try again later.',
+           description: 'Could not send OTP. Please ensure you are not using a test number and try again.',
            variant: 'destructive',
        });
     } finally {
@@ -250,7 +251,6 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
             Continue with your phone, email, or Google account.
           </DialogDescription>
         </DialogHeader>
-        <div id="recaptcha-container-login"/>
         
         <Tabs defaultValue="phone" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -267,7 +267,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                                 <FormControl>
                                     <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent} />
                                 </FormControl>
-                                <Button type="button" onClick={handlePhoneVerify} disabled={isSendingOtp || isOtpSent}>
+                                <Button ref={sendOtpButtonRef} type="button" onClick={handlePhoneVerify} disabled={isSendingOtp || isOtpSent}>
                                     {isSendingOtp ? 'Sending...' : (isOtpSent ? 'Sent' : 'Send OTP')}
                                 </Button>
                                 </div>
