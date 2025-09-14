@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Home, AlertTriangle } from 'lucide-react';
+import { Home, AlertTriangle, KeyRound } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
@@ -115,6 +115,24 @@ export default function AdminLoginPage() {
             let description = 'An error occurred. Please try again.';
              if (error.code === 'auth/user-not-found') {
                 description = 'This email address is not registered in our system.';
+             }
+            toast({ title: 'Error', description, variant: 'destructive' });
+        }
+    };
+    
+    const handleSuperAdminPasswordReset = async () => {
+        const adminEmail = "utsavlook01@gmail.com";
+        try {
+            await sendPasswordResetEmail(auth, adminEmail);
+            toast({
+                title: 'Superadmin Reset Email Sent',
+                description: `A password reset link has been sent to ${adminEmail}. Please check your inbox to set a new password.`,
+                duration: 9000,
+            });
+        } catch (error: any) {
+            let description = 'An error occurred. Please try again.';
+             if (error.code === 'auth/user-not-found') {
+                description = `The user ${adminEmail} does not exist. Please create the account first.`;
              }
             toast({ title: 'Error', description, variant: 'destructive' });
         }
@@ -252,6 +270,18 @@ export default function AdminLoginPage() {
                             </CardContent>
                             <CardFooter>
                                 <Button className="w-full" onClick={handleCreateSuperAdmin}>Create Super Admin Account</Button>
+                            </CardFooter>
+                        </Card>
+                    )}
+
+                     {superAdminExists && (
+                        <Card className="mt-6 bg-blue-50 border-blue-200">
+                           <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-base"><KeyRound className="text-blue-600"/> Admin Recovery</CardTitle>
+                                <CardDescription>If you're having trouble logging in, you can securely reset the superadmin password.</CardDescription>
+                            </CardHeader>
+                            <CardFooter>
+                                <Button variant="secondary" className="w-full" onClick={handleSuperAdminPasswordReset}>Reset Superadmin Password</Button>
                             </CardFooter>
                         </Card>
                     )}
