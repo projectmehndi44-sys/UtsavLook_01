@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { GoogleIcon } from '../icons';
-import { signInWithGoogle, setupRecaptcha, sendOtp, sendSignInLinkToEmail } from '@/lib/firebase';
+import { auth, signInWithGoogle, setupRecaptcha, sendOtp, sendSignInLinkToEmail } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { getCustomerByPhone, getCustomerByEmail, createCustomer } from '@/lib/services';
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
