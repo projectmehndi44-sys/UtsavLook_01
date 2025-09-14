@@ -14,4 +14,8 @@ export default function SettingsPage() {
 
     // Render a loading state or null while redirecting
     return (
-        <div className="flex items-center justify-center min
+        <div className="flex items-center justify-center min-h-full">
+            <p>Redirecting...</p>
+        </div>
+    );
+}

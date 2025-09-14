@@ -103,9 +103,9 @@ export default function ProfileManagementPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                        <Form {...form}>
+                    <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                <FormField control={form.control} name="name" render={({ field }) => (
+                            <FormField control={form.control} name="name" render={({ field }) => (
                                 <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="e.g., Jane Doe" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={form.control} name="username" render={({ field }) => (
@@ -113,7 +113,12 @@ export default function ProfileManagementPage() {
                             )} />
                             
                             <Button type="submit" disabled={isSaving} className="w-full">
-                                    {isSaving ? 'Saving...' : <><Save className="mr-2 h-4 w-4"/> Save Changes</>}
+                                {isSaving ? 'Saving...' : <><Save className="mr-2 h-4 w-4"/> Save Changes</>}
                             </Button>
                         </form>
-                    
+                    </Form>
+                </CardContent>
+            </Card>
+        </>
+    );
+}

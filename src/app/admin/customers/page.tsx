@@ -114,4 +114,6 @@ export default function CustomerManagementPage() {
                     </Table>
                 </CardContent>
             </Card>
-        
+        </>
+    );
+}
