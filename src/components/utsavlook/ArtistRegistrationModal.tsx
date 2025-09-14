@@ -27,7 +27,6 @@ import { Progress } from '../ui/progress';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent } from '@/components/ui/card';
 
-const MAX_WORK_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_CERTIFICATE_SIZE = 500 * 1024; // 500KB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
@@ -52,13 +51,6 @@ const registrationSchema = z.object({
     message: "You have to select at least one service.",
   }),
   serviceAreas: z.array(serviceAreaSchema).min(1, "You must add at least one service area."),
-  workImages: z.any()
-    .refine((files) => files?.length >= 1, "At least one work image is required.")
-    .refine((files) => !files || Array.from(files).every((file: any) => file.size <= MAX_WORK_IMAGE_SIZE), `Max file size is 5MB per image.`)
-    .refine(
-      (files) => !files || Array.from(files).every((file: any) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
-      ".jpg, .jpeg, .png and .webp files are accepted."
-    ),
   certificate: z.any().optional()
     .refine((files) => !files || files.length === 0 || files?.[0]?.size <= MAX_CERTIFICATE_SIZE, `Certificate max file size is 500KB.`)
     .refine((files) => !files || files.length === 0 || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted."),
@@ -150,7 +142,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
       email: '',
       services: ['mehndi'],
       serviceAreas: [],
-      workImages: undefined,
       certificate: undefined,
       agreed: false,
     },
@@ -188,13 +179,13 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
   }
 
   const onSubmit = async (data: RegistrationFormValues) => {
-    const { workImages, certificate, agreed, ...dataToStore } = data;
+    const { certificate, agreed, ...dataToStore } = data;
 
     const firstServiceArea = dataToStore.serviceAreas[0];
     const locationString = `${firstServiceArea.localities.split(',')[0].trim()}, ${firstServiceArea.district}`;
     
     // In a real app, you would upload files to cloud storage here and get URLs
-    const workImageUrls = ["https://picsum.photos/seed/work1/400/300", "https://picsum.photos/seed/work2/400/300"];
+    const workImageUrls: string[] = []; // No images on registration
     const certificateUrl = "https://picsum.photos/seed/cert1/200/300";
 
     const newPendingArtist = {
@@ -202,7 +193,7 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         location: locationString, // Add the generated location string
         status: 'Pending',
         submissionDate: new Date().toISOString(),
-        workImages: workImageUrls, // These would be the URLs from your storage service
+        workImages: workImageUrls, // Empty array
         hasCertificate: certificate && certificate.length > 0,
         certificateUrl: (certificate && certificate.length > 0) ? certificateUrl : null
     };
@@ -289,13 +280,17 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
 
                       {step === 3 && (
                         <div className="space-y-4">
-                            <h3 className="font-semibold text-lg text-primary">Step 3: Portfolio & Verification</h3>
-                            <FormField control={form.control} name="workImages" render={({ field: { onChange, ...rest } }) => (
-                                <FormItem><FormLabel>Work Images (Required)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p><p className="text-xs text-muted-foreground">At least 1 image, max 5MB each</p><Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" multiple onChange={(e) => onChange(e.target.files)} {...rest} /></div></FormControl><FormMessage /></FormItem>
-                            )} />
+                            <h3 className="font-semibold text-lg text-primary">Step 3: Verification & Agreement</h3>
                              <FormField control={form.control} name="certificate" render={({ field: { onChange, ...rest } }) => (
                                 <FormItem><FormLabel>Certificate (Optional)</FormLabel><FormControl><div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer"><Upload className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-2 text-sm text-muted-foreground">Click to upload certificate</p><p className="text-xs text-muted-foreground">Max 500KB</p><Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => onChange(e.target.files)} {...rest} /></div></FormControl><FormMessage /></FormItem>
                             )} />
+                            <Alert>
+                                <Terminal className="h-4 w-4" />
+                                <AlertTitle>Portfolio Upload</AlertTitle>
+                                <AlertDescription>
+                                You can upload your portfolio images from your dashboard after your profile is approved.
+                                </AlertDescription>
+                            </Alert>
                             <FormField control={form.control} name="agreed" render={({ field }) => (
                                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the <a href="/terms" target="_blank" className="underline">Terms & Conditions</a> of UtsavLook.</FormLabel><FormMessage /></div></FormItem>
                             )} />
