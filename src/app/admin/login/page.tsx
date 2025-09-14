@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { getTeamMembers, saveTeamMembers } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
             console.error("Password Reset Error:", error);
             toast({
                 title: 'Error',
-                description: `Could not send password reset email. Please ensure the email address is correct and try again. Firebase error: ${error.code}`,
+                description: `Could not send password reset email. Please ensure the email address is correct and try again.`,
                 variant: 'destructive',
             });
         }
