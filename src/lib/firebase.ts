@@ -86,7 +86,7 @@ const signInWithGoogle = (): Promise<User> => {
   return signInWithPopup(auth, googleProvider).then(result => result.user);
 };
 
-const setupRecaptcha = (elementId: string, onVerify: () => void): RecaptchaVerifier => {
+const setupRecaptcha = (elementId: string, onVerify: () => void): void => {
     if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
     }
@@ -101,7 +101,6 @@ const setupRecaptcha = (elementId: string, onVerify: () => void): RecaptchaVerif
     });
     verifier.render();
     window.recaptchaVerifier = verifier;
-    return verifier;
 }
 
 

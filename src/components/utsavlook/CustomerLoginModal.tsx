@@ -82,10 +82,10 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   }, [toast]);
   
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !window.recaptchaVerifier) {
        setTimeout(() => {
             const recaptchaContainer = document.getElementById('recaptcha-container');
-            if (recaptchaContainer && !window.recaptchaVerifier) {
+            if (recaptchaContainer) {
                  setupRecaptcha('recaptcha-container', onRecaptchaSuccess);
             }
        }, 500);
@@ -283,13 +283,13 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                             <FormItem>
                                 <FormLabel>Phone Number</FormLabel>
                                 <FormControl>
-                                    <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent || isRecaptchaVerified} />
+                                    <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
 
-                        {!isRecaptchaVerified && <div id="recaptcha-container" className="flex justify-center"></div>}
+                        <div id="recaptcha-container" className="flex justify-center"></div>
 
                         {isRecaptchaVerified && !isOtpSent && (
                            <Button type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
