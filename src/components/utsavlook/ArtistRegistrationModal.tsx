@@ -118,6 +118,13 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         });
     }
   }, [isOpen]);
+  
+  React.useEffect(() => {
+    const states = Object.keys(availableLocations);
+    if (states.length === 1) {
+      form.setValue('state', states[0]);
+    }
+  }, [availableLocations, form]);
 
   const selectedState = form.watch('state');
   const availableStates = Object.keys(availableLocations);
