@@ -261,15 +261,16 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                                 <h4 className="font-semibold">Additional Service Areas (Optional)</h4>
                                 {serviceAreaFields.map((field, index) => {
                                     const watchedState = form.watch(`serviceAreas.${index}.state`);
+                                    const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
                                     return (
                                         <Card key={field.id} className="p-4 bg-muted/50 relative">
                                             <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => removeServiceArea(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                  <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
-                                                    <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{Object.keys(INDIA_LOCATIONS).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                                    <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                                                 )} />
                                                  <FormField control={form.control} name={`serviceAreas.${index}.district`} render={({ field }) => (
-                                                    <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{(INDIA_LOCATIONS[watchedState || ''] || []).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                                    <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedState}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{districtsForWatchedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                                                 )} />
                                             </div>
                                             <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
