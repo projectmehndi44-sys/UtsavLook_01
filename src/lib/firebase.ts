@@ -25,42 +25,52 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 // --- Firestore Initialization with Offline Persistence ---
-let dbInitializationPromise: Promise<Firestore>;
+let dbInstance: Firestore | null = null;
+let dbInitializationPromise: Promise<Firestore> | null = null;
 
 const initializeDb = async (): Promise<Firestore> => {
-    const db = getFirestore(app);
-
-    if (typeof window !== 'undefined') {
-        try {
-            await enableIndexedDbPersistence(db);
-            console.log("Firebase Offline Persistence enabled.");
-        } catch (err: any) {
-            if (err.code === 'failed-precondition') {
-                console.info("Firestore persistence failed-precondition. This can happen with multiple tabs open.");
-            } else if (err.code === 'unimplemented') {
-                console.warn("Firestore persistence is not supported in this browser.");
-            } else {
-                 console.error("Error enabling Firestore persistence", err);
-            }
-        }
+    if (dbInstance) {
+        return dbInstance;
     }
     
-    return db;
+    // If initialization is already in progress, wait for it to complete.
+    if (dbInitializationPromise) {
+        return dbInitializationPromise;
+    }
+    
+    // Start initialization
+    dbInitializationPromise = new Promise(async (resolve, reject) => {
+        try {
+            const db = getFirestore(app);
+
+            if (typeof window !== 'undefined') {
+                try {
+                    await enableIndexedDbPersistence(db);
+                    console.log("Firebase Offline Persistence enabled.");
+                } catch (err: any) {
+                    if (err.code === 'failed-precondition') {
+                        console.info("Firestore persistence failed-precondition. This can happen with multiple tabs open.");
+                    } else if (err.code === 'unimplemented') {
+                        console.warn("Firestore persistence is not supported in this browser.");
+                    } else {
+                        console.error("Error enabling Firestore persistence", err);
+                    }
+                }
+            }
+            dbInstance = db;
+            resolve(dbInstance);
+        } catch (error) {
+            dbInitializationPromise = null; // Reset promise on failure
+            reject(error);
+        }
+    });
+
+    return dbInitializationPromise;
 };
-
-// Eagerly initialize the database as soon as this module is loaded.
-if (typeof window !== 'undefined') {
-    dbInitializationPromise = initializeDb();
-}
-
 
 // Use this function in your services to get the initialized DB instance
 export const getDb = async (): Promise<Firestore> => {
-    if (!dbInitializationPromise) {
-        // This will handle server-side rendering or cases where the eager init hasn't run.
-        dbInitializationPromise = initializeDb();
-    }
-    return dbInitializationPromise;
+    return initializeDb();
 }
 // ---------------------------------------------------------
 
