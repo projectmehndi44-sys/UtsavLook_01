@@ -30,7 +30,7 @@ const memberSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required'),
   username: z.string().email('Username must be a valid email address'),
-  role: z.literal('team-member'),
+  role: z.enum(['Super Admin', 'team-member']),
   permissions: z.object({
     dashboard: z.enum(['edit', 'view', 'hidden']),
     bookings: z.enum(['edit', 'view', 'hidden']),
@@ -92,7 +92,7 @@ export default function TeamManagementPage() {
 
         if (editingMember) {
              updatedMembers = currentMembers.map(member => 
-                member.id === editingMember.id ? { ...member, name: data.name, permissions: data.permissions } : member
+                member.id === editingMember.id ? { ...member, name: data.name, permissions: data.permissions, role: data.role } : member
             );
             toast({ title: 'Team Member Updated', description: `${data.name}'s permissions have been updated.` });
         } else {
@@ -152,7 +152,7 @@ export default function TeamManagementPage() {
             id: member.id,
             name: member.name,
             username: member.username,
-            role: 'team-member',
+            role: member.role,
             permissions: member.permissions
         });
     }
@@ -193,6 +193,20 @@ export default function TeamManagementPage() {
                                         )} />
                                         <FormField control={form.control} name="username" render={({ field }) => (
                                             <FormItem><FormLabel>Login Email</FormLabel><FormControl><Input type="email" placeholder="e.g., jane@example.com" {...field} disabled={!!editingMember} /></FormControl><FormMessage /></FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="role" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Role</FormLabel>
+                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="team-member">Team Member</SelectItem>
+                                                        <SelectItem value="Super Admin">Super Admin</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormItem>
                                         )} />
                                     </div>
                                     
@@ -268,14 +282,14 @@ export default function TeamManagementPage() {
                                                 <TableCell className="text-right">
                                                         <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button aria-haspopup="true" size="icon" variant="ghost" disabled={member.role === 'Super Admin'}>
+                                                            <Button aria-haspopup="true" size="icon" variant="ghost">
                                                                 <MoreHorizontal className="h-4 w-4" />
                                                                 <span className="sr-only">Toggle menu</span>
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                             <DropdownMenuItem onSelect={() => handleEdit(member)} disabled={member.role === 'Super Admin'}>
+                                                             <DropdownMenuItem onSelect={() => handleEdit(member)}>
                                                                 <UserCog className="mr-2 h-4 w-4" />
                                                                 Edit Permissions
                                                             </DropdownMenuItem>
