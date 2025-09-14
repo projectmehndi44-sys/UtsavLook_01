@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from '@/hooks/use-toast';
 import { Download, ChevronDown, CheckCircle, XCircle, MoreHorizontal, Eye, Trash2, UserPlus, ShieldOff, KeyRound, ShieldCheck, Star } from 'lucide-react';
 import type { Artist } from '@/lib/types';
-import { listenToCollection, createArtistWithId, deletePendingArtist, updateArtist, deleteArtist } from '@/lib/services';
+import { listenToCollection, createArtistWithId, deletePendingArtist, updateArtist, deleteArtist, getAvailableLocations } from '@/lib/services';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { exportToExcel } from '@/lib/export';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createUserWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { app } from '@/lib/firebase';
-import { INDIA_LOCATIONS } from '@/lib/india-locations';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
@@ -68,8 +67,11 @@ export default function ArtistManagementPage() {
     const [pendingArtists, setPendingArtists] = React.useState<PendingArtist[]>([]);
     const [onboardFormOpen, setOnboardFormOpen] = React.useState(false);
     const [dialogState, setDialogState] = React.useState<{type: 'delete' | 'delete-pending' | 'reset-pass'; data: Artist | PendingArtist | null}>({type: 'delete', data: null});
+    const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
+
 
     React.useEffect(() => {
+        getAvailableLocations().then(setAvailableLocations);
         const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
         const unsubscribePending = listenToCollection<PendingArtist>('pendingArtists', setPendingArtists);
 
@@ -85,8 +87,8 @@ export default function ArtistManagementPage() {
     });
 
     const selectedState = form.watch('state');
-    const allStates = Object.keys(INDIA_LOCATIONS);
-    const districtsInSelectedState = selectedState ? (INDIA_LOCATIONS[selectedState] || []) : [];
+    const allStates = Object.keys(availableLocations);
+    const districtsInSelectedState = selectedState ? (availableLocations[selectedState] || []) : [];
     
     const handleDownload = (selectedArtists?: Artist[]) => {
         const artistsToExport = selectedArtists || artists;
@@ -122,7 +124,7 @@ export default function ArtistManagementPage() {
                 state: pendingArtist.state,
                 district: pendingArtist.district,
                 locality: pendingArtist.locality,
-                servingAreas: pendingArtist.servingAreas,
+                serviceAreas: pendingArtist.serviceAreas,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${pendingArtist.fullName}`,
                 workImages: [], // This would be URLs from storage in a real app
                 services: pendingArtist.services, 
@@ -299,7 +301,7 @@ export default function ArtistManagementPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{artist.district}, {artist.state}</TableCell>
+                                            <TableCell>{artist.locality}, {artist.district}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                 {(artist.services || []).map(service => <Badge key={service} variant="secondary" className="capitalize">{service}</Badge>)}
@@ -458,7 +460,7 @@ export default function ArtistManagementPage() {
                                 </FormItem>
                                 )}/>
                             </div>
-                            <FormField control={form.control} name="locality" render={({ field }) => ( <FormItem><FormLabel>Locality</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem> )}/>
+                            <FormField control={form.control} name="locality" render={({ field }) => ( <FormItem><FormLabel>Locality</FormLabel><FormControl><Input placeholder="e.g. Koregaon Park" {...field}/></FormControl><FormMessage/></FormItem> )}/>
                             <FormField control={form.control} name="charge" render={({ field }) => ( <FormItem><FormLabel>Default Base Charge</FormLabel><FormControl><Input type="number" {...field}/></FormControl><FormMessage/></FormItem> )}/>
                              <FormField
                                 control={form.control}

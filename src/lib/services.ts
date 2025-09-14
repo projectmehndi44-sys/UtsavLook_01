@@ -122,8 +122,10 @@ export const getArtistByEmail = async (email: string): Promise<Artist | null> =>
 export const createArtistWithId = async (data: Omit<Artist, 'id'> & {id: string}): Promise<void> => {
     const db = await getDb();
     const docRef = doc(db, "artists", data.id);
-    await setDoc(docRef, data);
+    const { id, ...dataToSave } = data; // Exclude id from the data being saved
+    await setDoc(docRef, dataToSave);
 };
+
 
 export const updateArtist = async (id: string, data: Partial<Artist>): Promise<void> => {
     const db = await getDb();

@@ -1,6 +1,5 @@
 
-
-      'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -22,27 +21,30 @@ export default function ArtistDirectoryPage() {
 
     const filteredArtists = artists.filter(artist => {
         const search = searchTerm.toLowerCase();
+        if (!search) return true;
+
+        // Check primary location fields
         const primaryLocationMatch = (
             artist.name.toLowerCase().includes(search) ||
-            artist.location.toLowerCase().includes(search) ||
-            (artist.state || '').toLowerCase().includes(search) ||
+            (artist.locality || '').toLowerCase().includes(search) ||
             (artist.district || '').toLowerCase().includes(search) ||
-            (artist.locality || '').toLowerCase().includes(search)
+            (artist.state || '').toLowerCase().includes(search)
         );
 
         if (primaryLocationMatch) return true;
 
-        // Search in additional service areas
+        // Check additional service areas
         return artist.serviceAreas?.some(area => 
-            area.state.toLowerCase().includes(search) ||
             area.district.toLowerCase().includes(search) ||
             area.localities.toLowerCase().includes(search)
         );
     });
 
     const getArtistServingAreas = (artist: Artist) => {
-        const areas = artist.serviceAreas?.map(area => `${area.district} (${area.localities})`);
-        return areas?.join('; ') || 'Not specified';
+        if (!artist.serviceAreas || artist.serviceAreas.length === 0) {
+            return 'Not specified';
+        }
+        return artist.serviceAreas.map(area => `${area.district} (${area.localities})`).join('; ');
     }
 
 
@@ -62,7 +64,7 @@ export default function ArtistDirectoryPage() {
                     <div className="mb-4 relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by name, state, district, locality..."
+                            placeholder="Search by name, state, district, or locality..."
                             className="pl-8"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -72,7 +74,7 @@ export default function ArtistDirectoryPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Artist Name</TableHead>
-                                <TableHead>Primary Locality</TableHead>
+                                <TableHead>Primary Location</TableHead>
                                 <TableHead>Additional Serving Areas</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -99,5 +101,3 @@ export default function ArtistDirectoryPage() {
         </>
     );
 }
-
-    
