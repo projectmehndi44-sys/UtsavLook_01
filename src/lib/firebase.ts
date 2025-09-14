@@ -86,16 +86,21 @@ const signInWithGoogle = (): Promise<User> => {
   return signInWithPopup(auth, googleProvider).then(result => result.user);
 };
 
-const setupRecaptcha = (button: HTMLButtonElement): RecaptchaVerifier => {
+const setupRecaptcha = (elementId: string, onVerify: () => void): RecaptchaVerifier => {
     if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
     }
-    const verifier = new RecaptchaVerifier(auth, button, {
-        'size': 'invisible',
+    const verifier = new RecaptchaVerifier(auth, elementId, {
+        'size': 'normal',
         'callback': (response: any) => {
-            // reCAPTCHA solved.
+            onVerify();
         },
+        'expired-callback': () => {
+             // Response expired. Ask user to solve reCAPTCHA again.
+        }
     });
+    verifier.render();
+    window.recaptchaVerifier = verifier;
     return verifier;
 }
 
@@ -149,7 +154,7 @@ const signOutUser = () => {
 export { app, auth, signInWithGoogle, getFCMToken, onForegroundMessage, setupRecaptcha, sendOtp, createUser, signOutUser, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, updatePassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink };
 declare global {
     interface Window {
-        recaptchaVerifier: RecaptchaVerifier;
+        recaptchaVerifier?: RecaptchaVerifier;
         confirmationResult?: ConfirmationResult;
     }
 }

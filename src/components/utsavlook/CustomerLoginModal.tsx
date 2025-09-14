@@ -57,11 +57,10 @@ interface CustomerLoginModalProps {
 export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: CustomerLoginModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isSendingOtp, setIsSendingOtp] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
   const [isEmailLinkSent, setIsEmailLinkSent] = React.useState(false);
-  const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
+  const [isRecaptchaVerified, setIsRecaptchaVerified] = React.useState(false);
 
 
   const phoneForm = useForm<PhoneLoginFormValues>({
@@ -73,23 +72,39 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       resolver: zodResolver(emailLoginSchema),
       defaultValues: { email: '' },
   });
+  
+  const onRecaptchaSuccess = React.useCallback(() => {
+    setIsRecaptchaVerified(true);
+    toast({
+        title: 'Phone Verified',
+        description: 'You can now send the OTP.',
+    });
+  }, [toast]);
+  
+  React.useEffect(() => {
+    if (isOpen) {
+       setTimeout(() => {
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer && !window.recaptchaVerifier) {
+                 setupRecaptcha('recaptcha-container', onRecaptchaSuccess);
+            }
+       }, 500);
+    }
+  }, [isOpen, onRecaptchaSuccess]);
 
-  const handlePhoneVerify = async () => {
+  const handleSendOtp = async () => {
     const phone = phoneForm.getValues('phone');
-    if (!/^\d{10}$/.test(phone) || !sendOtpButtonRef.current) {
-        phoneForm.setError('phone', { type: 'manual', message: 'Please enter a valid 10-digit phone number to verify.' });
+    if (!/^\d{10}$/.test(phone) || !window.recaptchaVerifier) {
+        phoneForm.setError('phone', { type: 'manual', message: 'Please enter a valid phone number.' });
         return;
     }
     
-    setIsSendingOtp(true);
+    setIsSubmitting(true);
     const existingCustomer = await getCustomerByPhone(phone);
     setIsNewUser(!existingCustomer);
     
     try {
-      // Pass the button ref to setupRecaptcha
-      const verifier = setupRecaptcha(sendOtpButtonRef.current);
-      const confirmationResult = await sendOtp(phone, verifier);
-
+      const confirmationResult = await sendOtp(phone, window.recaptchaVerifier);
       window.confirmationResult = confirmationResult;
       setIsOtpSent(true);
       toast({
@@ -104,7 +119,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
            variant: 'destructive',
        });
     } finally {
-        setIsSendingOtp(false);
+        setIsSubmitting(false);
     }
   }
 
@@ -174,7 +189,11 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
-      setIsSendingOtp(false);
+      setIsRecaptchaVerified(false);
+      if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = undefined;
+      }
       setIsEmailLinkSent(false);
     }, 300);
   }
@@ -263,17 +282,20 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                         <FormField control={phoneForm.control} name="phone" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Phone Number</FormLabel>
-                                <div className="flex gap-2">
                                 <FormControl>
-                                    <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent} />
+                                    <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent || isRecaptchaVerified} />
                                 </FormControl>
-                                <Button ref={sendOtpButtonRef} type="button" onClick={handlePhoneVerify} disabled={isSendingOtp || isOtpSent}>
-                                    {isSendingOtp ? 'Sending...' : (isOtpSent ? 'Sent' : 'Send OTP')}
-                                </Button>
-                                </div>
                                 <FormMessage />
                             </FormItem>
                         )} />
+
+                        {!isRecaptchaVerified && <div id="recaptcha-container" className="flex justify-center"></div>}
+
+                        {isRecaptchaVerified && !isOtpSent && (
+                           <Button type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
+                                {isSubmitting ? 'Sending...' : 'Send OTP'}
+                           </Button>
+                        )}
 
                         {isOtpSent && (
                         <>
@@ -291,14 +313,14 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                                     <FormMessage />
                                 </FormItem>
                             )} />
+                             <DialogFooter>
+                                <Button type="submit" className="w-full" disabled={!isOtpSent || isSubmitting}>
+                                    {isSubmitting ? 'Verifying...' : (isNewUser ? 'Register & Login' : 'Login')}
+                                </Button>
+                            </DialogFooter>
                         </>
                         )}
 
-                        <DialogFooter>
-                            <Button type="submit" className="w-full" disabled={!isOtpSent || isSubmitting}>
-                                {isSubmitting ? 'Verifying...' : (isNewUser ? 'Register & Login' : 'Login')}
-                            </Button>
-                        </DialogFooter>
                     </form>
                 </Form>
             </TabsContent>
