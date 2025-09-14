@@ -83,13 +83,13 @@ const ServiceAreaFields = ({ form, availableLocations }: { form: UseFormReturn<R
             <FormDescription>Add all the areas where you are willing to provide services. You must add at least one.</FormDescription>
             {fields.map((field, index) => {
                 const watchedState = form.watch(`serviceAreas.${index}.state`);
-                const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
+                const districtsForWatchedState = watchedState && Array.isArray(availableLocations[watchedState]) ? (availableLocations[watchedState] || []) : [];
                 return (
                     <Card key={field.id} className="p-4 bg-muted/50 relative">
-                        <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                        {fields.length > 1 && <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => remove(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
-                                <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                <FormItem><FormLabel>State</FormLabel><Select onValueChange={(value) => { field.onChange(value); form.setValue(`serviceAreas.${index}.district`, ''); }} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                             )} />
                              <FormField control={form.control} name={`serviceAreas.${index}.district`} render={({ field }) => (
                                 <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedState || districtsForWatchedState.length === 0}><FormControl><SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger></FormControl><SelectContent>{districtsForWatchedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
@@ -164,7 +164,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
 
     const newPendingArtist = {
         ...dataToStore,
-        location: `${dataToStore.serviceAreas[0].localities.split(',')[0].trim()}, ${dataToStore.serviceAreas[0].district}`,
         status: 'Pending',
         submissionDate: new Date().toISOString(),
         hasCertificate: certificate && certificate.length > 0
