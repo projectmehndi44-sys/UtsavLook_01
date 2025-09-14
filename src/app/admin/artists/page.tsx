@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from '@/hooks/use-toast';
 import { Download, ChevronDown, CheckCircle, XCircle, MoreHorizontal, Eye, Trash2, UserPlus, ShieldOff, KeyRound, ShieldCheck, Star } from 'lucide-react';
 import type { Artist } from '@/lib/types';
-import { listenToCollection, createArtistWithId, deletePendingArtist, updateArtist } from '@/lib/services';
+import { listenToCollection, createArtistWithId, deletePendingArtist, updateArtist, deleteArtist } from '@/lib/services';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { exportToExcel } from '@/lib/export';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
