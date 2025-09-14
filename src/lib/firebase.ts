@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
@@ -28,29 +29,28 @@ const googleProvider = new GoogleAuthProvider();
 let dbInstance: Firestore | null = null;
 let dbInitializationPromise: Promise<Firestore> | null = null;
 
-const initializeDb = async (): Promise<Firestore> => {
-    if (dbInstance) {
-        return dbInstance;
-    }
-    
-    // If initialization is already in progress, wait for it to complete.
+const initializeDb = (): Promise<Firestore> => {
+    // If an initialization promise is already in progress, return it to avoid re-initializing
     if (dbInitializationPromise) {
         return dbInitializationPromise;
     }
     
-    // Start initialization
+    // Start a new initialization process
     dbInitializationPromise = new Promise(async (resolve, reject) => {
         try {
             const db = getFirestore(app);
 
+            // Only attempt to enable persistence in the browser
             if (typeof window !== 'undefined') {
                 try {
                     await enableIndexedDbPersistence(db);
                     console.log("Firebase Offline Persistence enabled.");
                 } catch (err: any) {
                     if (err.code === 'failed-precondition') {
-                        console.info("Firestore persistence failed-precondition. This can happen with multiple tabs open.");
+                        // This can happen if multiple tabs are open, which is a normal scenario.
+                        console.info("Firestore persistence failed-precondition. Multiple tabs open?");
                     } else if (err.code === 'unimplemented') {
+                        // Persistence is not supported in this browser.
                         console.warn("Firestore persistence is not supported in this browser.");
                     } else {
                         console.error("Error enabling Firestore persistence", err);
@@ -60,7 +60,8 @@ const initializeDb = async (): Promise<Firestore> => {
             dbInstance = db;
             resolve(dbInstance);
         } catch (error) {
-            dbInitializationPromise = null; // Reset promise on failure
+            console.error("Firestore initialization failed", error);
+            dbInitializationPromise = null; // Reset promise on failure to allow retry
             reject(error);
         }
     });
@@ -70,6 +71,11 @@ const initializeDb = async (): Promise<Firestore> => {
 
 // Use this function in your services to get the initialized DB instance
 export const getDb = async (): Promise<Firestore> => {
+    // If the instance is already available, return it directly.
+    if (dbInstance) {
+        return dbInstance;
+    }
+    // Otherwise, wait for the initialization to complete.
     return initializeDb();
 }
 // ---------------------------------------------------------
