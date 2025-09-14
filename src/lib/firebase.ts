@@ -1,4 +1,3 @@
-'use server';
 
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 

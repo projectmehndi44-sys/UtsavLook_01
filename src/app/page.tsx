@@ -1,228 +1,347 @@
-
 'use client';
+
 import * as React from 'react';
-import HeroSection from '@/components/hero-section';
-import OurWorksCarousel from '@/components/our-works-carousel';
-import { placeholderImages } from '@/lib/placeholder-images.json';
-import { masterServicePackages } from '@/lib/data';
-import { ServiceSelectionModal } from '@/components/utsavlook/ServiceSelectionModal';
-import { StyleMatch } from '@/components/utsavlook/StyleMatch';
-import type { Artist, CartItem, MasterServicePackage } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import Image from 'next/image';
+import type { Artist, Customer, CartItem, MasterServicePackage } from '@/lib/types';
+import { getCustomer, listenToCollection } from '@/lib/services';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  LogIn,
+  UserPlus,
+  Palette,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Header } from '@/components/utsavlook/Header';
+import { CustomerRegistrationModal } from '@/components/utsavlook/CustomerRegistrationModal';
+import { CustomerLoginModal } from '@/components/utsavlook/CustomerLoginModal';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, Star } from 'lucide-react';
-import { ArtistCard } from '@/components/utsavlook/ArtistCard';
+import { Separator } from '@/components/ui/separator';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay"
+import Image from 'next/image';
+import { Packages } from '@/components/utsavlook/Packages';
+import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
+import { ServiceSelectionModal } from '@/components/utsavlook/ServiceSelectionModal';
+import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
+import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
+import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 
-// Mock data, in a real app this would be fetched
-const mockArtists: Artist[] = [
-    {
-      id: 'artist-01',
-      name: 'Riya Sharma',
-      email: 'riya.s@example.com',
-      phone: '9876543210',
-      profilePicture: 'https://picsum.photos/seed/artist1/100/100',
-      workImages: [
-        'https://picsum.photos/seed/work1a/600/400',
-        'https://picsum.photos/seed/work1b/600/400',
-      ],
-      services: ['mehndi', 'makeup'],
-      location: 'Mumbai, Maharashtra',
-      rating: 4.9,
-      styleTags: ['Bridal', 'Intricate', 'Modern'],
-      verified: true,
-      isFoundersClubMember: true,
-      charge: 5000,
-      charges: {
-        'mehndi': 5000,
-        'makeup': 8000
-      }
-    },
-    {
-      id: 'artist-02',
-      name: 'Aditya Verma',
-      email: 'aditya.v@example.com',
-      phone: '9876543211',
-      profilePicture: 'https://picsum.photos/seed/artist2/100/100',
-      workImages: [
-        'https://picsum.photos/seed/work2a/600/400',
-        'https://picsum.photos/seed/work2b/600/400',
-      ],
-      services: ['photography'],
-      location: 'Pune, Maharashtra',
-      rating: 4.8,
-      styleTags: ['Candid', 'Cinematic', 'Pre-Wedding'],
-      verified: true,
-      charge: 25000,
-      charges: {
-        'photography': 25000
-      }
-    },
-     {
-      id: 'artist-03',
-      name: 'Sunita Patil',
-      email: 'sunita.p@example.com',
-      phone: '9876543212',
-      profilePicture: 'https://picsum.photos/seed/artist3/100/100',
-      workImages: [
-        'https://picsum.photos/seed/work3a/600/400',
-        'https://picsum.photos/seed/work3b/600/400',
-      ],
-      services: ['mehndi'],
-      location: 'Mumbai, Maharashtra',
-      rating: 4.7,
-      styleTags: ['Traditional', 'Arabic', 'Guest'],
-      isFoundersClubMember: true,
-      charge: 3000,
-      charges: {
-        'mehndi': 3000
-      }
-    },
+
+const galleryImages = [
+    { src: 'https://picsum.photos/seed/gal1/600/400', alt: 'Intricate bridal mehndi', hint: 'bridal mehndi' },
+    { src: 'https://picsum.photos/seed/gal2/600/400', alt: 'Glamorous makeup look', hint: 'glamorous makeup' },
+    { src: 'https://picsum.photos/seed/gal3/600/400', alt: 'Arabic mehndi design', hint: 'arabic mehndi' },
+    { src: 'https://picsum.photos/seed/gal4/600/400', alt: 'Full hand traditional mehndi', hint: 'traditional mehndi' },
+    { src: 'https://picsum.photos/seed/gal5/600/400', alt: 'Natural makeup for a daytime event', hint: 'natural makeup' },
+    { src: 'https://picsum.photos/seed/gal6/600/400', alt: 'Minimalist mehndi pattern', hint: 'minimalist mehndi' },
+    { src: 'https://picsum.photos/seed/gal7/600/400', alt: 'Peacock feather mehndi design', hint: 'peacock mehndi' },
+    { src: 'https://picsum.photos/seed/gal8/600/400', alt: 'Bold party makeup', hint: 'party makeup' },
+    { src: 'https://picsum.photos/seed/gal9/600/400', alt: 'Simple finger mehndi design', hint: 'finger mehndi' },
 ];
 
-const ServiceCard = ({ service, onSelect }: { service: MasterServicePackage, onSelect: (service: MasterServicePackage) => void }) => {
-    return (
-        <Card className="flex flex-col h-full overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 rounded-lg transform hover:-translate-y-1">
-            <CardHeader className="p-0">
-                <div className="aspect-[4/3] relative">
-                    <Image src={service.image} alt={service.name} fill className="object-cover" />
-                </div>
-            </CardHeader>
-            <CardContent className="p-4 flex-grow">
-                <CardTitle className="text-xl mb-2 text-primary">{service.name}</CardTitle>
-                <CardDescription className="text-sm text-muted-foreground mb-3">{service.description}</CardDescription>
-                <div className="flex flex-wrap gap-2">
-                    {service.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="bg-accent/20 text-accent-foreground/80">{tag}</Badge>
-                    ))}
-                </div>
-            </CardContent>
-            <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                <p className="text-lg font-bold text-primary">
-                    <span className="text-sm font-normal text-muted-foreground">From </span>
-                    ₹{service.categories[0].basePrice.toLocaleString()}
-                </p>
-                <Button onClick={() => onSelect(service)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Select
-                </Button>
-            </CardFooter>
-        </Card>
-    )
-}
-
-const ServiceTabs = ({ services, onSelectService }: { services: MasterServicePackage[], onSelectService: (service: MasterServicePackage) => void }) => {
-  const serviceTypes = ['Mehndi', 'Makeup', 'Photography'];
-  return (
-    <React.Fragment>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map(service => (
-                <ServiceCard key={service.id} service={service} onSelect={onSelectService} />
-            ))}
-        </div>
-    </React.Fragment>
-  );
-};
-
+const backgroundImages = [
+  'https://picsum.photos/seed/bg1/1200/800',
+  'https://picsum.photos/seed/bg2/1200/800',
+  'https://picsum.photos/seed/bg3/1200/800',
+  'https://picsum.photos/seed/bg4/1200/800',
+];
 
 export default function Home() {
-  const [cart, setCart] = React.useState<CartItem[]>([]);
-  const { toast } = useToast();
+  const router = useRouter();
+  const [artists, setArtists] = React.useState<Artist[]>([]);
+  const [masterServices, setMasterServices] = React.useState<MasterServicePackage[]>([]);
   
+  const [isCustomerRegistrationModalOpen, setIsCustomerRegistrationModalOpen] = React.useState(false);
+  const [isCustomerLoginModalOpen, setIsCustomerLoginModalOpen] = React.useState(false);
+  
+  const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
+  const [customer, setCustomer] = React.useState<Customer | null>(null);
+
+  const [cart, setCart] = React.useState<CartItem[]>([]);
+
+  // State for the service selection modal
   const [isServiceModalOpen, setIsServiceModalOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState<MasterServicePackage | null>(null);
 
   const [isArtistModalOpen, setIsArtistModalOpen] = React.useState(false);
   const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
 
-  const handleSelectService = (service: MasterServicePackage) => {
-    setSelectedService(service);
-    setIsServiceModalOpen(true);
+
+  const { toast } = useToast();
+
+  const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
+  
+  const handleCustomerLogout = React.useCallback(() => {
+    setIsCustomerLoggedIn(false);
+    setCustomer(null);
+    setCart([]);
+    localStorage.removeItem('currentCustomerId');
+    toast({
+      title: 'Logged Out',
+      description: 'You have been successfully logged out.',
+    });
+  }, [toast]);
+  
+  useInactivityTimeout(isCustomerLoggedIn ? handleCustomerLogout : () => {});
+
+  const checkLoggedInCustomer = React.useCallback(async () => {
+    const customerId = localStorage.getItem('currentCustomerId');
+    if (customerId) {
+        const currentCustomer = await getCustomer(customerId);
+        if (currentCustomer) {
+            setIsCustomerLoggedIn(true);
+            setCustomer(currentCustomer);
+            const storedCart = localStorage.getItem(`cart_${customerId}`);
+            setCart(storedCart ? JSON.parse(storedCart) : []);
+        } else {
+             // Clean up if customer ID is invalid
+             handleCustomerLogout();
+        }
+    } else {
+        setIsCustomerLoggedIn(false);
+        setCustomer(null);
+        setCart([]);
+    }
+  }, [handleCustomerLogout]);
+
+  React.useEffect(() => {
+    checkLoggedInCustomer();
+
+    const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
+    const unsubscribePackages = listenToCollection<MasterServicePackage>('masterServices', (services) => {
+        // Replace placeholder images with actual images from data
+        const updatedServices = services.map(service => ({
+            ...service,
+            image: service.image || `https://picsum.photos/seed/${service.id}/400/300`,
+            categories: service.categories.map(cat => ({
+                ...cat,
+                image: cat.image || `https://picsum.photos/seed/${service.id}-${cat.name}/200/200`
+            }))
+        }));
+        setMasterServices(updatedServices);
+    });
+
+    const intervalId = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+    }, 5000); 
+
+    return () => {
+        clearInterval(intervalId);
+        unsubscribeArtists();
+        unsubscribePackages();
+    };
+  }, [checkLoggedInCustomer]);
+  
+  const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
+    if (!isCustomerLoggedIn || !customer) {
+        setIsCustomerLoginModalOpen(true);
+        toast({ title: 'Please Login', description: 'You need to be logged in to add services to your booking.' });
+        return;
+    }
+    const newCartItem: CartItem = { ...item, id: `${item.servicePackage.id}-${Date.now()}` };
+    const newCart = [...cart, newCartItem];
+    setCart(newCart);
+    localStorage.setItem(`cart_${customer.id}`, JSON.stringify(newCart));
+    toast({ title: 'Added to cart!', description: `${item.servicePackage.name} (${item.selectedTier.name}) has been added.`});
+  };
+
+  const handleArtistRegister = () => {
+    router.push('/artist');
+  };
+
+  const handleCustomerRegister = () => {
+    setIsCustomerRegistrationModalOpen(true);
+  };
+
+  const handleCustomerLogin = () => {
+    setIsCustomerLoginModalOpen(true);
   };
   
-  const handleArtistBookingRequest = (artist: Artist) => {
-    setSelectedArtist(artist);
-    setIsArtistModalOpen(true);
-  };
+  const onSuccessfulLogin = (loggedInCustomer: Customer) => {
+    setIsCustomerLoggedIn(true);
+    setCustomer(loggedInCustomer);
+    setIsCustomerLoginModalOpen(false);
+    setIsCustomerRegistrationModalOpen(false);
+    const storedCart = localStorage.getItem(`cart_${loggedInCustomer.id}`);
+    setCart(storedCart ? JSON.parse(storedCart) : []);
+    setTimeout(() => {
+        toast({
+            title: 'Login Successful',
+            description: `Welcome back, ${loggedInCustomer.name}!`,
+        });
+    }, 0);
+  }
 
-  const handleAddToCart = (item: Omit<CartItem, 'id' | 'price'> & { price?: number }) => {
-    const newItem: CartItem = {
-      ...item,
-      id: `${item.servicePackage.id}-${Date.now()}`,
-      price: item.price || item.selectedTier.basePrice,
-    };
+  const CategoryTabContent = ({ serviceType }: { serviceType: "Mehndi" | "Makeup" | "Photography" }) => {
+    const relevantPackages = masterServices.filter(p => p.service === serviceType);
     
-    setCart(prevCart => [...prevCart, newItem]);
-    
-    toast({
-      title: "Added to Cart!",
-      description: `${item.servicePackage.name} (${item.selectedTier.name}) has been added.`,
-    });
-  };
-
-  const ourWorksImages = placeholderImages.filter(img => img.id.startsWith('our-work'));
+    return (
+      <div className="space-y-8 mt-8">
+        <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col">
-      <HeroSection />
-
-      <section id="our-works" className="py-12 md:py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <h2 className="font-headline text-5xl md:text-7xl text-primary text-center mb-8">Our Works</h2>
-          <p className="text-center max-w-2xl mx-auto mb-12 text-muted-foreground">
-            A curated collection of our finest work, showcasing the artistry and passion we bring to every event.
-          </p>
-          <OurWorksCarousel images={ourWorksImages} />
+    <div className="flex min-h-screen w-full flex-col relative bg-background">
+      <div className="fixed inset-0 -z-10 h-full w-full">
+          {backgroundImages.map((src, index) => (
+              <Image
+                  key={src}
+                  src={src}
+                  alt="Background Image"
+                  fill
+                  className={cn(
+                      'object-cover transition-opacity duration-1000 ease-in-out',
+                      index === currentBgIndex ? 'opacity-20' : 'opacity-0'
+                  )}
+                  priority={index === 0}
+                  data-ai-hint="mehndi makeup"
+              />
+          ))}
+      </div>
+      <Header 
+        isCustomerLoggedIn={isCustomerLoggedIn}
+        onCustomerLogout={handleCustomerLogout}
+        customer={customer}
+        cartCount={cart.length}
+      />
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <div className="text-center">
+            <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
+                Utsav<span className="text-primary">Look</span>
+            </h1>
+            <p className="mt-2 font-dancing-script text-2xl text-foreground/90">Your Perfect Look for Every Utsav.</p>
+            <div className="mt-4 font-body text-lg text-foreground/80 max-w-3xl mx-auto">
+              <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists,</p>
+              <p>all verified professionals dedicated to making your special day unforgettable.</p>
+            </div>
         </div>
-      </section>
 
-      <section id="services" className="py-12 md:py-20">
-        <div className="container mx-auto px-4">
-           <h2 className="font-headline text-5xl md:text-7xl text-primary text-center mb-12">Our Services</h2>
-           <ServiceTabs services={masterServicePackages} onSelectService={handleSelectService} />
-        </div>
-      </section>
-      
-      <section id="ai-style-match" className="py-12 md:py-20 bg-secondary/30">
-        <div className="container mx-auto px-4">
-          <StyleMatch />
-        </div>
-      </section>
-
-      <section id="featured-artists" className="py-12 md:py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="font-headline text-5xl md:text-7xl text-primary text-center mb-8">Featured Artists</h2>
-          <p className="text-center max-w-2xl mx-auto mb-12 text-muted-foreground">
-            Meet some of our top-rated and most-loved professional artists.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mockArtists.map(artist => (
-                <ArtistCard key={artist.id} artist={artist} onBookingRequest={handleArtistBookingRequest} />
-            ))}
+        {!isCustomerLoggedIn && (
+           <div className="text-center py-8 md:py-12 bg-card/80 backdrop-blur-sm rounded-lg shadow-md max-w-lg mx-auto mt-4 space-y-6 flex flex-col items-center">
+            <h2 className="text-2xl font-bold">Welcome to UtsavLook!</h2>
+            <p className="text-muted-foreground px-4">Login or create an account to book artists and manage your appointments.</p>
+            <div className="flex flex-col sm:flex-row gap-4 px-4 w-full">
+                <Button onClick={handleCustomerLogin} size="lg" className="w-full">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                </Button>
+                <Button onClick={handleCustomerRegister} size="lg" variant="outline" className="w-full">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Sign Up
+                </Button>
+            </div>
+            <Separator className="my-4 w-4/5" />
+            <div className="space-y-4 flex flex-col items-center w-full px-4">
+                 <Button variant="outline" onClick={handleArtistRegister} className="w-full max-w-xs">
+                    <Palette className="mr-2 h-4 w-4"/>
+                    Are you an artist? Join us!
+                 </Button>
+            </div>
           </div>
+        )}
+
+        {isCustomerLoggedIn && (
+            <div id="style-match" className="py-8">
+                <StyleMatch />
+            </div>
+        )}
+
+        <div className="mt-8">
+            <Tabs defaultValue="mehndi" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
+                    <TabsTrigger value="mehndi" className="py-2.5 flex items-center gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
+                    <TabsTrigger value="makeup" className="py-2.5 flex items-center gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
+                    <TabsTrigger value="photography" className="py-2.5 flex items-center gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
+                </TabsList>
+                <TabsContent value="mehndi">
+                    <CategoryTabContent serviceType="Mehndi" />
+                </TabsContent>
+                <TabsContent value="makeup">
+                    <CategoryTabContent serviceType="Makeup" />
+                </TabsContent>
+                <TabsContent value="photography">
+                    <CategoryTabContent serviceType="Photography" />
+                </TabsContent>
+            </Tabs>
         </div>
-      </section>
+        
+        <Separator className="my-8"/>
 
-      {selectedService && (
-        <ServiceSelectionModal
-          service={selectedService}
-          artists={mockArtists} // Pass relevant artists
-          isOpen={isServiceModalOpen}
-          onOpenChange={setIsServiceModalOpen}
-          onAddToCart={handleAddToCart}
-        />
-      )}
+        <div className="py-12">
+            <h2 className="text-center font-headline text-5xl text-primary">Our Works</h2>
+            <Carousel
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                plugins={[
+                    Autoplay({
+                        delay: 3000,
+                    }),
+                ]}
+                className="w-full max-w-6xl mx-auto"
+            >
+                <CarouselContent>
+                    {galleryImages.map((image, index) => (
+                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                            <div className="p-1">
+                                <Card className="overflow-hidden">
+                                    <CardContent className="flex aspect-video items-center justify-center p-0">
+                                        <Image 
+                                            src={image.src} 
+                                            alt={image.alt}
+                                            width={600}
+                                            height={400}
+                                            className="w-full h-full object-cover"
+                                            data-ai-hint={image.hint}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
+        </div>
 
-      {selectedArtist && (
-        <ArtistProfileModal
-          artist={selectedArtist}
-          isOpen={isArtistModalOpen}
-          onOpenChange={setIsArtistModalOpen}
+        <PwaInstallBanner />
+
+        <CustomerRegistrationModal
+            isOpen={isCustomerRegistrationModalOpen}
+            onOpenChange={setIsCustomerRegistrationModalOpen}
+            onSuccessfulRegister={onSuccessfulLogin}
         />
-      )}
+        <CustomerLoginModal
+            isOpen={isCustomerLoginModalOpen}
+            onOpenChange={setIsCustomerLoginModalOpen}
+            onSuccessfulLogin={onSuccessfulLogin}
+            onSwitchToRegister={() => {
+                setIsCustomerLoginModalOpen(false);
+                setIsCustomerRegistrationModalOpen(true);
+            }}
+        />
+        {selectedService && (
+            <ServiceSelectionModal
+                isOpen={isServiceModalOpen}
+                onOpenChange={setIsServiceModalOpen}
+                service={selectedService}
+                artists={artists}
+                onAddToCart={handleAddToCart}
+            />
+        )}
+        {selectedArtist && (
+            <ArtistProfileModal 
+                artist={selectedArtist}
+                isOpen={isArtistModalOpen}
+                onOpenChange={setIsArtistModalOpen}
+            />
+        )}
+      </main>
     </div>
   );
 }

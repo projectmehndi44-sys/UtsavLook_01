@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
-import { Toaster } from "@/components/ui/toaster"
-import Header from '@/components/layout/header';
-import Footer from '@/components/layout/footer';
 import { Playfair_Display, Roboto, Dancing_Script } from 'next/font/google';
 
 const playfairDisplay = Playfair_Display({
@@ -26,7 +24,6 @@ const dancingScript = Dancing_Script({
   variable: '--font-dancing-script',
 });
 
-
 export const metadata: Metadata = {
   title: 'UtsavLook: Artistry at Your Fingertips',
   description: 'Discover and book the most talented mehndi and makeup artists near you. Your perfect look for any occasion is just a click away.',
@@ -47,12 +44,8 @@ export default function RootLayout({
        <head>
         <meta name="theme-color" content="#8B4513" />
        </head>
-       <body className={cn('min-h-screen bg-background font-body antialiased', playfairDisplay.variable, roboto.variable, dancingScript.variable)}>
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+      <body className={cn('min-h-screen bg-background font-body antialiased', playfairDisplay.variable, roboto.variable, dancingScript.variable)}>
+        {children}
         <Toaster />
       </body>
     </html>

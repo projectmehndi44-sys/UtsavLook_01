@@ -95,3 +95,16 @@ export interface CartItem {
     artist?: Artist; // Undefined for Express Booking
     price: number;
 }
+
+
+// AI Recommendation Type
+export interface RawArtistRecommendation {
+  artistId: string;
+  name: string;
+  profilePicture?: string;
+  location: string;
+  serviceTypes: ('mehndi' | 'makeup' | 'photography')[];
+  styleTags: string[];
+  charge: number;
+  reason: string;
+}
