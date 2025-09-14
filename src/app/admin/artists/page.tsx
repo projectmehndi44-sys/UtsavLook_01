@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -67,7 +66,7 @@ export default function ArtistManagementPage() {
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [pendingArtists, setPendingArtists] = React.useState<PendingArtist[]>([]);
     const [onboardFormOpen, setOnboardFormOpen] = React.useState(false);
-    const [dialogState, setDialogState] = React.useState<{type: 'delete' | 'delete-pending' | 'reset-pass'; data: Artist | PendingArtist | null}>({type: 'delete', data: null});
+    const [dialogState, setDialogState<{type: 'delete' | 'delete-pending' | 'reset-pass'; data: Artist | PendingArtist | null}> = React.useState({type: 'delete', data: null});
     const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
 
 
@@ -121,7 +120,7 @@ export default function ArtistManagementPage() {
                 name: pendingArtist.fullName,
                 email: pendingArtist.email,
                 phone: pendingArtist.phone,
-                location: pendingArtist.location,
+                location: `${pendingArtist.serviceAreas[0].localities.split(',')[0].trim()}, ${pendingArtist.serviceAreas[0].district}`,
                 serviceAreas: pendingArtist.serviceAreas,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${pendingArtist.fullName}`,
                 workImages: [], // This would be URLs from storage in a real app
@@ -241,6 +240,15 @@ export default function ArtistManagementPage() {
         { id: 'photography', label: 'Photography' },
     ] as const;
 
+    const getArtistServingAreasPreview = (artist: Artist | PendingArtist) => {
+        if (!artist.serviceAreas || artist.serviceAreas.length === 0) {
+            return artist.location || 'Not specified';
+        }
+        // Show the first service area as a preview
+        const firstArea = artist.serviceAreas[0];
+        return `${firstArea.district} - ${firstArea.localities}`;
+    }
+
 
     return (
         <>
@@ -275,7 +283,7 @@ export default function ArtistManagementPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Artist</TableHead>
-                                        <TableHead>Primary Location</TableHead>
+                                        <TableHead>Primary Serving Area</TableHead>
                                         <TableHead>Services</TableHead>
                                         <TableHead>Rating</TableHead>
                                         <TableHead>Status</TableHead>
@@ -297,7 +305,7 @@ export default function ArtistManagementPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{artist.location}</TableCell>
+                                            <TableCell>{getArtistServingAreasPreview(artist)}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                 {(artist.services || []).map(service => <Badge key={service} variant="secondary" className="capitalize">{service}</Badge>)}
@@ -361,7 +369,7 @@ export default function ArtistManagementPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Applicant</TableHead>
-                                        <TableHead>Primary Location</TableHead>
+                                        <TableHead>Primary Serving Area</TableHead>
                                         <TableHead>Services</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
@@ -374,7 +382,7 @@ export default function ArtistManagementPage() {
                                                 <div className="font-medium">{pa.fullName}</div>
                                                 <div className="text-sm text-muted-foreground">{pa.email}</div>
                                             </TableCell>
-                                            <TableCell>{pa.location}</TableCell>
+                                            <TableCell>{getArtistServingAreasPreview(pa)}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                     {(pa.services || []).map(service => <Badge key={service} variant="outline" className="capitalize">{service}</Badge>)}
@@ -512,3 +520,5 @@ export default function ArtistManagementPage() {
         </>
     );
 }
+
+    
