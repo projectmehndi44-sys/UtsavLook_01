@@ -135,14 +135,6 @@ export default function Home() {
     localStorage.setItem(`cart_${customer.id}`, JSON.stringify(newCart));
     toast({ title: 'Added to cart!', description: `${item.servicePackage.name} (${item.selectedTier.name}) has been added.`});
   };
-
-  const handleArtistRegister = () => {
-    router.push('/artist');
-  };
-
-  const handleCustomerLogin = () => {
-    setIsCustomerLoginModalOpen(true);
-  };
   
   const onSuccessfulLogin = (loggedInCustomer: Customer) => {
     setIsCustomerLoggedIn(true);
@@ -193,7 +185,7 @@ export default function Home() {
         cartCount={cart.length}
       />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="text-center">
+        <div className="text-center py-8">
             <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
                 Utsav<span className="text-primary">Look</span>
             </h1>
@@ -203,26 +195,6 @@ export default function Home() {
               <p>all verified professionals dedicated to making your special day unforgettable.</p>
             </div>
         </div>
-
-        {!isCustomerLoggedIn && (
-           <div className="text-center py-8 md:py-12 bg-card/80 backdrop-blur-sm rounded-lg shadow-md max-w-lg mx-auto mt-4 space-y-6 flex flex-col items-center">
-            <h2 className="text-2xl font-bold">Welcome to UtsavLook!</h2>
-            <p className="text-muted-foreground px-4">Login or create an account to book artists and manage your appointments.</p>
-            <div className="flex flex-col sm:flex-row gap-4 px-4 w-full">
-                <Button onClick={handleCustomerLogin} size="lg" className="w-full">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login / Sign Up
-                </Button>
-            </div>
-            <Separator className="my-4 w-4/5" />
-            <div className="space-y-4 flex flex-col items-center w-full px-4">
-                 <Button variant="outline" onClick={handleArtistRegister} className="w-full max-w-xs">
-                    <Palette className="mr-2 h-4 w-4"/>
-                    Are you an artist? Join us!
-                 </Button>
-            </div>
-          </div>
-        )}
 
         {isCustomerLoggedIn && (
             <div id="style-match" className="py-8">
