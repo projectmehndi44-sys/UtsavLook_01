@@ -20,6 +20,7 @@ import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { initialTeamMembers } from '@/lib/team-data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
+import type { TeamMember } from '@/lib/types';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),

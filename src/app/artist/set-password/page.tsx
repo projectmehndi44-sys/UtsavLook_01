@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { KeyRound, LogIn } from 'lucide-react';
-import { getAuth, confirmPasswordReset, updatePassword, applyActionCode } from 'firebase/auth';
+import { getAuth, confirmPasswordReset } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
 
 export default function SetPasswordPage() {
     const router = useRouter();
@@ -49,19 +51,22 @@ export default function SetPasswordPage() {
                 title: "Password Set Successfully!",
                 description: "Your new password has been set. You can now log in.",
             });
-            // Optional: You could try to automatically log the user in here,
-            // but redirecting to login is simpler and more secure.
             setTimeout(() => router.push('/artist/login'), 3000);
 
         } catch (err: any) {
             console.error("Set password error:", err);
             if (err.code === 'auth/expired-action-code') {
-                setError("This link has expired. Please request a new password reset link.");
+                setError("This link has expired. Please request a new password reset link from the login page.");
             } else if (err.code === 'auth/invalid-action-code') {
-                setError("This link is invalid or has already been used. Please request a new one.");
+                setError("This link is invalid or has already been used. Please request a new one from the login page.");
             } else {
                 setError("An unknown error occurred. Please try again.");
             }
+             toast({
+                title: "Error Setting Password",
+                description: error,
+                variant: "destructive",
+            });
         } finally {
             setIsLoading(false);
         }
@@ -74,7 +79,9 @@ export default function SetPasswordPage() {
                     <AlertTitle>Invalid Link</AlertTitle>
                     <AlertDescription>
                         The password reset link is missing or invalid. Please return to the login page and request a new one.
-                        <Button asChild variant="link" className="mt-2"><a href="/artist/login">Go to Login</a></Button>
+                        <Button asChild variant="link" className="mt-2">
+                            <Link href="/artist/login">Go to Artist Login</Link>
+                        </Button>
                     </AlertDescription>
                 </Alert>
             </div>

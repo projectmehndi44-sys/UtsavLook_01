@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -51,20 +52,28 @@ export default function ArtistLoginPage() {
     
     const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!forgotPasswordEmail) return;
+        if (!forgotPasswordEmail) {
+             toast({
+                title: 'Email Required',
+                description: 'Please enter your email address.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
         try {
             await sendPasswordResetEmail(auth, forgotPasswordEmail);
             toast({
                 title: 'Password Reset Email Sent',
                 description: `If an account exists for ${forgotPasswordEmail}, you will receive an email to reset your password shortly.`,
+                duration: 9000,
             });
             setIsForgotPasswordOpen(false);
         } catch (error) {
             console.error("Forgot password error:", error);
              toast({
                 title: 'Error',
-                description: 'Could not send password reset email. Please ensure the email is correct.',
+                description: 'Could not send password reset email. Please ensure the email is correct and registered.',
                 variant: 'destructive',
             });
         }
