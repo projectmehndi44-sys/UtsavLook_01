@@ -27,6 +27,7 @@ import { getCustomerByPhone, getCustomerByEmail, createCustomer } from '@/lib/se
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { useRouter } from 'next/navigation';
 
 declare global {
   interface Window {
@@ -56,6 +57,7 @@ interface CustomerLoginModalProps {
 
 export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: CustomerLoginModalProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
@@ -164,6 +166,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       if (customer) {
           localStorage.setItem('currentCustomerId', customer.id);
           onSuccessfulLogin(customer);
+          router.push('/account');
           handleClose();
       } else {
           throw new Error("Customer data could not be retrieved or created.");
@@ -220,6 +223,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
 
             localStorage.setItem('currentCustomerId', customer.id);
             onSuccessfulLogin(customer);
+            router.push('/account');
             handleClose();
         }
     } catch (error: any) {
@@ -368,3 +372,5 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     </Dialog>
   );
 }
+
+    

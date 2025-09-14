@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
             }
         } catch (error: any) {
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/invalid-credential') {
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                 description = 'Invalid credentials. Please check your username and password.';
             }
             toast({ title: 'Authentication Failed', description, variant: 'destructive' });
@@ -272,3 +272,5 @@ export default function AdminLoginPage() {
         </>
     );
 }
+
+    
