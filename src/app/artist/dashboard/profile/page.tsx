@@ -155,7 +155,9 @@ export default function ArtistProfilePage() {
         };
 
         if (data.password) {
-            dataToUpdate.password = data.password;
+            // In a real app, you would handle password change through a secure backend function
+            // For this example, we are just showing the logic
+            console.log("Password change requested. This should be handled by a secure backend service.");
         }
         
         try {
@@ -292,7 +294,7 @@ export default function ArtistProfilePage() {
                                                         )} />
                                                     </div>
                                                     <FormField control={form.control} name={`serviceAreas.${index}.localities`} render={({ field }) => (
-                                                        <FormItem className="mt-4"><FormLabel>Localities Served</FormLabel><FormControl><Input placeholder="e.g., Bandra, Juhu, Andheri" {...field}/></FormControl><FormDescription>Enter a comma-separated list of localities.</FormDescription><FormMessage /></FormItem>
+                                                        <FormItem className="mt-4"><FormLabel>Localities Served</FormLabel><FormControl><Input placeholder="e.g., Bandra, Juhu, Andheri" {...field}/></FormControl><FormDescription>Enter a comma-separated list.</FormDescription><FormMessage /></FormItem>
                                                     )} />
                                                 </Card>
                                             )})}

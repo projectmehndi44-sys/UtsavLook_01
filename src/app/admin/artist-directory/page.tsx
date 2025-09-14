@@ -23,18 +23,12 @@ export default function ArtistDirectoryPage() {
         const search = searchTerm.toLowerCase();
         if (!search) return true;
 
-        // Check primary location fields
-        const primaryLocationMatch = (
-            artist.name.toLowerCase().includes(search) ||
-            (artist.locality || '').toLowerCase().includes(search) ||
-            (artist.district || '').toLowerCase().includes(search) ||
-            (artist.state || '').toLowerCase().includes(search)
-        );
+        // Check artist name
+        if (artist.name.toLowerCase().includes(search)) return true;
 
-        if (primaryLocationMatch) return true;
-
-        // Check additional service areas
+        // Check all service areas
         return artist.serviceAreas?.some(area => 
+            area.state.toLowerCase().includes(search) ||
             area.district.toLowerCase().includes(search) ||
             area.localities.toLowerCase().includes(search)
         );
@@ -44,7 +38,7 @@ export default function ArtistDirectoryPage() {
         if (!artist.serviceAreas || artist.serviceAreas.length === 0) {
             return 'Not specified';
         }
-        return artist.serviceAreas.map(area => `${area.district} (${area.localities})`).join('; ');
+        return artist.serviceAreas.map(area => `${area.localities} (${area.district}, ${area.state})`).join('; ');
     }
 
 
@@ -55,9 +49,9 @@ export default function ArtistDirectoryPage() {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><MapPin className="w-6 h-6 text-primary" /> Artist Locations</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><MapPin className="w-6 h-6 text-primary" /> Artist Service Areas</CardTitle>
                     <CardDescription>
-                        A real-time directory of all registered artists and their service locations.
+                        A real-time directory of all registered artists and their defined service areas.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -74,8 +68,7 @@ export default function ArtistDirectoryPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Artist Name</TableHead>
-                                <TableHead>Primary Location</TableHead>
-                                <TableHead>Additional Serving Areas</TableHead>
+                                <TableHead>Service Areas</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -86,12 +79,11 @@ export default function ArtistDirectoryPage() {
                                             {artist.name}
                                         </Link>
                                     </TableCell>
-                                    <TableCell>{artist.locality}, {artist.district}, {artist.state}</TableCell>
                                     <TableCell>{getArtistServingAreas(artist)}</TableCell>
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="text-center">No artists found.</TableCell>
+                                    <TableCell colSpan={2} className="text-center">No artists found.</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>

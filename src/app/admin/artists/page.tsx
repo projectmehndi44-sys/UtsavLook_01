@@ -121,7 +121,7 @@ export default function ArtistManagementPage() {
                 name: pendingArtist.fullName,
                 email: pendingArtist.email,
                 phone: pendingArtist.phone,
-                location: `${pendingArtist.locality}, ${pendingArtist.state}`,
+                location: pendingArtist.location,
                 serviceAreas: pendingArtist.serviceAreas,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${pendingArtist.fullName}`,
                 workImages: [], // This would be URLs from storage in a real app
@@ -275,7 +275,7 @@ export default function ArtistManagementPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Artist</TableHead>
-                                        <TableHead>Location</TableHead>
+                                        <TableHead>Primary Location</TableHead>
                                         <TableHead>Services</TableHead>
                                         <TableHead>Rating</TableHead>
                                         <TableHead>Status</TableHead>
@@ -361,7 +361,7 @@ export default function ArtistManagementPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Applicant</TableHead>
-                                        <TableHead>Location</TableHead>
+                                        <TableHead>Primary Location</TableHead>
                                         <TableHead>Services</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
