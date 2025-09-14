@@ -22,10 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Terminal, Upload, ArrowLeft, PlusCircle, Trash2 } from 'lucide-react';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '../ui/separator';
 import { getAvailableLocations, createPendingArtist } from '@/lib/services';
 import { Progress } from '../ui/progress';
-import { INDIA_LOCATIONS } from '@/lib/india-locations';
 import { v4 as uuidv4 } from 'uuid';
 import { Card } from '@/components/ui/card';
 
@@ -115,17 +113,14 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
     if (isOpen) {
         getAvailableLocations().then(locations => {
             setAvailableLocations(locations);
+            const states = Object.keys(locations);
+            if (states.length === 1) {
+              form.setValue('state', states[0]);
+            }
         });
     }
-  }, [isOpen]);
+  }, [isOpen, form]);
   
-  React.useEffect(() => {
-    const states = Object.keys(availableLocations);
-    if (states.length === 1) {
-      form.setValue('state', states[0]);
-    }
-  }, [availableLocations, form]);
-
   const selectedState = form.watch('state');
   const availableStates = Object.keys(availableLocations);
   const districtsInSelectedState = selectedState ? (availableLocations[selectedState] || []) : [];
@@ -170,6 +165,8 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         form.reset();
     }, 300);
   }
+
+  const safeDistrictsInSelectedState = Array.isArray(districtsInSelectedState) ? districtsInSelectedState : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -244,9 +241,9 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                                     <FormField control={form.control} name="district" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>District</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState || districtsInSelectedState.length === 0}>
+                                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState || safeDistrictsInSelectedState.length === 0}>
                                                 <FormControl><SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger></FormControl>
-                                                <SelectContent>{districtsInSelectedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                                <SelectContent>{safeDistrictsInSelectedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                                             </Select>
                                             <FormMessage />
                                         </FormItem>
@@ -327,4 +324,3 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
     </Dialog>
   );
 }
-
