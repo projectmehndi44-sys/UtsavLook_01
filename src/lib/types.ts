@@ -50,7 +50,7 @@ export type Artist = {
   workImages: string[];
   services: ('mehndi' | 'makeup' | 'photography')[];
   serviceOfferings?: ArtistServiceOffering[];
-  location: string;
+  location: string; // Main display location string
   charges: {
       mehndi?: number;
       makeup?: number;
@@ -61,11 +61,7 @@ export type Artist = {
   styleTags: string[];
   unavailableDates?: string[]; // ISO date strings
   reviews?: Review[]; // Artist-specific reviews
-  // New detailed location fields
-  state?: string;
-  district?: string;
-  locality?: string;
-  serviceAreas?: ServiceArea[]; // New structured service areas
+  serviceAreas: ServiceArea[]; // New structured service areas
   referralCode?: string;
   referralDiscount?: number; // Percentage, e.g., 10 for 10%
   status?: 'active' | 'suspended';

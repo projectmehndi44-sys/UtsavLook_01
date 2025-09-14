@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -121,9 +122,6 @@ export default function ArtistManagementPage() {
                 email: pendingArtist.email,
                 phone: pendingArtist.phone,
                 location: `${pendingArtist.locality}, ${pendingArtist.state}`,
-                state: pendingArtist.state,
-                district: pendingArtist.district,
-                locality: pendingArtist.locality,
                 serviceAreas: pendingArtist.serviceAreas,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${pendingArtist.fullName}`,
                 workImages: [], // This would be URLs from storage in a real app
@@ -212,9 +210,7 @@ export default function ArtistManagementPage() {
                 email: data.email,
                 phone: data.phone,
                 location: `${data.locality}, ${data.state}`,
-                state: data.state,
-                district: data.district,
-                locality: data.locality,
+                serviceAreas: [{id: 'primary', state: data.state, district: data.district, localities: data.locality}],
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${data.name}`,
                 workImages: [],
                 services: data.services as ('mehndi' | 'makeup' | 'photography')[],
@@ -301,7 +297,7 @@ export default function ArtistManagementPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{artist.locality}, {artist.district}</TableCell>
+                                            <TableCell>{artist.location}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                 {(artist.services || []).map(service => <Badge key={service} variant="secondary" className="capitalize">{service}</Badge>)}
@@ -378,7 +374,7 @@ export default function ArtistManagementPage() {
                                                 <div className="font-medium">{pa.fullName}</div>
                                                 <div className="text-sm text-muted-foreground">{pa.email}</div>
                                             </TableCell>
-                                            <TableCell>{pa.locality}, {pa.district}, {pa.state}</TableCell>
+                                            <TableCell>{pa.location}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                     {(pa.services || []).map(service => <Badge key={service} variant="outline" className="capitalize">{service}</Badge>)}

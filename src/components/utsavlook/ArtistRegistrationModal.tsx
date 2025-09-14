@@ -48,15 +48,12 @@ const serviceAreaSchema = z.object({
 const registrationSchema = z.object({
   fullName: z.string().min(1, { message: 'Full name is required.' }),
   presentAddress: z.string().min(1, { message: 'Present address is required.' }),
-  state: z.string().min(1, { message: 'Please select a state.' }),
-  district: z.string().min(1, { message: 'Please select a district.' }),
-  locality: z.string().min(1, { message: 'Please enter a locality.' }),
-  serviceAreas: z.array(serviceAreaSchema).optional(),
   phone: z.string().regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit phone number.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   services: z.array(z.string()).refine(value => value.some(item => item), {
     message: "You have to select at least one service.",
   }),
+  serviceAreas: z.array(serviceAreaSchema).min(1, "You must add at least one service area."),
   workImages: z.any()
     .refine((files) => files?.length >= 1, "At least one work image is required.")
     .refine((files) => !files || Array.from(files).every((file: any) => file.size <= MAX_WORK_IMAGE_SIZE), `Max file size is 5MB per image.`)
@@ -93,9 +90,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
       phone: '',
       email: '',
       presentAddress: '',
-      state: '',
-      district: '',
-      locality: '',
       services: ['mehndi'],
       serviceAreas: [],
       workImages: undefined,
@@ -115,21 +109,20 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         getAvailableLocations().then(locations => {
             setAvailableLocations(locations);
             const states = Object.keys(locations);
-            if (states.length === 1) {
-              form.setValue('state', states[0]);
+            if (states.length > 0 && form.getValues('serviceAreas').length === 0) {
+              // Optionally pre-fill the first service area
+              appendServiceArea({ id: uuidv4(), state: '', district: '', localities: '' });
             }
         });
     }
-  }, [isOpen, form]);
+  }, [isOpen, form, appendServiceArea]);
   
-  const selectedState = form.watch('state');
   const availableStates = Object.keys(availableLocations);
-  const districtsInSelectedState = selectedState ? (availableLocations[selectedState] || []) : [];
 
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof RegistrationFormValues)[] = [];
     if(step === 1) fieldsToValidate = ['fullName', 'email', 'phone', 'presentAddress'];
-    if(step === 2) fieldsToValidate = ['state', 'district', 'locality', 'services'];
+    if(step === 2) fieldsToValidate = ['serviceAreas', 'services'];
 
     const isValid = await form.trigger(fieldsToValidate);
     if(isValid) setStep(prev => prev + 1);
@@ -145,6 +138,11 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
 
     const newPendingArtist = {
         ...dataToStore,
+        // The first service area determines the primary location string for display purposes
+        state: dataToStore.serviceAreas[0].state,
+        district: dataToStore.serviceAreas[0].district,
+        locality: dataToStore.serviceAreas[0].localities.split(',')[0].trim(),
+        location: `${dataToStore.serviceAreas[0].localities.split(',')[0].trim()}, ${dataToStore.serviceAreas[0].district}`,
         status: 'Pending',
         submissionDate: new Date().toISOString(),
         hasCertificate: certificate && certificate.length > 0
@@ -166,8 +164,6 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
         form.reset();
     }, 300);
   }
-
-  const safeDistrictsInSelectedState = Array.isArray(districtsInSelectedState) ? districtsInSelectedState : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -225,44 +221,16 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
 
                       {step === 2 && (
                         <div className="space-y-4">
-                            <h3 className="font-semibold text-lg text-primary">Step 2: Service Location & Offerings</h3>
+                            <h3 className="font-semibold text-lg text-primary">Step 2: Service Areas & Offerings</h3>
                              <div className="p-4 border rounded-lg space-y-4">
-                                <h4 className="font-semibold">Primary Location</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <FormField control={form.control} name="state" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>State</FormLabel>
-                                            <Select onValueChange={(value) => { field.onChange(value); form.setValue('district', ''); }} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select a state" /></SelectTrigger></FormControl>
-                                                <SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )} />
-                                    <FormField control={form.control} name="district" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>District</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState || safeDistrictsInSelectedState.length === 0}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select a district" /></SelectTrigger></FormControl>
-                                                <SelectContent>{safeDistrictsInSelectedState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )} />
-                                     <FormField control={form.control} name="locality" render={({ field }) => (
-                                        <FormItem><FormLabel>Locality</FormLabel><FormControl><Input placeholder="e.g., Koregaon Park" {...field} /></FormControl><FormMessage /></FormItem>
-                                    )} />
-                                </div>
-                             </div>
-
-                             <div className="p-4 border rounded-lg space-y-4">
-                                <h4 className="font-semibold">Additional Service Areas (Optional)</h4>
+                                <h4 className="font-semibold">Service Areas</h4>
+                                <FormDescription>Add all the areas where you are willing to provide services. You must add at least one.</FormDescription>
                                 {serviceAreaFields.map((field, index) => {
                                     const watchedState = form.watch(`serviceAreas.${index}.state`);
                                     const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
                                     return (
                                         <Card key={field.id} className="p-4 bg-muted/50 relative">
-                                            <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => removeServiceArea(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                            {serviceAreaFields.length > 1 && <Button type="button" size="icon" variant="ghost" className="absolute top-2 right-2" onClick={() => removeServiceArea(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                  <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
                                                     <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
@@ -278,8 +246,9 @@ export function ArtistRegistrationModal({ isOpen, onOpenChange }: ArtistRegistra
                                     )
                                 })}
                                 <Button type="button" variant="outline" onClick={() => appendServiceArea({ id: uuidv4(), state: '', district: '', localities: '' })}>
-                                    <PlusCircle className="mr-2 h-4 w-4"/> Add Service Area
+                                    <PlusCircle className="mr-2 h-4 w-4"/> Add Another Service Area
                                 </Button>
+                                 <FormMessage>{form.formState.errors.serviceAreas?.message}</FormMessage>
                              </div>
 
                             <FormField control={form.control} name="services" render={() => (

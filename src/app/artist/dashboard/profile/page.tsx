@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -13,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, Upload, UserCircle, Briefcase, Tag, Lock, Image as ImageIcon, IndianRupee, Gift, PlusCircle, MapPin } from 'lucide-react';
 import NextImage from 'next/image';
@@ -43,10 +44,7 @@ const profileSchema = z.object({
   styleTags: z.array(z.object({ value: z.string().min(1, "Tag cannot be empty.") })),
   password: z.string().optional().or(z.literal('')),
   confirmPassword: z.string().optional(),
-  state: z.string().optional(),
-  district: z.string().optional(),
-  locality: z.string().optional(),
-  serviceAreas: z.array(serviceAreaSchema).optional(),
+  serviceAreas: z.array(serviceAreaSchema).min(1, "You must have at least one service area."),
   referralCode: z.string().optional(),
   referralDiscount: z.coerce.number().min(0).max(20).optional(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -101,9 +99,6 @@ export default function ArtistProfilePage() {
             styleTags: [],
             password: '',
             confirmPassword: '',
-            state: '',
-            district: '',
-            locality: '',
             serviceAreas: [],
             referralCode: '',
             referralDiscount: 10,
@@ -135,9 +130,6 @@ export default function ArtistProfilePage() {
                 charges: artist.charges,
                 services: artist.services || [],
                 styleTags: (artist.styleTags || []).map(tag => ({ value: tag })),
-                state: artist.state,
-                district: artist.district,
-                locality: artist.locality,
                 serviceAreas: artist.serviceAreas || [],
                 referralCode: artist.referralCode || artist.name.split(' ')[0].toUpperCase() + '10',
                 referralDiscount: artist.referralDiscount || 10,
@@ -148,15 +140,15 @@ export default function ArtistProfilePage() {
     const onSubmit = async (data: ProfileFormValues) => {
         if (!artist) return;
         
+        const firstServiceArea = data.serviceAreas[0];
+        const locationString = `${firstServiceArea.localities.split(',')[0].trim()}, ${firstServiceArea.district}`;
+        
         const dataToUpdate: Partial<Artist> = {
             name: data.name,
-            location: `${data.locality}, ${data.state}`, // Re-construct primary location
+            location: locationString,
             charges: data.charges,
             services: data.services as ('mehndi' | 'makeup' | 'photography')[],
             styleTags: data.styleTags.map(tag => tag.value),
-            state: data.state,
-            district: data.district,
-            locality: data.locality,
             serviceAreas: data.serviceAreas,
             referralCode: data.referralCode,
             referralDiscount: data.referralDiscount,
@@ -274,35 +266,22 @@ export default function ArtistProfilePage() {
                          <AccordionItem value="item-7">
                             <Card>
                                 <AccordionTrigger className="p-6 hover:no-underline">
-                                    <CardTitle className="flex items-center gap-2 text-lg"><MapPin /> Location & Service Areas</CardTitle>
+                                    <CardTitle className="flex items-center gap-2 text-lg"><MapPin /> Service Areas</CardTitle>
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <CardHeader className="pt-0">
-                                        <CardDescription>Define your primary location and add other areas you're willing to travel to for work.</CardDescription>
+                                        <CardDescription>Define all the areas you're willing to travel to for work. You must have at least one.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6 pt-2">
-                                        <h4 className="font-semibold text-primary">Primary Location</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                             <FormField control={form.control} name="state" render={({ field }) => (
-                                                <FormItem><FormLabel>State</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                                            )} />
-                                             <FormField control={form.control} name="district" render={({ field }) => (
-                                                <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{(availableLocations[form.watch('state') || ''] || []).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
-                                            )} />
-                                            <FormField control={form.control} name="locality" render={({ field }) => (
-                                                <FormItem><FormLabel>Locality</FormLabel><FormControl><Input placeholder="e.g. Koregaon Park" {...field}/></FormControl><FormMessage /></FormItem>
-                                            )} />
-                                        </div>
-                                        <Separator/>
-                                         <h4 className="font-semibold text-primary">Additional Service Areas</h4>
                                          <div className="space-y-4">
                                             {serviceAreaFields.map((field, index) => {
                                                 const watchedState = form.watch(`serviceAreas.${index}.state`);
                                                 const districtsForWatchedState = watchedState ? (availableLocations[watchedState] || []) : [];
                                                 return (
                                                 <Card key={field.id} className="p-4 bg-muted/50">
-                                                    <div className="flex justify-end mb-2">
-                                                        <Button type="button" size="icon" variant="ghost" onClick={() => removeServiceArea(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <h4 className="font-semibold text-primary">Service Area #{index + 1}</h4>
+                                                        {serviceAreaFields.length > 1 && <Button type="button" size="icon" variant="ghost" onClick={() => removeServiceArea(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>}
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                          <FormField control={form.control} name={`serviceAreas.${index}.state`} render={({ field }) => (
@@ -318,8 +297,9 @@ export default function ArtistProfilePage() {
                                                 </Card>
                                             )})}
                                              <Button type="button" variant="outline" onClick={() => appendServiceArea({ id: uuidv4(), state: '', district: '', localities: '' })}>
-                                                <PlusCircle className="mr-2 h-4 w-4"/> Add Service Area
+                                                <PlusCircle className="mr-2 h-4 w-4"/> Add Another Service Area
                                             </Button>
+                                            <FormMessage>{form.formState.errors.serviceAreas?.message}</FormMessage>
                                          </div>
                                     </CardContent>
                                 </AccordionContent>
