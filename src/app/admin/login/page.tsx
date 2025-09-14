@@ -106,11 +106,35 @@ export default function AdminLoginPage() {
     };
 
     const handleSetup = async (data: SetupFormValues) => {
+        let authUser;
         try {
             // Step 1: Create the Firebase Auth user
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const authUser = userCredential.user;
-
+            authUser = userCredential.user;
+        } catch (error: any) {
+            if (error.code === 'auth/email-already-in-use') {
+                // If auth user exists, we might just need to create the Firestore doc.
+                // We'll proceed, and the next steps will handle it.
+                // We need to sign in to get the UID for an existing user.
+                try {
+                    const signInCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+                    authUser = signInCredential.user;
+                } catch(signInError: any) {
+                     toast({ title: 'Setup Failed', description: 'This email is already in use with a different password. Please try logging in or use the "Forgot Password" link.', variant: 'destructive' });
+                     return;
+                }
+            } else {
+                 toast({ title: 'Setup Failed', description: error.message || 'An unexpected error occurred.', variant: 'destructive' });
+                 return;
+            }
+        }
+        
+        if (!authUser) {
+            toast({ title: 'Setup Failed', description: 'Could not create or verify the authentication user.', variant: 'destructive' });
+            return;
+        }
+        
+        try {
             // Step 2: Create the team member document in Firestore
             const newAdminMember: TeamMember = {
                 id: authUser.uid,
@@ -125,8 +149,15 @@ export default function AdminLoginPage() {
                 },
             };
             
-            // Get existing members (should be empty, but good practice)
             const currentMembers = await getTeamMembers();
+            const adminExists = currentMembers.some(m => m.role === 'Super Admin');
+
+            if (adminExists) {
+                toast({ title: 'Setup Not Needed', description: 'A Super Admin already exists. Switching to login.', variant: 'destructive' });
+                setPageState('login');
+                return;
+            }
+
             await saveTeamMembers([...currentMembers, newAdminMember]);
             
             toast({
@@ -137,11 +168,7 @@ export default function AdminLoginPage() {
             loginForm.setValue('email', data.email); // Pre-fill email for convenience
 
         } catch (error: any) {
-            let description = 'An unexpected error occurred.';
-            if (error.code === 'auth/email-already-in-use') {
-                description = 'This email is already in use. Please try logging in or use a different email.';
-            }
-            toast({ title: 'Setup Failed', description, variant: 'destructive' });
+            toast({ title: 'Setup Failed', description: 'Failed to save admin profile to database.', variant: 'destructive' });
         }
     };
 
