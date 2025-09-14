@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
 
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
-        defaultValues: { email: '', password: '' },
+        defaultValues: { email: 'utsavlook01@gmail.com', password: '' },
     });
 
     // Check if super admin exists when component mounts
