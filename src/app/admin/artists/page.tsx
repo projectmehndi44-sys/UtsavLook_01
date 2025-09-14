@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from '@/hooks/use-toast';
 import { Download, ChevronDown, CheckCircle, XCircle, MoreHorizontal, Eye, Trash2, UserPlus, ShieldOff, KeyRound, ShieldCheck, Star } from 'lucide-react';
 import type { Artist } from '@/lib/types';
-import { listenToCollection, createArtistWithId, deletePendingArtist, deleteArtist, updateArtist, getArtistByEmail } from '@/lib/services';
+import { listenToCollection, createArtistWithId, deletePendingArtist, deleteArtist, updateArtist } from '@/lib/services';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { exportToExcel } from '@/lib/export';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -95,21 +95,15 @@ export default function ArtistManagementPage() {
         const auth = getAuth(app);
         
         try {
-            // Check if user already exists in Firebase auth
-            const existingAuthUser = await getArtistByEmail(pendingArtist.email).catch(() => null);
+            // 1. Create user in Firebase Authentication
+            const userCredential = await createUserWithEmailAndPassword(auth, pendingArtist.email, `tempPass${Date.now()}`);
+            const uid = userCredential.user.uid;
+            
+            // 2. Send password creation/reset email
+            await sendPasswordResetEmail(auth, pendingArtist.email);
 
-            let uid;
-            if (existingAuthUser) {
-                uid = existingAuthUser.id;
-            } else {
-                 // 1. Create user in Firebase Authentication (will send password reset email)
-                const userCredential = await createUserWithEmailAndPassword(auth, pendingArtist.email, `tempPass${Date.now()}`);
-                uid = userCredential.user.uid;
-                await sendPasswordResetEmail(auth, pendingArtist.email);
-            }
-
-            // 2. Create artist document in 'artists' collection with the new UID
-            const newArtist: Omit<Artist, 'id'> = {
+            // 3. Create artist document in 'artists' collection with the new UID
+            const newArtistData: Omit<Artist, 'id'> = {
                 name: pendingArtist.fullName,
                 email: pendingArtist.email,
                 phone: pendingArtist.phone,
@@ -119,17 +113,19 @@ export default function ArtistManagementPage() {
                 locality: pendingArtist.locality,
                 servingAreas: pendingArtist.servingAreas,
                 profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${pendingArtist.fullName}`,
-                workImages: [], // This would be URLs from storage
-                services: ['mehndi', 'makeup', 'photography'], // Default services, can be changed later
+                workImages: [], // This would be URLs from storage in a real app
+                services: ['mehndi', 'makeup', 'photography'], // Default services
                 charge: 5000,
                 charges: { mehndi: 5000, makeup: 7000, photography: 10000 },
                 rating: 0,
                 styleTags: ['bridal', 'traditional'],
+                verified: false,
+                isFoundersClubMember: false,
             };
             
-            await createArtistWithId({ id: uid, ...newArtist });
+            await createArtistWithId({ id: uid, ...newArtistData });
             
-            // 3. Delete from 'pendingArtists'
+            // 4. Delete from 'pendingArtists' collection
             await deletePendingArtist(pendingArtist.id);
 
             toast({
@@ -139,11 +135,21 @@ export default function ArtistManagementPage() {
 
         } catch (error: any) {
             console.error("Approval error: ", error);
-            toast({
-                title: 'Approval Failed',
-                description: error.message,
-                variant: 'destructive',
-            });
+            // Handle specific error for existing email
+            if (error.code === 'auth/email-already-in-use') {
+                 toast({
+                    title: 'Approval Failed',
+                    description: `An account with email ${pendingArtist.email} already exists. Please onboard them manually or ask them to use a different email.`,
+                    variant: 'destructive',
+                    duration: 10000,
+                });
+            } else {
+                toast({
+                    title: 'Approval Failed',
+                    description: error.message,
+                    variant: 'destructive',
+                });
+            }
         }
     };
 
@@ -161,7 +167,7 @@ export default function ArtistManagementPage() {
         const {type, data} = dialogState;
 
         try {
-            if (type === 'delete' && data.role !== 'Super Admin') {
+            if (type === 'delete' && (data as Artist).role !== 'Super Admin') {
                 await deleteArtist(data.id);
                 toast({ title: 'Artist Deleted', description: `${data.name} has been removed.`, variant: 'destructive'});
             } else if (type === 'delete-pending') {
@@ -171,7 +177,7 @@ export default function ArtistManagementPage() {
                  const auth = getAuth(app);
                  await sendPasswordResetEmail(auth, data.email);
                  toast({ title: 'Password Reset Email Sent', description: `An email has been sent to ${data.name}.`});
-            } else if (data.role === 'Super Admin') {
+            } else if ((data as Artist).role === 'Super Admin') {
                  toast({ title: 'Action Denied', description: 'Super Admin cannot be deleted.', variant: 'destructive' });
             }
         } catch(error: any) {
@@ -200,6 +206,8 @@ export default function ArtistManagementPage() {
                 charges: { mehndi: data.charge },
                 rating: 0,
                 styleTags: [],
+                verified: false,
+                isFoundersClubMember: false,
             };
             await createArtistWithId({ id: uid, ...newArtist });
             

@@ -101,7 +101,7 @@ export default function TeamManagementPage() {
                 const authUser = userCredential.user;
                 
                 const newMember: TeamMember = {
-                    id: authUser.uid,
+                    id: authUser.uid, // Use the actual UID from Firebase Auth
                     name: data.name,
                     username: data.username,
                     role: data.role,
