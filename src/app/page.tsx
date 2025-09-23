@@ -1,10 +1,10 @@
 
+
 'use client';
 
 import * as React from 'react';
 import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder } from '@/lib/types';
 import { getCustomer, getPlaceholderImages, listenToCollection } from '@/lib/services';
-import { setupRecaptcha } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
