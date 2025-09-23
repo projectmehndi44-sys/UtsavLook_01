@@ -103,6 +103,8 @@ export default function LoginPage() {
                 recaptchaVerifierRef.current.clear();
             }
             
+            auth.languageCode = 'en';
+
             const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
                 'size': 'invisible'
             });
@@ -125,6 +127,8 @@ export default function LoginPage() {
                 errorMessage = "You have requested an OTP too many times. Please try again later.";
             } else if (err.code === 'auth/captcha-check-failed') {
                 errorMessage = "reCAPTCHA verification failed. Please try again.";
+            } else if (err.code === 'auth/invalid-phone-number') {
+                errorMessage = "The phone number is not valid.";
             }
             setError(errorMessage);
         } finally {
