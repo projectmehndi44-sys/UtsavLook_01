@@ -59,38 +59,6 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     defaultValues: { phone: '' },
   });
 
-  const handleGoogleSignIn = async () => {
-    setIsSubmitting(true);
-    try {
-        const firebaseUser: FirebaseAuthUser = await signInWithGoogle();
-        if (!firebaseUser.email) {
-            throw new Error("Google sign-in did not provide an email address.");
-        }
-        
-        let customer = await getCustomerByEmail(firebaseUser.email);
-
-        if (!customer) {
-            const newCustomerData: Omit<Customer, 'id'> & { id: string } = {
-                id: firebaseUser.uid,
-                name: firebaseUser.displayName || 'New User',
-                phone: firebaseUser.phoneNumber || '',
-                email: firebaseUser.email,
-            };
-            await createCustomer(newCustomerData);
-            customer = newCustomerData;
-        }
-
-        onSuccessfulLogin(customer);
-        handleClose();
-
-    } catch (error: any) {
-        console.error("Google Sign-In error:", error);
-        toast({ title: 'Google Sign-In Failed', description: error.message, variant: 'destructive'});
-    } finally {
-        setIsSubmitting(false);
-    }
-  }
-
   // Setup reCAPTCHA when the modal is opened
   React.useEffect(() => {
     if (isOpen && !window.recaptchaVerifier) {
@@ -246,19 +214,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                 <Button variant="link" size="sm" onClick={() => setIsOtpSent(false)}>Back</Button>
             </div>
          )}
-        
-        <div className="relative my-4">
-          <Separator />
-          <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-background px-2 text-sm text-muted-foreground">OR</span>
-        </div>
-
-        <Button variant="outline" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-          <GoogleIcon className="mr-2 h-5 w-5" />
-          Sign in with Google
-        </Button>
-        
       </DialogContent>
     </Dialog>
   );
 }
-
