@@ -18,6 +18,10 @@ const firebaseConfig = {
 // Initialize Firebase
 let app: FirebaseApp;
 if (getApps().length === 0) {
+  // Dynamically set authDomain for client-side environments to fix auth issues in previews
+  if (typeof window !== 'undefined') {
+    firebaseConfig.authDomain = window.location.hostname;
+  }
   app = initializeApp(firebaseConfig);
 } else {
   app = getApp();
