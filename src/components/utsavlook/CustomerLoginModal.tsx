@@ -77,7 +77,11 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         });
     } catch (error: any) {
         console.error("OTP send error:", error);
-        toast({ title: 'Failed to send OTP', description: error.message, variant: 'destructive'});
+        if (error.code === 'auth/too-many-requests') {
+             toast({ title: 'Too Many Requests', description: "You've requested too many OTPs. Please wait a while before trying again.", variant: 'destructive'});
+        } else {
+            toast({ title: 'Failed to send OTP', description: error.message, variant: 'destructive'});
+        }
     } finally {
         setIsSubmitting(false);
     }
