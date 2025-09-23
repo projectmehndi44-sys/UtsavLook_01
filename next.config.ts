@@ -4,9 +4,15 @@ import withPWA from 'next-pwa';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  serverActions: {
-    bodySizeLimit: '4mb', // Allow larger image uploads
-    maxDuration: 120, // Increase timeout to 2 minutes for AI operations
+  experimental: {
+    serverActions: {
+      maxDuration: 120, // Increase timeout to 2 minutes for AI operations
+    },
+  },
+  api: {
+    bodyParser: {
+      sizeLimit: '4mb', // Allow larger image uploads
+    },
   },
   typescript: {
     ignoreBuildErrors: true,
