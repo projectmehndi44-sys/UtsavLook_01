@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -40,11 +41,10 @@ export default function LoginPage() {
   const handleSendOtp = async (data: PhoneLoginFormValues) => {
     setIsLoading(true);
     try {
+        // Explicitly set the auth domain before creating the verifier.
+        auth.app.options.authDomain = 'studio-163529036-f9a8c.firebaseapp.com';
         const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
-            'parameters': {
-                'authDomain': 'studio-163529036-f9a8c.firebaseapp.com'
-            }
         });
       
         const confirmationResult = await sendOtp(data.phone, recaptchaVerifier);
