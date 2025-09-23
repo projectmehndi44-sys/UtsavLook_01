@@ -17,19 +17,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, signInWithGoogle, setupRecaptcha, sendOtp } from '@/lib/firebase';
+import { auth, setupRecaptcha, sendOtp } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
-import { Mail, Phone, Loader2 } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { getCustomerByPhone, createCustomer, getCustomerByEmail } from '@/lib/services';
+import { getCustomerByPhone, createCustomer } from '@/lib/services';
 import type { ConfirmationResult, User as FirebaseAuthUser } from 'firebase/auth';
-import { Separator } from '../ui/separator';
-import { GoogleIcon } from '../icons';
 
 
 const phoneLoginSchema = z.object({
@@ -59,15 +57,20 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     defaultValues: { phone: '' },
   });
 
-  // Setup reCAPTCHA when the modal is opened
+  // Check if reCAPTCHA is already ready from page load
   React.useEffect(() => {
-    if (isOpen && !window.recaptchaVerifier) {
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (recaptchaContainer) {
-        setupRecaptcha(recaptchaContainer, () => {
-          setIsRecaptchaReady(true);
-        });
-      }
+    if (isOpen) {
+        if (window.recaptchaVerifier) {
+            setIsRecaptchaReady(true);
+        } else {
+            // Fallback in case it wasn't ready on page load
+             const recaptchaContainer = document.getElementById('recaptcha-container');
+             if (recaptchaContainer) {
+                setupRecaptcha(recaptchaContainer, () => {
+                    setIsRecaptchaReady(true);
+                });
+             }
+        }
     }
   }, [isOpen]);
   
@@ -175,10 +178,10 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                             </FormItem>
                         )}
                     />
-                    <div id="recaptcha-container"></div>
+                    
                     <Button type="submit" disabled={isSubmitting || !isRecaptchaReady} className="w-full">
-                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Phone className="mr-2 h-4 w-4" />}
-                        {isSubmitting ? 'Sending...' : (isRecaptchaReady ? 'Send OTP' : 'Initializing...')}
+                        {isSubmitting || !isRecaptchaReady ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Phone className="mr-2 h-4 w-4" />}
+                        {isSubmitting ? 'Sending...' : isRecaptchaReady ? 'Send OTP' : 'Initializing...'}
                     </Button>
                 </form>
             </Form>
