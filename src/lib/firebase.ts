@@ -1,6 +1,7 @@
 
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
@@ -75,7 +76,7 @@ const signOutUser = () => {
     return signOut(auth);
 }
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail };
+export { app, auth, sendOtp, signOutUser, getFirebaseApp };
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
