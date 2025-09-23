@@ -82,10 +82,9 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { toast } = useToast();
     const auth = getAuth(app);
-    const { setArtist, artist, fetchData } = useArtistPortal();
+    const { artist, fetchData } = useArtistPortal();
     const [isLoading, setIsLoading] = React.useState(true);
-    const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
-
+    
     const handleLogout = React.useCallback(async () => {
         await signOutUser();
         toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
@@ -96,35 +95,31 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            setFirebaseUser(user);
-            if (!user && window.location.pathname.startsWith('/artist/dashboard')) {
-                router.push('/artist/login');
-            }
-        });
-        return () => unsubscribe();
-    }, [auth, router]);
-    
-    React.useEffect(() => {
-        const checkUser = async () => {
-            if (firebaseUser) {
+            setIsLoading(true);
+            if (user) {
                 try {
                     await fetchData();
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
                     handleLogout();
                 }
+            } else if (window.location.pathname.startsWith('/artist/dashboard')) {
+                router.push('/artist/login');
             }
             setIsLoading(false);
-        };
-        checkUser();
-    }, [firebaseUser, fetchData, handleLogout]);
-
+        });
+        return () => unsubscribe();
+    }, [auth, router, fetchData, handleLogout]);
+    
 
     if (isLoading) {
         return <div className="flex items-center justify-center min-h-screen">Loading Artist Portal...</div>;
     }
     
     if (!artist) {
+        if(window.location.pathname.startsWith('/artist/dashboard')) {
+            router.push('/artist/login');
+        }
         return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
     }
 
@@ -156,7 +151,7 @@ export default function ArtistDashboardLayout({
      const fetchData = React.useCallback(async () => {
         const firebaseUser = auth.currentUser;
         if (!firebaseUser?.uid) {
-            if (window.location.pathname.startsWith('/artist/dashboard')) {
+             if (window.location.pathname.startsWith('/artist/dashboard')) {
                 router.push('/artist/login');
             }
             return;
@@ -170,7 +165,7 @@ export default function ArtistDashboardLayout({
              await signOutUser();
              router.push('/artist/login');
         }
-    }, [auth.currentUser, router]);
+    }, [auth, router]);
 
 
     React.useEffect(() => {
