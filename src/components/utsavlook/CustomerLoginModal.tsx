@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, sendOtp } from '@/lib/firebase';
+import { sendOtp, getFirebaseApp } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { Phone, Loader2 } from 'lucide-react';
 import {
@@ -27,7 +27,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { getCustomerByPhone, createCustomer } from '@/lib/services';
-import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
+import { ConfirmationResult, RecaptchaVerifier, getAuth } from 'firebase/auth';
 
 
 const phoneLoginSchema = z.object({
@@ -61,28 +61,25 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     setPhone(data.phone);
 
     try {
-      const verifier = await new Promise<RecaptchaVerifier>((resolve) => {
+        const auth = getAuth(getFirebaseApp());
         const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
-            'callback': () => {
-                resolve(recaptchaVerifier);
-            }
         });
-        recaptchaVerifier.render();
-      });
+        
+        // Render the verifier and then send the OTP
+        const confirmationResult = await sendOtp(data.phone, recaptchaVerifier);
 
-      const confirmationResult = await sendOtp(data.phone, verifier);
-      window.confirmationResult = confirmationResult;
-      setIsOtpSent(true);
-      toast({
-        title: 'OTP Sent!',
-        description: 'Please check your phone for the verification code.',
-      });
+        window.confirmationResult = confirmationResult;
+        setIsOtpSent(true);
+        toast({
+            title: 'OTP Sent!',
+            description: 'Please check your phone for the verification code.',
+        });
     } catch (error: any) {
-      console.error("OTP send error:", error);
-      toast({ title: 'Failed to send OTP', description: error.message, variant: 'destructive'});
+        console.error("OTP send error:", error);
+        toast({ title: 'Failed to send OTP', description: error.message, variant: 'destructive'});
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
