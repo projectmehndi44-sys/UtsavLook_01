@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, sendOtp } from '@/lib/firebase';
+import { auth, sendOtp, setupRecaptcha } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { getCustomerByPhone, createCustomer } from '@/lib/services';
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
@@ -51,11 +51,23 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
+  const [isRecaptchaReady, setIsRecaptchaReady] = React.useState(false);
+  const recaptchaContainerRef = React.useRef<HTMLDivElement>(null);
+
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { phone: '', otp: '', name: '' },
   });
+
+  React.useEffect(() => {
+    if (isOpen && !window.recaptchaVerifier && recaptchaContainerRef.current) {
+      setupRecaptcha(recaptchaContainerRef.current, () => {
+        setIsRecaptchaReady(true);
+        console.log('reCAPTCHA verifier is ready.');
+      });
+    }
+  }, [isOpen]);
 
   const handleSendOtp = async () => {
     const phone = form.getValues('phone');
@@ -166,6 +178,11 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        const container = document.getElementById('recaptcha-container-modal');
+        if (container) container.innerHTML = '';
+      }
     }, 300);
   }
 
@@ -179,6 +196,8 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
           </DialogDescription>
         </DialogHeader>
         
+        <div id="recaptcha-container-modal" ref={recaptchaContainerRef}></div>
+
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                 <FormField control={form.control} name="phone" render={({ field }) => (
@@ -192,8 +211,8 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                 )} />
 
                 {!isOtpSent && (
-                   <Button id="send-otp-button" type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
-                        {isSubmitting ? 'Sending...' : 'Send OTP'}
+                   <Button id="send-otp-button" type="button" onClick={handleSendOtp} disabled={isSubmitting || !isRecaptchaReady} className="w-full">
+                        {isSubmitting ? 'Sending...' : (isRecaptchaReady ? 'Send OTP' : 'Verifying...')}
                    </Button>
                 )}
 

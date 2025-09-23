@@ -117,13 +117,6 @@ export default function Home() {
       setCurrentBgIndex((prevIndex) => (prevIndex + 1) % (backgroundImages.length || 1));
     }, 5000); 
 
-    // Setup reCAPTCHA on page load
-    const recaptchaContainer = document.getElementById('recaptcha-container');
-    if (recaptchaContainer) {
-        setupRecaptcha(recaptchaContainer, () => {
-            console.log('reCAPTCHA verifier is ready on page load.');
-        });
-    }
 
     return () => {
         clearInterval(intervalId);
@@ -171,7 +164,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
-      <div id="recaptcha-container" style={{ display: 'none' }}></div>
       <div className="fixed inset-0 -z-10 h-full w-full">
           {backgroundImages.map((image, index) => (
               <Image
