@@ -286,5 +286,5 @@ export const getCustomers = async (): Promise<Customer[]> => getCollection<Custo
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     const config = await getConfigDocument<any>('masterServices');
-    return config?.packages || [];
+    return config || [];
 };

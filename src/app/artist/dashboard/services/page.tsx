@@ -74,8 +74,8 @@ export default function ArtistServicesPage() {
         }
     };
 
-    if (!artist || masterServices.length === 0) {
-        return <div>Loading services...</div>
+    if (!artist) {
+        return <div>Loading...</div>
     }
 
     // Filter master services based on the services the artist has signed up for in their profile
