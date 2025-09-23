@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -21,6 +22,7 @@ export default function FinishLoginPage() {
             if (isSignInWithEmailLink(auth, window.location.href)) {
                 let email = window.localStorage.getItem('emailForSignIn');
                 if (!email) {
+                    // Fallback if local storage is cleared
                     email = window.prompt('Please provide your email for confirmation');
                 }
 
@@ -72,7 +74,8 @@ export default function FinishLoginPage() {
                     router.push('/');
                 }
             } else {
-                 setMessage('This link is not valid for sign-in.');
+                 // This page is only for email link sign-in. Redirect if accessed directly.
+                 setMessage('No action to perform. Redirecting...');
                  router.push('/');
             }
         };
@@ -98,3 +101,4 @@ export default function FinishLoginPage() {
 }
 
     
+

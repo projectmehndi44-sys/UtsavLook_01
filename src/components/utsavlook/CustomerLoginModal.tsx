@@ -17,29 +17,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, sendSignInLinkToEmail, setupRecaptcha, sendOtp } from '@/lib/firebase';
+import { auth, signInWithGoogle, setupRecaptcha, sendOtp } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { Mail, Phone, Loader2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { getCustomerByPhone, createCustomer } from '@/lib/services';
-import type { ConfirmationResult } from 'firebase/auth';
+import { getCustomerByPhone, createCustomer, getCustomerByEmail } from '@/lib/services';
+import type { ConfirmationResult, User as FirebaseAuthUser } from 'firebase/auth';
+import { Separator } from '../ui/separator';
+import { GoogleIcon } from '../icons';
 
-
-const emailLoginSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-});
 
 const phoneLoginSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit phone number.' }),
 });
 
-type EmailLoginFormValues = z.infer<typeof emailLoginSchema>;
 type PhoneLoginFormValues = z.infer<typeof phoneLoginSchema>;
 
 interface CustomerLoginModalProps {
@@ -51,7 +47,6 @@ interface CustomerLoginModalProps {
 export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: CustomerLoginModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState('email');
   
   // Phone auth state
   const [phone, setPhone] = React.useState('');
@@ -59,50 +54,46 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isRecaptchaReady, setIsRecaptchaReady] = React.useState(false);
 
-  const emailForm = useForm<EmailLoginFormValues>({
-    resolver: zodResolver(emailLoginSchema),
-    defaultValues: { email: '' },
-  });
-
   const phoneForm = useForm<PhoneLoginFormValues>({
     resolver: zodResolver(phoneLoginSchema),
     defaultValues: { phone: '' },
   });
 
-  const handleEmailSubmit = async (data: EmailLoginFormValues) => {
+  const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
     try {
-      const actionCodeSettings = {
-        url: `https://${auth.config.authDomain}/finish-login`,
-        handleCodeInApp: true,
-      };
+        const firebaseUser: FirebaseAuthUser = await signInWithGoogle();
+        if (!firebaseUser.email) {
+            throw new Error("Google sign-in did not provide an email address.");
+        }
+        
+        let customer = await getCustomerByEmail(firebaseUser.email);
 
-      await sendSignInLinkToEmail(auth, data.email, actionCodeSettings);
-      window.localStorage.setItem('emailForSignIn', data.email);
+        if (!customer) {
+            const newCustomerData: Omit<Customer, 'id'> & { id: string } = {
+                id: firebaseUser.uid,
+                name: firebaseUser.displayName || 'New User',
+                phone: firebaseUser.phoneNumber || '',
+                email: firebaseUser.email,
+            };
+            await createCustomer(newCustomerData);
+            customer = newCustomerData;
+        }
 
-      toast({
-        title: 'Login Link Sent!',
-        description: 'Please check your email for a link to sign in.',
-        duration: 9000,
-      });
+        onSuccessfulLogin(customer);
+        handleClose();
 
-      handleClose();
-
-    } catch (error) {
-      console.error("Email link sign-in error:", error);
-      toast({
-        title: 'Failed to Send Link',
-        description: 'Could not send the login link. Please try again.',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+        console.error("Google Sign-In error:", error);
+        toast({ title: 'Google Sign-In Failed', description: error.message, variant: 'destructive'});
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+  }
 
-  // Setup reCAPTCHA when phone tab is selected
+  // Setup reCAPTCHA when the modal is opened
   React.useEffect(() => {
-    if (isOpen && activeTab === 'phone' && !window.recaptchaVerifier) {
+    if (isOpen && !window.recaptchaVerifier) {
       const recaptchaContainer = document.getElementById('recaptcha-container');
       if (recaptchaContainer) {
         setupRecaptcha(recaptchaContainer, () => {
@@ -110,14 +101,14 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         });
       }
     }
-  }, [isOpen, activeTab]);
+  }, [isOpen]);
   
 
   const handleSendOtp = async (data: PhoneLoginFormValues) => {
     setIsSubmitting(true);
     setPhone(data.phone);
     if (!window.recaptchaVerifier) {
-      toast({ title: 'reCAPTCHA not ready', variant: 'destructive'});
+      toast({ title: 'reCAPTCHA not ready, please wait.', variant: 'destructive'});
       setIsSubmitting(false);
       return;
     }
@@ -179,13 +170,11 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      emailForm.reset();
       phoneForm.reset();
       setIsSubmitting(false);
       setIsOtpSent(false);
       setOtp('');
       setPhone('');
-      setActiveTab('email');
     }, 300);
   };
 
@@ -195,102 +184,81 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         <DialogHeader>
           <DialogTitle className="text-primary font-bold text-2xl">Login or Sign Up</DialogTitle>
           <DialogDescription>
-             Choose your preferred method to get a secure login.
+             Enter your phone number to receive a secure one-time password (OTP).
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="email"><Mail className="mr-2 h-4 w-4"/>Email</TabsTrigger>
-                <TabsTrigger value="phone"><Phone className="mr-2 h-4 w-4"/>Phone</TabsTrigger>
-            </TabsList>
-            <TabsContent value="email">
-                <Form {...emailForm}>
-                <form onSubmit={emailForm.handleSubmit(handleEmailSubmit)} className="space-y-4 pt-4">
-                    <FormField
-                    control={emailForm.control}
-                    name="email"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <FormControl>
-                            <Input type="email" placeholder="you@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
+         {!isOtpSent ? (
+             <Form {...phoneForm}>
+                <form onSubmit={phoneForm.handleSubmit(handleSendOtp)} className="space-y-4 pt-4">
+                     <FormField
+                        control={phoneForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>10-Digit Mobile Number</FormLabel>
+                                <FormControl>
+                                    <div className="flex items-center">
+                                        <span className="inline-block p-2 border rounded-l-md bg-muted">+91</span>
+                                        <Input type="tel" placeholder="9876543210" {...field} className="rounded-l-none" />
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-
-                    <Button type="submit" disabled={isSubmitting} className="w-full">
-                        <Mail className="mr-2 h-4 w-4" />
-                        {isSubmitting ? 'Sending Link...' : 'Send Login Link'}
+                    <div id="recaptcha-container"></div>
+                    <Button type="submit" disabled={isSubmitting || !isRecaptchaReady} className="w-full">
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Phone className="mr-2 h-4 w-4" />}
+                        {isSubmitting ? 'Sending...' : (isRecaptchaReady ? 'Send OTP' : 'Initializing...')}
                     </Button>
                 </form>
-                </Form>
-            </TabsContent>
-            <TabsContent value="phone">
-                 {!isOtpSent ? (
-                     <Form {...phoneForm}>
-                        <form onSubmit={phoneForm.handleSubmit(handleSendOtp)} className="space-y-4 pt-4">
-                             <FormField
-                                control={phoneForm.control}
-                                name="phone"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>10-Digit Mobile Number</FormLabel>
-                                        <FormControl>
-                                            <div className="flex items-center">
-                                                <span className="inline-block p-2 border rounded-l-md bg-muted">+91</span>
-                                                <Input type="tel" placeholder="9876543210" {...field} className="rounded-l-none" />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <div id="recaptcha-container"></div>
-                            <Button type="submit" disabled={isSubmitting || !isRecaptchaReady} className="w-full">
-                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Phone className="mr-2 h-4 w-4" />}
-                                {isSubmitting ? 'Sending...' : (isRecaptchaReady ? 'Send OTP' : 'Verifying...')}
-                            </Button>
-                        </form>
-                    </Form>
-                 ) : (
-                    <div className="space-y-4 pt-4">
-                         <div className="text-center">
-                            <Label htmlFor="otp-input">Enter OTP</Label>
-                            <p className="text-sm text-muted-foreground">Sent to +91 {phone}</p>
-                         </div>
-                        <InputOTP
-                            id="otp-input"
-                            maxLength={6}
-                            value={otp}
-                            onChange={setOtp}
-                            containerClassName="justify-center"
-                        >
-                            <InputOTPGroup>
-                                <InputOTPSlot index={0} />
-                                <InputOTPSlot index={1} />
-                                <InputOTPSlot index={2} />
-                            </InputOTPGroup>
-                            <InputOTPSeparator />
-                            <InputOTPGroup>
-                                <InputOTPSlot index={3} />
-                                <InputOTPSlot index={4} />
-                                <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                        </InputOTP>
-                        <Button onClick={handleVerifyOtp} disabled={isSubmitting || otp.length < 6} className="w-full">
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Verify & Login
-                        </Button>
-                        <Button variant="link" size="sm" onClick={() => setIsOtpSent(false)}>Back</Button>
-                    </div>
-                 )}
-            </TabsContent>
-        </Tabs>
+            </Form>
+         ) : (
+            <div className="space-y-4 pt-4">
+                 <div className="text-center">
+                    <Label htmlFor="otp-input">Enter OTP</Label>
+                    <p className="text-sm text-muted-foreground">Sent to +91 {phone}</p>
+                 </div>
+                <InputOTP
+                    id="otp-input"
+                    maxLength={6}
+                    value={otp}
+                    onChange={setOtp}
+                    containerClassName="justify-center"
+                >
+                    <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                </InputOTP>
+                <Button onClick={handleVerifyOtp} disabled={isSubmitting || otp.length < 6} className="w-full">
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Verify & Login
+                </Button>
+                <Button variant="link" size="sm" onClick={() => setIsOtpSent(false)}>Back</Button>
+            </div>
+         )}
+        
+        <div className="relative my-4">
+          <Separator />
+          <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-background px-2 text-sm text-muted-foreground">OR</span>
+        </div>
+
+        <Button variant="outline" onClick={handleGoogleSignIn} disabled={isSubmitting}>
+          <GoogleIcon className="mr-2 h-5 w-5" />
+          Sign in with Google
+        </Button>
         
       </DialogContent>
     </Dialog>
   );
 }
+
