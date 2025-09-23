@@ -1,4 +1,5 @@
 
+
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder } from '@/lib/types';
@@ -92,8 +93,9 @@ export const listenToCollection = <T>(collectionName: string, callback: (data: T
 // Artists
 export const getArtist = async (id: string): Promise<Artist | null> => {
     const artist = await getDocument<Artist>('artists', id);
-    if (artist && !artist.charges) {
-        artist.charges = {};
+    if (artist) {
+        // Ensure charges is an object, even if it's empty.
+        artist.charges = artist.charges || {};
     }
     return artist;
 };
