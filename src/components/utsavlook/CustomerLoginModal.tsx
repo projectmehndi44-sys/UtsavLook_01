@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, setupRecaptcha, sendOtp } from '@/lib/firebase';
+import { auth, sendOtp } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { getCustomerByPhone, createCustomer } from '@/lib/services';
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
@@ -51,21 +51,11 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
-  const [isRecaptchaReady, setIsRecaptchaReady] = React.useState(false);
-
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { phone: '', otp: '', name: '' },
   });
-
-  const sendOtpButtonRef = React.useRef<HTMLDivElement>(null);
-  
-  React.useEffect(() => {
-    if (isOpen && !window.recaptchaVerifier && sendOtpButtonRef.current) {
-        setupRecaptcha(sendOtpButtonRef.current, () => setIsRecaptchaReady(true));
-    }
-  }, [isOpen]);
 
   const handleSendOtp = async () => {
     const phone = form.getValues('phone');
@@ -73,8 +63,8 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         form.setError('phone', { type: 'manual', message: 'Please enter a valid phone number.' });
         return;
     }
-    if (!window.recaptchaVerifier || !isRecaptchaReady) {
-        toast({ title: 'reCAPTCHA not ready', description: 'Please wait for the reCAPTCHA to load and verify.', variant: 'destructive'});
+    if (!window.recaptchaVerifier) {
+        toast({ title: 'reCAPTCHA not ready', description: 'Please wait a moment and try again.', variant: 'destructive'});
         return;
     }
     
@@ -94,19 +84,16 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
        console.error("OTP Error:", error);
        toast({
            title: 'Failed to Send OTP',
-           description: 'Could not send OTP. Please check the phone number and try again. The reCAPTCHA might need to be solved again.',
+           description: 'Could not send OTP. Please check the phone number and try again.',
            variant: 'destructive',
        });
-       // Reset reCAPTCHA
-       setIsRecaptchaReady(false);
-        if (window.recaptchaVerifier) {
-            window.recaptchaVerifier.render().then(widgetId => {
+       // Reset reCAPTCHA on error
+       if (window.recaptchaVerifier) {
+           window.recaptchaVerifier.render().then(function(widgetId) {
                 // @ts-ignore
-                if(window.grecaptcha) {
-                    window.grecaptcha.reset(widgetId);
-                }
+                window.grecaptcha.reset(widgetId);
             });
-        }
+       }
     } finally {
         setIsSubmitting(false);
     }
@@ -179,11 +166,6 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
-      setIsRecaptchaReady(false);
-      if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
-          window.recaptchaVerifier = undefined;
-      }
     }, 300);
   }
 
@@ -210,12 +192,10 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                 )} />
 
                 {!isOtpSent && (
-                   <Button id="send-otp-button" type="button" onClick={handleSendOtp} disabled={isSubmitting || !isRecaptchaReady} className="w-full">
-                        {isSubmitting ? 'Sending...' : (isRecaptchaReady ? 'Send OTP' : 'Verifying...')}
+                   <Button id="send-otp-button" type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
+                        {isSubmitting ? 'Sending...' : 'Send OTP'}
                    </Button>
                 )}
-                 {/* This div is used as an anchor for the invisible reCAPTCHA */}
-                <div ref={sendOtpButtonRef}></div>
 
                 {isOtpSent && (
                 <>
