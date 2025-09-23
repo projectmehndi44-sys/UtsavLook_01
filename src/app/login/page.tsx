@@ -2,10 +2,10 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -33,6 +33,10 @@ export default function LoginPage() {
   const [isVerifying, setIsVerifying] = React.useState(false);
   const auth = getAuth(getFirebaseApp());
 
+  // Keep a ref to the verifier to avoid re-creation
+  const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
+
+
   const phoneForm = useForm<PhoneLoginFormValues>({
     resolver: zodResolver(phoneLoginSchema),
     defaultValues: { phone: '' },
@@ -41,14 +45,20 @@ export default function LoginPage() {
   const handleSendOtp = async (data: PhoneLoginFormValues) => {
     setIsLoading(true);
     try {
-        // Set language code to ensure proper functioning of reCAPTCHA
         auth.languageCode = 'en';
 
-        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'invisible'
+        // Clear any previous instance
+        if (recaptchaVerifierRef.current) {
+            recaptchaVerifierRef.current.clear();
+        }
+
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
         });
-      
-        const confirmationResult = await sendOtp(data.phone, recaptchaVerifier);
+        
+        recaptchaVerifierRef.current = verifier;
+
+        const confirmationResult = await sendOtp(data.phone, verifier);
 
         window.confirmationResult = confirmationResult;
         setIsOtpSent(true);
@@ -58,7 +68,7 @@ export default function LoginPage() {
         });
     } catch (error: any) {
         console.error("OTP Send error:", error);
-        let description = "An unknown error occurred.";
+        let description = "An unknown error occurred. Please refresh the page and try again.";
         if (error.code === 'auth/too-many-requests') {
             description = "You have requested an OTP too many times. Please try again later.";
         } else if (error.code === 'auth/captcha-check-failed') {
