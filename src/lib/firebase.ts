@@ -86,20 +86,21 @@ const signInWithGoogle = (): Promise<User> => {
   return signInWithPopup(auth, googleProvider).then(result => result.user);
 };
 
-const setupRecaptcha = (elementId: string, onVerify: () => void): void => {
+export const setupRecaptcha = (button: HTMLElement): void => {
     if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
     }
-    const verifier = new RecaptchaVerifier(auth, elementId, {
-        'size': 'normal',
+    const verifier = new RecaptchaVerifier(auth, button, {
+        'size': 'invisible',
         'callback': (response: any) => {
-            onVerify();
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+            console.log("reCAPTCHA verified");
         },
         'expired-callback': () => {
-             // Response expired. Ask user to solve reCAPTCHA again.
+            // Response expired. User needs to solve reCAPTCHA again.
+             console.warn("reCAPTCHA expired");
         }
     });
-    verifier.render();
     window.recaptchaVerifier = verifier;
 }
 
@@ -150,7 +151,7 @@ const signOutUser = () => {
 }
 
 
-export { app, auth, signInWithGoogle, getFCMToken, onForegroundMessage, setupRecaptcha, sendOtp, createUser, signOutUser, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, updatePassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink };
+export { app, auth, signInWithGoogle, getFCMToken, onForegroundMessage, sendOtp, createUser, signOutUser, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, updatePassword, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink };
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;

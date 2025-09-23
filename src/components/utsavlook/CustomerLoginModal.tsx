@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -55,15 +56,12 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     resolver: zodResolver(loginSchema),
     defaultValues: { phone: '', otp: '', name: '' },
   });
+
+  const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
   
   React.useEffect(() => {
-    if (isOpen && !window.recaptchaVerifier) {
-       setTimeout(() => {
-            const recaptchaContainer = document.getElementById('recaptcha-container');
-            if (recaptchaContainer) {
-                 setupRecaptcha('recaptcha-container', () => {});
-            }
-       }, 500);
+    if (isOpen && !window.recaptchaVerifier && sendOtpButtonRef.current) {
+        setupRecaptcha(sendOtpButtonRef.current);
     }
   }, [isOpen]);
 
@@ -174,10 +172,6 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (recaptchaContainer) {
-          recaptchaContainer.innerHTML = '';
-      }
       if (window.recaptchaVerifier) {
           window.recaptchaVerifier.clear();
           window.recaptchaVerifier = undefined;
@@ -207,10 +201,8 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                     </FormItem>
                 )} />
 
-                {!isOtpSent && <div id="recaptcha-container" className="flex justify-center min-h-[78px]"></div>}
-
                 {!isOtpSent && (
-                   <Button type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
+                   <Button ref={sendOtpButtonRef} type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
                         {isSubmitting ? 'Sending...' : 'Send OTP'}
                    </Button>
                 )}
