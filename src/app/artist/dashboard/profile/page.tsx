@@ -1,10 +1,9 @@
 
-
 'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Artist, ServiceArea } from '@/lib/types';
@@ -88,7 +87,7 @@ const serviceItems = [
 
 
 export default function ArtistProfilePage() {
-    const { artist, setArtist } = useArtistPortal();
+    const { artist, setArtist, fetchData } = useArtistPortal();
     const router = useRouter();
     const { toast } = useToast();
     const [tagInput, setTagInput] = React.useState('');
@@ -145,7 +144,7 @@ export default function ArtistProfilePage() {
         }
     }, [artist, form]);
 
-    const onSubmit = async (data: ProfileFormValues) => {
+    const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
         if (!artist) return;
         
         const firstServiceArea = data.serviceAreas[0];
@@ -170,9 +169,8 @@ export default function ArtistProfilePage() {
         
         try {
             await updateArtist(artist.id, dataToUpdate);
-            if (setArtist) {
-                setArtist(prev => prev ? { ...prev, ...dataToUpdate } as Artist : null);
-            }
+            // After successful update, fetch the latest artist data to update the context
+            await fetchData();
             form.reset({ ...data, password: '', confirmPassword: '' });
             toast({
                 title: "Profile Updated",
@@ -535,6 +533,5 @@ export default function ArtistProfilePage() {
         </div>
     );
 }
-
 
     

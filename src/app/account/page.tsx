@@ -1,5 +1,5 @@
 
-      'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 import { generateCustomerInvoice } from '@/lib/export';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getArtists, getBookings, getCustomer, createNotification, updateBooking } from '@/lib/services';
+import { getArtists, getBookings, getCustomer, createNotification, updateArtist } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -103,33 +103,32 @@ export default function AccountPage() {
         fetchCustomerData();
     }, [fetchCustomerData]);
 
-    React.useEffect(() => {
-        const checkReviewRequests = async () => {
-            if (!customer) return;
-            const now = new Date();
-            const completedUnreviewedBookings = bookings.filter(b => 
-                b.status === 'Completed' && 
-                !b.reviewSubmitted &&
-                (now.getTime() - getSafeDate(b.eventDate).getTime()) > (24 * 60 * 60 * 1000)
-            );
+    const checkReviewRequests = React.useCallback(async () => {
+        if (!customer) return;
+        const now = new Date();
+        const completedUnreviewedBookings = bookings.filter(b => 
+            b.status === 'Completed' && 
+            !b.reviewSubmitted &&
+            (now.getTime() - getSafeDate(b.eventDate).getTime()) > (24 * 60 * 60 * 1000)
+        );
 
-            if (completedUnreviewedBookings.length > 0) {
-                const bookingToReview = completedUnreviewedBookings[0];
-                 await createNotification({
-                    customerId: customer.id,
-                    bookingId: bookingToReview.id,
-                    title: "How was your service?",
-                    message: `Please take a moment to review your recent booking for ${bookingToReview.items.map(i => i.servicePackage.name).join(', ')} with ${bookingToReview.customerName}.`,
-                    timestamp: new Date().toISOString(),
-                    isRead: false,
-                    type: 'review_request',
-                });
-            }
+        for (const bookingToReview of completedUnreviewedBookings) {
+             await createNotification({
+                customerId: customer.id,
+                bookingId: bookingToReview.id,
+                title: "How was your service?",
+                message: `Please take a moment to review your recent booking for ${bookingToReview.items.map(i => i.servicePackage.name).join(', ')} with ${bookingToReview.customerName}.`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                type: 'review_request',
+            });
         }
-        
+    }, [bookings, customer]);
+
+    React.useEffect(() => {
         const interval = setInterval(checkReviewRequests, 60000); // Check every minute
         return () => clearInterval(interval);
-    }, [bookings, customer]);
+    }, [checkReviewRequests]);
 
 
     const handleDownloadInvoice = (booking: Booking) => {
@@ -159,11 +158,10 @@ export default function AccountPage() {
                 const updatedReviews = [...(artist.reviews || []), newReview];
                 const newRating = updatedReviews.reduce((acc, r) => acc + r.rating, 0) / updatedReviews.length;
 
-                // In a real app, this should be a transaction for accuracy
-                await updateBooking(artist.id, { reviews: updatedReviews, rating: newRating });
+                await updateArtist(artist.id, { reviews: updatedReviews, rating: newRating });
             }
         }
-
+        
         await updateBooking(reviewBooking.id, { reviewSubmitted: true });
 
         toast({
@@ -171,11 +169,11 @@ export default function AccountPage() {
             description: "Thank you for your feedback.",
         });
 
-        // Close modal and reset state
         setReviewBooking(null);
         setRating(0);
         setComment('');
-        fetchCustomerData(); // Refetch to update UI
+        // Re-fetch data to reflect the changes immediately
+        await fetchCustomerData();
     }
 
     const getStatusVariant = (status: Booking['status']) => {

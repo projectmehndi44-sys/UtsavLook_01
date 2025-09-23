@@ -1,5 +1,4 @@
 
-
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder } from '@/lib/types';
@@ -271,7 +270,18 @@ export const createNotification = async (data: Omit<Notification, 'id'>): Promis
 export async function getCollection<T>(collectionName: string): Promise<T[]> {
   const db = await getDb();
   const querySnapshot = await getDocs(collection(db, collectionName));
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+  return querySnapshot.docs.map(doc => {
+       const data = doc.data();
+        // Convert Timestamps
+        Object.keys(data).forEach(key => {
+            if (data[key] instanceof Timestamp) {
+                data[key] = data[key].toDate();
+            } else if (Array.isArray(data[key])) {
+                data[key] = data[key].map(item => item instanceof Timestamp ? item.toDate() : item);
+            }
+        });
+        return { id: doc.id, ...data } as T;
+  });
 }
 
 export const getArtists = async (): Promise<Artist[]> => {
@@ -288,3 +298,5 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     const config = await getConfigDocument<any>('masterServices');
     return config || [];
 };
+
+    

@@ -41,7 +41,7 @@ interface ArtistPortalContextType {
     unreadCount: number;
     setArtist: React.Dispatch<React.SetStateAction<Artist | null>>;
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
-    fetchData: () => void;
+    fetchData: () => Promise<void>;
 }
 
 export const ArtistPortalContext = React.createContext<ArtistPortalContextType | null>(null);
@@ -82,7 +82,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { toast } = useToast();
     const auth = getAuth(app);
-    const { setArtist, artist } = useArtistPortal();
+    const { setArtist, artist, fetchData } = useArtistPortal();
     const [isLoading, setIsLoading] = React.useState(true);
 
     const handleLogout = React.useCallback(async () => {
@@ -97,17 +97,8 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
-                    const currentArtist = await getArtist(firebaseUser.uid);
-                    if (currentArtist) {
-                        setArtist(currentArtist);
-                    } else {
-                        toast({
-                            title: "Access Denied",
-                            description: "This account is not registered as an artist.",
-                            variant: "destructive"
-                        });
-                        handleLogout();
-                    }
+                    // Use the fetchData function from context to ensure data is fresh
+                    await fetchData();
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
                     handleLogout();
@@ -146,6 +137,7 @@ export default function ArtistDashboardLayout({
     const router = useRouter();
     const pathname = usePathname();
     const isMobile = useIsMobile();
+    const auth = getAuth(app);
     
     const [artist, setArtist] = React.useState<Artist | null>(null);
     const [artistBookings, setArtistBookings] = React.useState<Booking[]>([]);
@@ -159,12 +151,18 @@ export default function ArtistDashboardLayout({
     }, [router]);
     
     const fetchData = React.useCallback(async () => {
-        if (!artist?.id) return;
-        const currentArtist = await getArtist(artist.id);
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser?.uid) return;
+
+        const currentArtist = await getArtist(firebaseUser.uid);
         if (currentArtist) {
             setArtist(currentArtist);
+        } else {
+             // Handle case where artist doc is not found for an authenticated user
+             await signOutUser();
+             router.push('/artist/login');
         }
-    }, [artist?.id]);
+    }, [auth.currentUser, router]);
 
 
     React.useEffect(() => {
@@ -328,3 +326,5 @@ export default function ArtistDashboardLayout({
         </ArtistPortalContext.Provider>
     );
 }
+
+    
