@@ -53,4 +53,7 @@ const pwaConfig = withPWA({
   disable: process.env.NODE_ENV === 'development',
 })
 
-export default pwaConfig(nextConfig);
+// Only apply PWA config if not in Turbopack mode
+const finalConfig = process.env.TURBOPACK ? nextConfig : pwaConfig(nextConfig);
+
+export default finalConfig;
