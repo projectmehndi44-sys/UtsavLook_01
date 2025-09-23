@@ -12,16 +12,7 @@ async function getDocument<T>(collectionName: string, id: string): Promise<T | n
     const docRef = doc(db, collectionName, id);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return null;
-    const data = docSnap.data();
-    // Convert Firestore Timestamps to JS Dates for client-side consistency
-    Object.keys(data).forEach(key => {
-        if (data[key] instanceof Timestamp) {
-            data[key] = (data[key] as Timestamp).toDate();
-        } else if (Array.isArray(data[key])) {
-            data[key] = data[key].map(item => item instanceof Timestamp ? item.toDate() : item);
-        }
-    });
-    return { id: docSnap.id, ...data } as T;
+    return { id: docSnap.id, ...docSnap.data() } as T;
 }
 
 
@@ -93,11 +84,22 @@ export const listenToCollection = <T>(collectionName: string, callback: (data: T
 // Artists
 export const getArtist = async (id: string): Promise<Artist | null> => {
     const artist = await getDocument<Artist>('artists', id);
-    if (artist) {
-        // Ensure charges is an object, even if it's empty.
-        artist.charges = artist.charges || {};
-    }
-    return artist;
+    if (!artist) return null;
+    
+    // Convert Timestamps to JS Dates for client-side consistency
+    const data = artist as any;
+     Object.keys(data).forEach(key => {
+        if (data[key] instanceof Timestamp) {
+            data[key] = (data[key] as Timestamp).toDate();
+        } else if (Array.isArray(data[key])) {
+            data[key] = data[key].map(item => item instanceof Timestamp ? item.toDate() : item);
+        }
+    });
+
+    // Ensure charges is an object, even if it's empty.
+    data.charges = data.charges || {};
+
+    return data as Artist;
 };
 export const getArtistByEmail = async (email: string): Promise<Artist | null> => {
     const db = await getDb();
@@ -267,9 +269,8 @@ export const createNotification = async (data: Omit<Notification, 'id'>): Promis
     return docRef.id;
 };
 
-
-// Generic function to get a collection
-export async function getCollection<T>(collectionName: string): Promise<T[]> {
+// To be DEPRECATED. Use listeners instead for performance.
+async function getCollection<T>(collectionName: string): Promise<T[]> {
   const db = await getDb();
   const querySnapshot = await getDocs(collection(db, collectionName));
   return querySnapshot.docs.map(doc => {
@@ -277,7 +278,7 @@ export async function getCollection<T>(collectionName: string): Promise<T[]> {
         // Convert Timestamps
         Object.keys(data).forEach(key => {
             if (data[key] instanceof Timestamp) {
-                data[key] = data[key].toDate();
+                data[key] = (data[key] as Timestamp).toDate();
             } else if (Array.isArray(data[key])) {
                 data[key] = data[key].map(item => item instanceof Timestamp ? item.toDate() : item);
             }
@@ -286,6 +287,7 @@ export async function getCollection<T>(collectionName: string): Promise<T[]> {
   });
 }
 
+// DEPRECATED - use listeners instead.
 export const getArtists = async (): Promise<Artist[]> => {
     const artists = await getCollection<Artist>('artists');
     return artists.map(artist => ({
@@ -293,8 +295,9 @@ export const getArtists = async (): Promise<Artist[]> => {
         charges: artist.charges || {}, // Ensure charges object exists
     }));
 };
+// DEPRECATED - use listeners instead.
 export const getBookings = async (): Promise<Booking[]> => getCollection<Booking>('bookings');
-export const getCustomers = async (): Promise<Customer[]> => getCollection<Customer>('customers');
+
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     const config = await getConfigDocument<any>('masterServices');

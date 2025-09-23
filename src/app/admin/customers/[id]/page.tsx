@@ -9,10 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import type { Booking, Customer, Artist } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Briefcase } from 'lucide-react';
-import { getArtists, getBookings, getCustomer } from '@/lib/services';
+import { getCustomer, listenToCollection } from '@/lib/services';
 import { format, parseISO, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, query, collection, where } from 'firebase/firestore';
 
 
 function getSafeDate(date: any): Date {
@@ -36,42 +36,40 @@ export default function CustomerDetailPage() {
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [bookings, setBookings] = React.useState<Booking[]>([]);
     const [artists, setArtists] = React.useState<Artist[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
 
     React.useEffect(() => {
         if (!customerId) return;
         
-        const fetchData = async () => {
-            try {
-                const [customerData, artistsData, bookingsData] = await Promise.all([
-                    getCustomer(customerId),
-                    getArtists(),
-                    getBookings()
-                ]);
+        setIsLoading(true);
 
-                if (customerData) {
-                    setCustomer(customerData);
-                    setArtists(artistsData);
-                    const customerBookings = bookingsData.filter(b => b.customerId === customerId);
-                    setBookings(customerBookings.sort((a, b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime()));
-                } else {
-                    toast({
-                        title: 'Customer not found',
-                        description: 'The requested customer could not be found.',
-                        variant: 'destructive',
-                    });
-                    router.push('/admin/customers');
-                }
-            } catch (error) {
-                console.error("Failed to fetch customer details", error);
+        getCustomer(customerId).then(customerData => {
+            if (customerData) {
+                setCustomer(customerData);
+            } else {
                  toast({
-                    title: 'Error',
-                    description: 'Failed to load customer details.',
+                    title: 'Customer not found',
+                    description: 'The requested customer could not be found.',
                     variant: 'destructive',
                 });
+                router.push('/admin/customers');
             }
+        });
+        
+        const artistsUnsub = listenToCollection<Artist>('artists', setArtists);
+
+        const bookingsQuery = query(collection(getDb() as any, 'bookings'), where('customerId', '==', customerId));
+        const bookingsUnsub = listenToCollection<Booking>('bookings', (customerBookings) => {
+            setBookings(customerBookings.sort((a, b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime()));
+            setIsLoading(false);
+        }, bookingsQuery);
+
+
+        return () => {
+            artistsUnsub();
+            bookingsUnsub();
         };
 
-        fetchData();
     }, [router, customerId, toast]);
 
 
@@ -87,7 +85,7 @@ export default function CustomerDetailPage() {
         }
     };
 
-    if (!customer) {
+    if (isLoading || !customer) {
         return <div className="flex items-center justify-center min-h-screen">Loading customer details...</div>;
     }
 

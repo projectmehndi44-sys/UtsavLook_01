@@ -28,10 +28,18 @@ function getSafeDate(date: any): Date {
 export default function AnalyticsPage() {
     const [bookings, setBookings] = React.useState<Booking[]>([]);
     const [artists, setArtists] = React.useState<Artist[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
 
     React.useEffect(() => {
-        const unsubscribeBookings = listenToCollection<Booking>('bookings', setBookings);
-        const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
+        setIsLoading(true);
+        const unsubscribeBookings = listenToCollection<Booking>('bookings', (data) => {
+            setBookings(data);
+            if (artists.length > 0) setIsLoading(false);
+        });
+        const unsubscribeArtists = listenToCollection<Artist>('artists', (data) => {
+            setArtists(data);
+            if (bookings.length > 0 || data.length > 0) setIsLoading(false);
+        });
         return () => {
             unsubscribeBookings();
             unsubscribeArtists();
@@ -99,6 +107,10 @@ export default function AnalyticsPage() {
     const topArtistsByRevenue = [...artistPerformance].sort((a, b) => b.totalRevenue - a.totalRevenue).slice(0, 5);
     const topArtistsByBookings = [...artistPerformance].sort((a, b) => b.totalBookings - a.totalBookings).slice(0, 5);
     const topArtistsByRating = [...artists].sort((a, b) => b.rating - a.rating).slice(0, 5);
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-full"><p>Loading analytics data...</p></div>
+    }
 
 
     return (
