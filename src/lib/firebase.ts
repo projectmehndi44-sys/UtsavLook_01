@@ -25,6 +25,11 @@ if (getApps().length === 0) {
 
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+// Set the auth domain to fix 'unauthorized-domain' issues in preview environments.
+googleProvider.setCustomParameters({
+  authDomain: firebaseConfig.authDomain
+});
+
 
 // --- Firestore Initialization with Offline Persistence (Singleton Pattern) ---
 let dbInstance: Firestore | null = null;
