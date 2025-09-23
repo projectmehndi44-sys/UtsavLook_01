@@ -25,7 +25,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import type { Customer } from '@/lib/types';
-import { CustomerLoginModal } from './CustomerLoginModal';
 import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
@@ -42,19 +41,7 @@ export function Header({
   cartCount,
 }: HeaderProps) {
   const router = useRouter();
-  const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
-  const {toast} = useToast();
   
-  const onSuccessfulLogin = (loggedInCustomer: Customer) => {
-      // This is handled by the parent page, we just need to close the modal
-      setIsLoginModalOpen(false);
-       toast({
-            title: 'Login Successful',
-            description: `Welcome back, ${loggedInCustomer.name}!`,
-        });
-      router.refresh();
-  }
-
   return (
     <header className="flex items-center justify-between w-full px-4 md:px-8 py-2 bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
       <Link href="/" className="flex items-center gap-2">
@@ -108,7 +95,7 @@ export function Header({
           </>
         ) : (
            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setIsLoginModalOpen(true)}>
+              <Button variant="ghost" onClick={() => router.push('/login')}>
                 <LogIn className="mr-2 h-4 w-4" />
                 Login / Sign Up
               </Button>
@@ -126,13 +113,6 @@ export function Header({
            </div>
         )}
       </div>
-       
-        <CustomerLoginModal
-            isOpen={isLoginModalOpen}
-            onOpenChange={setIsLoginModalOpen}
-            onSuccessfulLogin={onSuccessfulLogin}
-        />
-       
     </header>
   );
 }

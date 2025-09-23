@@ -8,13 +8,10 @@ import { getCustomer, getPlaceholderImages, listenToCollection } from '@/lib/ser
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  LogIn,
-  UserPlus,
   Palette,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
-import { CustomerLoginModal } from '@/components/utsavlook/CustomerLoginModal';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
@@ -34,8 +31,6 @@ export default function Home() {
   const router = useRouter();
   const [artists, setArtists] = React.useState<Artist[]>([]);
   const [masterServices, setMasterServices] = React.useState<MasterServicePackage[]>([]);
-  
-  const [isCustomerLoginModalOpen, setIsCustomerLoginModalOpen] = React.useState(false);
   
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
   const [customer, setCustomer] = React.useState<Customer | null>(null);
@@ -127,7 +122,7 @@ export default function Home() {
   
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
-        setIsCustomerLoginModalOpen(true);
+        router.push('/login');
         toast({ title: 'Please Login', description: 'You need to be logged in to add services to your booking.' });
         return;
     }
@@ -138,20 +133,6 @@ export default function Home() {
     toast({ title: 'Added to cart!', description: `${item.servicePackage.name} (${item.selectedTier.name}) has been added.`});
   };
   
-  const onSuccessfulLogin = (loggedInCustomer: Customer) => {
-    setIsCustomerLoggedIn(true);
-    setCustomer(loggedInCustomer);
-    setIsCustomerLoginModalOpen(false);
-    const storedCart = localStorage.getItem(`cart_${loggedInCustomer.id}`);
-    setCart(storedCart ? JSON.parse(storedCart) : []);
-    setTimeout(() => {
-        toast({
-            title: 'Login Successful',
-            description: `Welcome back, ${loggedInCustomer.name}!`,
-        });
-    }, 0);
-  }
-
   const CategoryTabContent = ({ serviceType }: { serviceType: "mehndi" | "makeup" | "photography" }) => {
     const relevantPackages = masterServices.filter(p => p.service === serviceType);
     
@@ -266,11 +247,6 @@ export default function Home() {
 
         <PwaInstallBanner />
 
-        <CustomerLoginModal
-            isOpen={isCustomerLoginModalOpen}
-            onOpenChange={setIsCustomerLoginModalOpen}
-            onSuccessfulLogin={onSuccessfulLogin}
-        />
         {selectedService && (
             <ServiceSelectionModal
                 isOpen={isServiceModalOpen}
