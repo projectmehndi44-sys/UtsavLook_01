@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -11,8 +12,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { signInWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase';
 import { Separator } from '@/components/ui/separator';
 import { getArtist } from '@/lib/services';
 
@@ -22,7 +23,7 @@ export default function ArtistLoginPage() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
     
     // State for forgot password
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);

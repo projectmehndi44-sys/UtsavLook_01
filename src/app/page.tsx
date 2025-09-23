@@ -5,7 +5,6 @@
 import * as React from 'react';
 import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder } from '@/lib/types';
 import { getCustomer, getPlaceholderImages, listenToCollection } from '@/lib/services';
-import { setupRecaptcha } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -165,7 +164,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
-      <div id="recaptcha-container" style={{ display: 'none' }}></div>
+      <div id="recaptcha-container" style={{ position: 'absolute', bottom: 0, right: 0, zIndex: -1 }}></div>
       <div className="fixed inset-0 -z-10 h-full w-full">
           {backgroundImages.map((image, index) => (
               <Image

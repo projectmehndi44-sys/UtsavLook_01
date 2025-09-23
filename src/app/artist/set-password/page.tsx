@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { KeyRound, LogIn } from 'lucide-react';
 import { getAuth, confirmPasswordReset } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { getFirebaseApp } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 
@@ -23,7 +23,7 @@ export default function SetPasswordPage() {
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState('');
     const [isSuccess, setIsSuccess] = React.useState(false);
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
     const oobCode = searchParams.get('oobCode');
 
     const handleSubmit = async (e: React.FormEvent) => {

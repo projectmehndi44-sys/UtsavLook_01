@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,7 +13,8 @@ import { ArrowLeft, Briefcase } from 'lucide-react';
 import { getCustomer, listenToCollection } from '@/lib/services';
 import { format, parseISO, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Timestamp, query, collection, where } from 'firebase/firestore';
+import { Timestamp, query, collection, where, getFirestore } from 'firebase/firestore';
+import { getFirebaseApp } from '@/lib/firebase';
 
 
 function getSafeDate(date: any): Date {
@@ -58,17 +60,19 @@ export default function CustomerDetailPage() {
         
         const artistsUnsub = listenToCollection<Artist>('artists', setArtists);
 
-        const bookingsQuery = query(collection(getDb() as any, 'bookings'), where('customerId', '==', customerId));
-        const bookingsUnsub = listenToCollection<Booking>('bookings', (customerBookings) => {
-            setBookings(customerBookings.sort((a, b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime()));
-            setIsLoading(false);
-        }, bookingsQuery);
+        getFirestore(getFirebaseApp()).then(db => {
+            const bookingsQuery = query(collection(db, 'bookings'), where('customerId', '==', customerId));
+            const bookingsUnsub = listenToCollection<Booking>('bookings', (customerBookings) => {
+                setBookings(customerBookings.sort((a, b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime()));
+                setIsLoading(false);
+            }, bookingsQuery);
 
 
-        return () => {
-            artistsUnsub();
-            bookingsUnsub();
-        };
+            return () => {
+                artistsUnsub();
+                bookingsUnsub();
+            };
+        });
 
     }, [router, customerId, toast]);
 

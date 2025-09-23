@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, sendOtp, setupRecaptcha } from '@/lib/firebase';
+import { auth, sendOtp } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { Phone, Loader2 } from 'lucide-react';
 import {
@@ -27,7 +27,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { getCustomerByPhone, createCustomer } from '@/lib/services';
-import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
+import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 
 
 const phoneLoginSchema = z.object({
@@ -61,18 +61,14 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     setPhone(data.phone);
 
     try {
-      // Initialize reCAPTCHA verifier on demand
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (!recaptchaContainer) {
-          throw new Error("reCAPTCHA container not found.");
-      }
-      
-      const verifier = await new Promise<RecaptchaVerifier>((resolve, reject) => {
-          try {
-            setupRecaptcha(recaptchaContainer, () => resolve(window.recaptchaVerifier!));
-          } catch(e) {
-            reject(e);
-          }
+      const verifier = await new Promise<RecaptchaVerifier>((resolve) => {
+        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+            'callback': () => {
+                resolve(recaptchaVerifier);
+            }
+        });
+        recaptchaVerifier.render();
       });
 
       const confirmationResult = await sendOtp(data.phone, verifier);
@@ -85,10 +81,6 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     } catch (error: any) {
       console.error("OTP send error:", error);
       toast({ title: 'Failed to send OTP', description: error.message, variant: 'destructive'});
-      // Reset reCAPTCHA if it exists
-      if (window.grecaptcha && window.recaptchaVerifier) {
-        window.grecaptcha.reset(window.recaptchaVerifier.widgetId);
-      }
     } finally {
       setIsSubmitting(false);
     }

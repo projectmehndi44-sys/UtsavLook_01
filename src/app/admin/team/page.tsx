@@ -23,7 +23,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { getTeamMembers, saveTeamMembers } from '@/lib/services';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { getFirebaseApp } from '@/lib/firebase';
 
 
 const memberSchema = z.object({
@@ -53,7 +53,7 @@ export default function TeamManagementPage() {
     const { user } = useAdminAuth();
     const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([]);
     const [editingMember, setEditingMember] = React.useState<TeamMember | null>(null);
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
 
     const form = useForm<MemberFormValues>({
         resolver: zodResolver(memberSchema),

@@ -19,9 +19,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
-import { signOutUser } from '@/lib/firebase';
+import { signOutUser, getFirebaseApp } from '@/lib/firebase';
 import { onAuthStateChanged, getAuth, User as FirebaseUser } from 'firebase/auth';
-import { app } from '@/lib/firebase';
 import { collection, query, where, getFirestore, Timestamp } from 'firebase/firestore';
 
 
@@ -81,7 +80,7 @@ const BottomNavLink = ({ href, pathname, icon: Icon, label, children }: { href: 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { toast } = useToast();
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
     const { artist, fetchData } = useArtistPortal();
     const [isLoading, setIsLoading] = React.useState(true);
     
@@ -135,7 +134,7 @@ export default function ArtistDashboardLayout({
     const router = useRouter();
     const pathname = usePathname();
     const isMobile = useIsMobile();
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
     
     const [artist, setArtist] = React.useState<Artist | null>(null);
     const [artistBookings, setArtistBookings] = React.useState<Booking[]>([]);
@@ -171,26 +170,26 @@ export default function ArtistDashboardLayout({
     React.useEffect(() => {
         if (!artist?.id) return;
         
-        const db = getFirestore(app);
+        getFirestore(getFirebaseApp()).then(db => {
+            const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
+            const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
+                const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
+                setArtistBookings(sortedBookings);
+            }, bookingsQuery);
 
-        const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
-        const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
-            const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
-            setArtistBookings(sortedBookings);
-        }, bookingsQuery);
 
-
-        const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
-        const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
-            const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            setNotifications(sortedNotifications);
-            setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
-        }, notificationsQuery);
-        
-        return () => {
-            unsubscribeBookings();
-            unsubscribeNotifications();
-        };
+            const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
+            const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
+                const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                setNotifications(sortedNotifications);
+                setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
+            }, notificationsQuery);
+            
+            return () => {
+                unsubscribeBookings();
+                unsubscribeNotifications();
+            };
+        });
 
     }, [artist?.id]);
 

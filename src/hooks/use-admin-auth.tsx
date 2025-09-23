@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { getFirebaseApp } from '@/lib/firebase';
 import { getTeamMembers } from '@/lib/services';
 import type { TeamMember, Permissions } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
@@ -20,7 +20,7 @@ const AdminAuthContext = React.createContext<AdminAuthContextType | undefined>(u
 export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = React.useState<TeamMember | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
     const router = useRouter();
     const pathname = usePathname();
 

@@ -14,7 +14,7 @@ import { Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { getFirebaseApp } from '@/lib/firebase';
 import { getTeamMembers, saveTeamMembers } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { initialTeamMembers } from '@/lib/team-data';
@@ -38,7 +38,7 @@ type SetupFormValues = z.infer<typeof setupSchema>;
 export default function AdminLoginPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const auth = getAuth(app);
+    const auth = getAuth(getFirebaseApp());
     const { isAuthenticated, isLoading: isAuthLoading } = useAdminAuth();
     
     const [pageState, setPageState] = React.useState<'loading' | 'setup' | 'login'>('loading');
