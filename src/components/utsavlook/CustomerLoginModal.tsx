@@ -73,7 +73,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     setIsSubmitting(true);
     try {
       const actionCodeSettings = {
-        url: `${window.location.origin}/finish-login`,
+        url: `https://${auth.config.authDomain}/finish-login`,
         handleCodeInApp: true,
       };
 
@@ -102,7 +102,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
 
   // Setup reCAPTCHA when phone tab is selected
   React.useEffect(() => {
-    if (activeTab === 'phone' && !window.recaptchaVerifier) {
+    if (isOpen && activeTab === 'phone' && !window.recaptchaVerifier) {
       const recaptchaContainer = document.getElementById('recaptcha-container');
       if (recaptchaContainer) {
         setupRecaptcha(recaptchaContainer, () => {
@@ -110,7 +110,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         });
       }
     }
-  }, [activeTab]);
+  }, [isOpen, activeTab]);
   
 
   const handleSendOtp = async (data: PhoneLoginFormValues) => {
@@ -159,6 +159,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
           id: user.uid,
           name: `User ${phone.substring(6)}`,
           phone: phone,
+          email: user.email || undefined,
         };
         await createCustomer(newCustomerData);
         customer = newCustomerData;
