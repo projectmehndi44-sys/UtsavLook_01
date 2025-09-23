@@ -1,14 +1,13 @@
 
-
 'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { auth, isSignInWithEmailLink, signInWithEmailLink } from '@/lib/firebase';
+import { auth, isSignInWithEmailLink, signInWithEmailLink, getFirebaseApp } from '@/lib/firebase';
 import { createCustomer, getCustomerByEmail } from '@/lib/services';
 import type { Customer } from '@/lib/types';
-import { getAdditionalUserInfo } from 'firebase/auth';
+import { getAdditionalUserInfo, getAuth } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -19,6 +18,7 @@ export default function FinishLoginPage() {
 
     React.useEffect(() => {
         const processSignIn = async () => {
+            const auth = getAuth(getFirebaseApp());
             if (isSignInWithEmailLink(auth, window.location.href)) {
                 let email = window.localStorage.getItem('emailForSignIn');
                 if (!email) {
@@ -99,6 +99,3 @@ export default function FinishLoginPage() {
         </div>
     );
 }
-
-    
-

@@ -17,10 +17,6 @@ const firebaseConfig = {
 let app: FirebaseApp;
 const getFirebaseApp = (): FirebaseApp => {
     if (getApps().length === 0) {
-        // Dynamically set authDomain for client-side environments
-        if (typeof window !== 'undefined') {
-            firebaseConfig.authDomain = window.location.hostname;
-        }
         app = initializeApp(firebaseConfig);
     } else {
         app = getApp();
@@ -79,7 +75,7 @@ const signOutUser = () => {
     return signOut(auth);
 }
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp };
+export { app, auth, sendOtp, signOutUser, getFirebaseApp, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail };
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
