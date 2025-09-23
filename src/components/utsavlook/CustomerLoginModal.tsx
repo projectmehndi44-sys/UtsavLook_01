@@ -51,17 +51,19 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
+  const [isRecaptchaReady, setIsRecaptchaReady] = React.useState(false);
+
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { phone: '', otp: '', name: '' },
   });
 
-  const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
+  const sendOtpButtonRef = React.useRef<HTMLDivElement>(null);
   
   React.useEffect(() => {
     if (isOpen && !window.recaptchaVerifier && sendOtpButtonRef.current) {
-        setupRecaptcha(sendOtpButtonRef.current);
+        setupRecaptcha(sendOtpButtonRef.current, () => setIsRecaptchaReady(true));
     }
   }, [isOpen]);
 
@@ -71,7 +73,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         form.setError('phone', { type: 'manual', message: 'Please enter a valid phone number.' });
         return;
     }
-    if (!window.recaptchaVerifier) {
+    if (!window.recaptchaVerifier || !isRecaptchaReady) {
         toast({ title: 'reCAPTCHA not ready', description: 'Please wait for the reCAPTCHA to load and verify.', variant: 'destructive'});
         return;
     }
@@ -96,10 +98,15 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
            variant: 'destructive',
        });
        // Reset reCAPTCHA
-        window.recaptchaVerifier?.render().then(widgetId => {
-            // @ts-ignore
-            window.grecaptcha.reset(widgetId);
-        });
+       setIsRecaptchaReady(false);
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.render().then(widgetId => {
+                // @ts-ignore
+                if(window.grecaptcha) {
+                    window.grecaptcha.reset(widgetId);
+                }
+            });
+        }
     } finally {
         setIsSubmitting(false);
     }
@@ -172,6 +179,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
+      setIsRecaptchaReady(false);
       if (window.recaptchaVerifier) {
           window.recaptchaVerifier.clear();
           window.recaptchaVerifier = undefined;
@@ -202,10 +210,12 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                 )} />
 
                 {!isOtpSent && (
-                   <Button ref={sendOtpButtonRef} type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
-                        {isSubmitting ? 'Sending...' : 'Send OTP'}
+                   <Button id="send-otp-button" type="button" onClick={handleSendOtp} disabled={isSubmitting || !isRecaptchaReady} className="w-full">
+                        {isSubmitting ? 'Sending...' : (isRecaptchaReady ? 'Send OTP' : 'Verifying...')}
                    </Button>
                 )}
+                 {/* This div is used as an anchor for the invisible reCAPTCHA */}
+                <div ref={sendOtpButtonRef}></div>
 
                 {isOtpSent && (
                 <>

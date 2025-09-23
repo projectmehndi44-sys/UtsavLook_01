@@ -86,15 +86,16 @@ const signInWithGoogle = (): Promise<User> => {
   return signInWithPopup(auth, googleProvider).then(result => result.user);
 };
 
-export const setupRecaptcha = (button: HTMLElement): void => {
+export const setupRecaptcha = (container: HTMLElement, readyCallback: () => void): void => {
     if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
     }
-    const verifier = new RecaptchaVerifier(auth, button, {
+    const verifier = new RecaptchaVerifier(auth, container, {
         'size': 'invisible',
         'callback': (response: any) => {
             // reCAPTCHA solved, allow signInWithPhoneNumber.
             console.log("reCAPTCHA verified");
+            readyCallback();
         },
         'expired-callback': () => {
             // Response expired. User needs to solve reCAPTCHA again.
@@ -102,6 +103,10 @@ export const setupRecaptcha = (button: HTMLElement): void => {
         }
     });
     window.recaptchaVerifier = verifier;
+    // Render the reCAPTCHA and call the ready callback
+    verifier.render().then(() => {
+      readyCallback();
+    });
 }
 
 
@@ -156,5 +161,6 @@ declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
         confirmationResult?: ConfirmationResult;
+        grecaptcha?: any;
     }
 }
