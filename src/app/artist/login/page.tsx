@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { signInWithEmailAndPassword, getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Separator } from '@/components/ui/separator';
+import { getArtist } from '@/lib/services';
 
 export default function ArtistLoginPage() {
     const router = useRouter();
@@ -33,9 +34,25 @@ export default function ArtistLoginPage() {
         setIsLoading(true);
         
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
-            router.push('/artist/dashboard');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Verify if the logged-in user is a registered artist
+            const artistProfile = await getArtist(user.uid);
+            
+            if (artistProfile) {
+                toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
+                router.push('/artist/dashboard');
+            } else {
+                // If they have an auth account but no artist profile, deny access
+                await auth.signOut();
+                toast({ 
+                    title: 'Access Denied', 
+                    description: 'This account does not have artist privileges.', 
+                    variant: 'destructive' 
+                });
+            }
+
         } catch (error: any) {
             console.error("Login error:", error);
             let description = 'An error occurred during login. Please try again.';
