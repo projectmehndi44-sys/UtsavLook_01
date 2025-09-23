@@ -7,11 +7,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       maxDuration: 120, // Increase timeout to 2 minutes for AI operations
-    },
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: '4mb', // Allow larger image uploads
+      bodySizeLimit: '4mb', // Allow larger image uploads
     },
   },
   typescript: {
