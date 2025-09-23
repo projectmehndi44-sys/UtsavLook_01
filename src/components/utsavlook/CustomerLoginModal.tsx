@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -18,15 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Phone } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import { GoogleIcon } from '../icons';
-import { auth, signInWithGoogle, setupRecaptcha, sendOtp, sendSignInLinkToEmail } from '@/lib/firebase';
+import { auth, setupRecaptcha, sendOtp } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
-import { getCustomerByPhone, getCustomerByEmail, createCustomer } from '@/lib/services';
+import { getCustomerByPhone, createCustomer } from '@/lib/services';
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useRouter } from 'next/navigation';
 
 declare global {
@@ -36,18 +30,13 @@ declare global {
   }
 }
 
-const phoneLoginSchema = z.object({
+const loginSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit phone number.' }),
   otp: z.string().optional(),
   name: z.string().optional(),
 });
 
-const emailLoginSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-});
-
-type PhoneLoginFormValues = z.infer<typeof phoneLoginSchema>;
-type EmailLoginFormValues = z.infer<typeof emailLoginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface CustomerLoginModalProps {
   isOpen: boolean;
@@ -61,30 +50,23 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
-  const [isEmailLinkSent, setIsEmailLinkSent] = React.useState(false);
   const [isRecaptchaVerified, setIsRecaptchaVerified] = React.useState(false);
 
-
-  const phoneForm = useForm<PhoneLoginFormValues>({
-    resolver: zodResolver(phoneLoginSchema),
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { phone: '', otp: '', name: '' },
-  });
-  
-  const emailForm = useForm<EmailLoginFormValues>({
-      resolver: zodResolver(emailLoginSchema),
-      defaultValues: { email: '' },
   });
   
   const onRecaptchaSuccess = React.useCallback(() => {
     setIsRecaptchaVerified(true);
     toast({
-        title: 'Phone Verified',
+        title: 'reCAPTCHA Verified',
         description: 'You can now send the OTP.',
     });
   }, [toast]);
   
   React.useEffect(() => {
-    if (isOpen && !window.recaptchaVerifier) {
+    if (isOpen && !window.recaptchaVerifier && !isRecaptchaVerified) {
        setTimeout(() => {
             const recaptchaContainer = document.getElementById('recaptcha-container');
             if (recaptchaContainer) {
@@ -92,12 +74,12 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
             }
        }, 500);
     }
-  }, [isOpen, onRecaptchaSuccess]);
+  }, [isOpen, onRecaptchaSuccess, isRecaptchaVerified]);
 
   const handleSendOtp = async () => {
-    const phone = phoneForm.getValues('phone');
+    const phone = form.getValues('phone');
     if (!/^\d{10}$/.test(phone) || !window.recaptchaVerifier) {
-        phoneForm.setError('phone', { type: 'manual', message: 'Please enter a valid phone number.' });
+        form.setError('phone', { type: 'manual', message: 'Please enter a valid phone number.' });
         return;
     }
     
@@ -117,7 +99,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
        console.error("OTP Error:", error);
        toast({
            title: 'Failed to Send OTP',
-           description: 'Could not send OTP. Please ensure you are not using a test number and try again.',
+           description: 'Could not send OTP. Please check the phone number and try again.',
            variant: 'destructive',
        });
     } finally {
@@ -125,7 +107,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     }
   }
 
-  const onPhoneSubmit = async (data: PhoneLoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     
     if (!window.confirmationResult) {
@@ -135,7 +117,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     }
 
     if (!data.otp) {
-        phoneForm.setError('otp', { type: 'manual', message: 'Please enter the OTP.' });
+        form.setError('otp', { type: 'manual', message: 'Please enter the OTP.' });
         setIsSubmitting(false);
         return;
     }
@@ -145,8 +127,8 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       let customer: Customer | null;
 
       if (isNewUser) {
-        if (!data.name) {
-          phoneForm.setError('name', { type: 'manual', message: 'Name is required for new users.' });
+        if (!data.name || data.name.length < 2) {
+          form.setError('name', { type: 'manual', message: 'Name is required for new users.' });
           setIsSubmitting(false);
           return;
         }
@@ -187,82 +169,20 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      phoneForm.reset();
-      emailForm.reset();
+      form.reset();
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
       setIsRecaptchaVerified(false);
+      const recaptchaContainer = document.getElementById('recaptcha-container');
+      if (recaptchaContainer) {
+          recaptchaContainer.innerHTML = '';
+      }
       if (window.recaptchaVerifier) {
           window.recaptchaVerifier.clear();
           window.recaptchaVerifier = undefined;
       }
-      setIsEmailLinkSent(false);
     }, 300);
-  }
-
-  const handleGoogleLogin = async () => {
-    try {
-        const user = await signInWithGoogle();
-        if (user && user.email) {
-            let customer = await getCustomerByEmail(user.email);
-
-            if (!customer) { // If user doesn't exist, create a new account
-               const newCustomerData: Omit<Customer, 'id'> & {id: string} = {
-                  id: user.uid,
-                  name: user.displayName || 'Google User',
-                  phone: user.phoneNumber || '',
-                  email: user.email,
-              };
-              await createCustomer(newCustomerData);
-              customer = newCustomerData;
-              toast({ title: "Registration Successful!", description: `Welcome, ${customer.name}!` });
-            } else {
-               toast({ title: 'Welcome Back!', description: `You are now logged in as ${customer.name}.` });
-            }
-
-            localStorage.setItem('currentCustomerId', customer.id);
-            onSuccessfulLogin(customer);
-            router.push('/account');
-            handleClose();
-        }
-    } catch (error: any) {
-        if (error.code !== 'auth/cancelled-popup-request' && error.code !== 'auth/popup-closed-by-user') {
-            console.error("Google Login Error:", error);
-            toast({
-              title: 'Google Action Failed',
-              description: 'Could not log in or sign up with Google. Please try again.',
-              variant: 'destructive',
-            });
-        }
-    }
-  };
-
-  const onEmailSubmit = async (data: EmailLoginFormValues) => {
-      setIsSubmitting(true);
-      const actionCodeSettings = {
-        url: `${window.location.origin}/finish-login`,
-        handleCodeInApp: true,
-      };
-
-      try {
-        await sendSignInLinkToEmail(auth, data.email, actionCodeSettings);
-        window.localStorage.setItem('emailForSignIn', data.email);
-        setIsEmailLinkSent(true);
-        toast({
-          title: 'Check your email',
-          description: `A sign-in link has been sent to ${data.email}.`,
-        });
-      } catch (error) {
-        console.error("Email Link Error:", error);
-        toast({
-            title: 'Failed to Send Link',
-            description: 'Could not send sign-in link. Please check the email address and try again.',
-            variant: 'destructive',
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
   }
 
   return (
@@ -271,106 +191,56 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         <DialogHeader>
           <DialogTitle className="text-primary font-bold text-2xl">Login or Sign Up</DialogTitle>
           <DialogDescription>
-            Continue with your phone, email, or Google account.
+            Enter your phone number to continue.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="phone" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="phone"><Phone className="mr-2 h-4 w-4"/>Phone</TabsTrigger>
-                <TabsTrigger value="email"><Mail className="mr-2 h-4 w-4"/>Email</TabsTrigger>
-            </TabsList>
-            <TabsContent value="phone">
-                 <Form {...phoneForm}>
-                    <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-4 pt-4">
-                        <FormField control={phoneForm.control} name="phone" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Phone Number</FormLabel>
-                                <FormControl>
-                                    <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <FormField control={form.control} name="phone" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>10-digit Phone Number</FormLabel>
+                        <FormControl>
+                            <Input type="tel" placeholder="9876543210" {...field} disabled={isOtpSent} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
 
-                        <div id="recaptcha-container" className="flex justify-center"></div>
+                {!isOtpSent && <div id="recaptcha-container" className="flex justify-center min-h-[78px]"></div>}
 
-                        {isRecaptchaVerified && !isOtpSent && (
-                           <Button type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
-                                {isSubmitting ? 'Sending...' : 'Send OTP'}
-                           </Button>
-                        )}
-
-                        {isOtpSent && (
-                        <>
-                            {isNewUser && (
-                                <FormField control={phoneForm.control} name="name" render={({ field }) => (
-                                    <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Enter your full name" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                            )}
-                            <FormField control={phoneForm.control} name="otp" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Enter OTP</FormLabel>
-                                    <FormControl>
-                                    <Input placeholder="Enter 6-digit OTP" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                             <DialogFooter>
-                                <Button type="submit" className="w-full" disabled={!isOtpSent || isSubmitting}>
-                                    {isSubmitting ? 'Verifying...' : (isNewUser ? 'Register & Login' : 'Login')}
-                                </Button>
-                            </DialogFooter>
-                        </>
-                        )}
-
-                    </form>
-                </Form>
-            </TabsContent>
-            <TabsContent value="email">
-                {isEmailLinkSent ? (
-                     <Alert>
-                        <Mail className="h-4 w-4" />
-                        <AlertTitle>Magic Link Sent!</AlertTitle>
-                        <AlertDescription>
-                          Please check your email inbox for a link to sign in. You can close this window.
-                        </AlertDescription>
-                    </Alert>
-                ) : (
-                    <Form {...emailForm}>
-                        <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4 pt-4">
-                            <FormField control={emailForm.control} name="email" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email Address</FormLabel>
-                                    <FormControl>
-                                        <Input type="email" placeholder="your.email@example.com" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <DialogFooter>
-                                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Sending...' : 'Send Magic Link'}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </Form>
+                {!isOtpSent && (
+                   <Button type="button" onClick={handleSendOtp} disabled={isSubmitting || !isRecaptchaVerified} className="w-full">
+                        {isSubmitting ? 'Sending...' : 'Send OTP'}
+                   </Button>
                 )}
-            </TabsContent>
-        </Tabs>
 
-        <div className="relative my-2">
-            <Separator />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 bg-background text-sm text-muted-foreground">OR</div>
-        </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
-            <GoogleIcon className="mr-2 h-5 w-5"/>
-            Continue with Google
-        </Button>
+                {isOtpSent && (
+                <>
+                    {isNewUser && (
+                        <FormField control={form.control} name="name" render={({ field }) => (
+                            <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="Enter your full name" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    )}
+                    <FormField control={form.control} name="otp" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Enter OTP</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Enter 6-digit OTP" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <DialogFooter>
+                        <Button type="submit" className="w-full" disabled={!isOtpSent || isSubmitting}>
+                            {isSubmitting ? 'Verifying...' : (isNewUser ? 'Register & Login' : 'Login')}
+                        </Button>
+                    </DialogFooter>
+                </>
+                )}
+            </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
 }
-
-    
