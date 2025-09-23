@@ -1,7 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import type { Artist, MasterServicePackage, ArtistServiceOffering } from '@/lib/types';
 import { listenToCollection, updateArtist } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
