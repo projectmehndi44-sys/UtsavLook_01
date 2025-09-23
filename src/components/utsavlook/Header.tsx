@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -25,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import type { Customer } from '@/lib/types';
 import { CustomerLoginModal } from './CustomerLoginModal';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   isCustomerLoggedIn: boolean;
@@ -41,11 +43,16 @@ export function Header({
 }: HeaderProps) {
   const router = useRouter();
   const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
+  const {toast} = useToast();
   
-  const onSuccessfulLogin = () => {
+  const onSuccessfulLogin = (loggedInCustomer: Customer) => {
       // This is handled by the parent page, we just need to close the modal
       setIsLoginModalOpen(false);
-      // We might need to reload or re-fetch data, parent component handles this.
+       toast({
+            title: 'Login Successful',
+            description: `Welcome back, ${loggedInCustomer.name}!`,
+        });
+      router.refresh();
   }
 
   return (
@@ -62,9 +69,11 @@ export function Header({
             <Button variant="ghost" className="relative" asChild>
                 <Link href="/cart">
                     <ShoppingBag className="h-6 w-6"/>
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center text-white border-2 border-background">
-                        {cartCount}
-                    </span>
+                    {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center text-white border-2 border-background">
+                            {cartCount}
+                        </span>
+                    )}
                     <span className="sr-only">View Cart</span>
                 </Link>
             </Button>
@@ -117,13 +126,13 @@ export function Header({
            </div>
         )}
       </div>
-       {!isCustomerLoggedIn && (
+       
         <CustomerLoginModal
             isOpen={isLoginModalOpen}
             onOpenChange={setIsLoginModalOpen}
             onSuccessfulLogin={onSuccessfulLogin}
         />
-       )}
+       
     </header>
   );
 }

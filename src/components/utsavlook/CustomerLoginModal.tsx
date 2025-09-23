@@ -50,36 +50,31 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isNewUser, setIsNewUser] = React.useState(false);
-  const [isRecaptchaVerified, setIsRecaptchaVerified] = React.useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { phone: '', otp: '', name: '' },
   });
   
-  const onRecaptchaSuccess = React.useCallback(() => {
-    setIsRecaptchaVerified(true);
-    toast({
-        title: 'reCAPTCHA Verified',
-        description: 'You can now send the OTP.',
-    });
-  }, [toast]);
-  
   React.useEffect(() => {
-    if (isOpen && !window.recaptchaVerifier && !isRecaptchaVerified) {
+    if (isOpen && !window.recaptchaVerifier) {
        setTimeout(() => {
             const recaptchaContainer = document.getElementById('recaptcha-container');
             if (recaptchaContainer) {
-                 setupRecaptcha('recaptcha-container', onRecaptchaSuccess);
+                 setupRecaptcha('recaptcha-container', () => {});
             }
        }, 500);
     }
-  }, [isOpen, onRecaptchaSuccess, isRecaptchaVerified]);
+  }, [isOpen]);
 
   const handleSendOtp = async () => {
     const phone = form.getValues('phone');
-    if (!/^\d{10}$/.test(phone) || !window.recaptchaVerifier) {
+    if (!/^\d{10}$/.test(phone)) {
         form.setError('phone', { type: 'manual', message: 'Please enter a valid phone number.' });
+        return;
+    }
+    if (!window.recaptchaVerifier) {
+        toast({ title: 'reCAPTCHA not ready', description: 'Please wait for the reCAPTCHA to load and verify.', variant: 'destructive'});
         return;
     }
     
@@ -99,9 +94,14 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
        console.error("OTP Error:", error);
        toast({
            title: 'Failed to Send OTP',
-           description: 'Could not send OTP. Please check the phone number and try again.',
+           description: 'Could not send OTP. Please check the phone number and try again. The reCAPTCHA might need to be solved again.',
            variant: 'destructive',
        });
+       // Reset reCAPTCHA
+        window.recaptchaVerifier?.render().then(widgetId => {
+            // @ts-ignore
+            window.grecaptcha.reset(widgetId);
+        });
     } finally {
         setIsSubmitting(false);
     }
@@ -116,8 +116,8 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
         return;
     }
 
-    if (!data.otp) {
-        form.setError('otp', { type: 'manual', message: 'Please enter the OTP.' });
+    if (!data.otp || data.otp.length !== 6) {
+        form.setError('otp', { type: 'manual', message: 'Please enter the 6-digit OTP.' });
         setIsSubmitting(false);
         return;
     }
@@ -136,6 +136,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
             id: userCredential.user.uid,
             name: data.name,
             phone: data.phone,
+            email: userCredential.user.email || undefined,
         };
         await createCustomer(newCustomerData);
         customer = newCustomerData;
@@ -173,7 +174,6 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       setIsSubmitting(false);
       setIsOtpSent(false);
       setIsNewUser(false);
-      setIsRecaptchaVerified(false);
       const recaptchaContainer = document.getElementById('recaptcha-container');
       if (recaptchaContainer) {
           recaptchaContainer.innerHTML = '';
@@ -210,7 +210,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                 {!isOtpSent && <div id="recaptcha-container" className="flex justify-center min-h-[78px]"></div>}
 
                 {!isOtpSent && (
-                   <Button type="button" onClick={handleSendOtp} disabled={isSubmitting || !isRecaptchaVerified} className="w-full">
+                   <Button type="button" onClick={handleSendOtp} disabled={isSubmitting} className="w-full">
                         {isSubmitting ? 'Sending...' : 'Send OTP'}
                    </Button>
                 )}
