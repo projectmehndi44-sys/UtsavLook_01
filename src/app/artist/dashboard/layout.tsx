@@ -84,6 +84,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const auth = getAuth(app);
     const { setArtist, artist, fetchData } = useArtistPortal();
     const [isLoading, setIsLoading] = React.useState(true);
+    const [firebaseUser, setFirebaseUser] = React.useState<FirebaseUser | null>(null);
 
     const handleLogout = React.useCallback(async () => {
         await signOutUser();
@@ -94,27 +95,29 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     useInactivityTimeout(handleLogout, 360000); // 6 minutes
 
     React.useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            setFirebaseUser(user);
+            if (!user && window.location.pathname.startsWith('/artist/dashboard')) {
+                router.push('/artist/login');
+            }
+        });
+        return () => unsubscribe();
+    }, [auth, router]);
+    
+    React.useEffect(() => {
+        const checkUser = async () => {
             if (firebaseUser) {
                 try {
-                    // Use the fetchData function from context to ensure data is fresh
                     await fetchData();
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
                     handleLogout();
                 }
-            } else {
-                setArtist(null);
-                 if (window.location.pathname.startsWith('/artist/dashboard')) {
-                    router.push('/artist/login');
-                 }
             }
             setIsLoading(false);
-        });
-
-        return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [auth]);
+        };
+        checkUser();
+    }, [firebaseUser, fetchData, handleLogout]);
 
 
     if (isLoading) {
@@ -150,9 +153,14 @@ export default function ArtistDashboardLayout({
         router.push('/');
     }, [router]);
     
-    const fetchData = React.useCallback(async () => {
+     const fetchData = React.useCallback(async () => {
         const firebaseUser = auth.currentUser;
-        if (!firebaseUser?.uid) return;
+        if (!firebaseUser?.uid) {
+            if (window.location.pathname.startsWith('/artist/dashboard')) {
+                router.push('/artist/login');
+            }
+            return;
+        }
 
         const currentArtist = await getArtist(firebaseUser.uid);
         if (currentArtist) {
@@ -326,5 +334,3 @@ export default function ArtistDashboardLayout({
         </ArtistPortalContext.Provider>
     );
 }
-
-    
