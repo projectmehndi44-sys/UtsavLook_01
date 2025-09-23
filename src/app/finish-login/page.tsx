@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { auth, isSignInWithEmailLink, signInWithEmailLink, getFirebaseApp } from '@/lib/firebase';
+import { isSignInWithEmailLink, signInWithEmailLink, getFirebaseApp } from '@/lib/firebase';
 import { createCustomer, getCustomerByEmail } from '@/lib/services';
 import type { Customer } from '@/lib/types';
 import { getAdditionalUserInfo, getAuth } from 'firebase/auth';
