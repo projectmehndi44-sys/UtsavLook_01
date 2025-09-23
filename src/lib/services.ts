@@ -190,6 +190,12 @@ export const createCustomer = async (data: Omit<Customer, 'id'> & {id: string}):
     return customerId;
 };
 
+export const updateCustomer = async (id: string, data: Partial<Customer>): Promise<void> => {
+    const db = await getDb();
+    const customerRef = doc(db, "customers", id);
+    await updateDoc(customerRef, data);
+};
+
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
     const config = await getConfigDocument<any>('placeholderImages');

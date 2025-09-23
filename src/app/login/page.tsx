@@ -15,12 +15,18 @@ import { getFirebaseApp, sendOtp } from '@/lib/firebase';
 import { Alert } from '@/components/ui/alert';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Loader2, KeyRound } from 'lucide-react';
-import { getCustomer, createCustomer } from '@/lib/services';
+import { getCustomer, createCustomer, updateCustomer } from '@/lib/services';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const OTPSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
 });
 type OTPFormValues = z.infer<typeof OTPSchema>;
+
+const NameSchema = z.object({
+    name: z.string().min(2, { message: "Please enter a valid name." }),
+});
+type NameFormValues = z.infer<typeof NameSchema>;
 
 export default function LoginPage() {
     const router = useRouter();
@@ -29,6 +35,8 @@ export default function LoginPage() {
     const [isOtpSent, setIsOtpSent] = React.useState(false);
     const [otp, setOtp] = React.useState('');
     const [error, setError] = React.useState('');
+    const [isNamePromptOpen, setIsNamePromptOpen] = React.useState(false);
+    const [newUserId, setNewUserId] = React.useState<string | null>(null);
 
     const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
     const auth = getAuth(getFirebaseApp());
@@ -36,6 +44,11 @@ export default function LoginPage() {
     const phoneForm = useForm<OTPFormValues>({
         resolver: zodResolver(OTPSchema),
         defaultValues: { phone: '' },
+    });
+    
+    const nameForm = useForm<NameFormValues>({
+        resolver: zodResolver(NameSchema),
+        defaultValues: { name: '' },
     });
 
     const handleSendOtp: SubmitHandler<OTPFormValues> = async (data) => {
@@ -59,7 +72,7 @@ export default function LoginPage() {
             setIsOtpSent(true);
             toast({
                 title: 'OTP Sent',
-                description: `An OTP has been sent to ${data.phone}.`,
+                description: `An OTP has been sent to +91 ${data.phone}.`,
             });
         } catch (err: any) {
             console.error("OTP send error:", err);
@@ -88,6 +101,7 @@ export default function LoginPage() {
                 let customer = await getCustomer(user.uid);
                 
                 if (!customer) {
+                    // New user, create a temporary profile
                     const newCustomerData = {
                         id: user.uid,
                         name: `User ${user.uid.substring(0, 5)}`,
@@ -95,15 +109,18 @@ export default function LoginPage() {
                         email: user.email || ''
                     };
                     await createCustomer(newCustomerData);
-                    customer = newCustomerData;
+                    setNewUserId(user.uid);
+                    setIsNamePromptOpen(true);
+                } else {
+                    // Existing user
+                    localStorage.setItem('currentCustomerId', customer.id);
+                    toast({
+                        title: 'Login Successful!',
+                        description: `Welcome back, ${customer.name}!`,
+                    });
+                    router.push('/account');
                 }
 
-                localStorage.setItem('currentCustomerId', customer.id);
-                toast({
-                    title: 'Login Successful!',
-                    description: `Welcome back, ${customer.name}!`,
-                });
-                router.push('/account');
             } else {
                  throw new Error("Confirmation result not found.");
             }
@@ -113,10 +130,35 @@ export default function LoginPage() {
             let errorMessage = "Failed to verify OTP. Please check the code and try again.";
             if (err.code === 'auth/invalid-verification-code') {
                 errorMessage = "Invalid OTP. Please try again.";
+            } else if (err.code === 'auth/too-many-requests') {
+                errorMessage = "Too many failed attempts. Please request a new OTP.";
             }
             setError(errorMessage);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleNameSubmit: SubmitHandler<NameFormValues> = async (data) => {
+        if (!newUserId) return;
+        setIsLoading(true);
+        try {
+            await updateCustomer(newUserId, { name: data.name });
+            localStorage.setItem('currentCustomerId', newUserId);
+            toast({
+                title: 'Registration Successful!',
+                description: `Welcome, ${data.name}!`,
+            });
+            router.push('/account');
+        } catch (error) {
+            toast({
+                title: 'Registration Failed',
+                description: 'Could not save your name. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoading(false);
+            setIsNamePromptOpen(false);
         }
     };
 
@@ -174,6 +216,7 @@ export default function LoginPage() {
     );
 
   return (
+    <>
     <div className="w-full min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <div className="max-w-md w-full space-y-6">
              <div className="bg-background p-8 rounded-lg shadow-lg">
@@ -185,5 +228,39 @@ export default function LoginPage() {
             </div>
         </div>
     </div>
+    
+    <Dialog open={isNamePromptOpen} onOpenChange={setIsNamePromptOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Welcome to UtsavLook!</DialogTitle>
+                <DialogDescription>Please enter your name to complete your profile.</DialogDescription>
+            </DialogHeader>
+            <Form {...nameForm}>
+                <form onSubmit={nameForm.handleSubmit(handleNameSubmit)} className="space-y-4">
+                    <FormField
+                        control={nameForm.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Your Full Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. Anjali Sharma" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <DialogFooter>
+                        <Button type="submit" disabled={isLoading} className="w-full">
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Create Profile & Login
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </Form>
+        </DialogContent>
+    </Dialog>
+
+    </>
   );
 }
