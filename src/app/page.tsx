@@ -118,14 +118,6 @@ export default function Home() {
       setCurrentBgIndex((prevIndex) => (prevIndex + 1) % (backgroundImages.length || 1));
     }, 5000); 
 
-    // Pre-initialize reCAPTCHA
-    const recaptchaContainer = document.getElementById('recaptcha-container');
-    if (recaptchaContainer && !window.recaptchaVerifier) {
-        setupRecaptcha(recaptchaContainer, () => {
-            console.log('reCAPTCHA verifier is ready on page load.');
-        });
-    }
-
 
     return () => {
         clearInterval(intervalId);

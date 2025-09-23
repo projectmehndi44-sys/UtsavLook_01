@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { auth, setupRecaptcha, sendOtp } from '@/lib/firebase';
+import { auth, sendOtp, setupRecaptcha } from '@/lib/firebase';
 import type { Customer } from '@/lib/types';
 import { Phone, Loader2 } from 'lucide-react';
 import {
@@ -27,7 +27,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { getCustomerByPhone, createCustomer } from '@/lib/services';
-import type { ConfirmationResult, User as FirebaseAuthUser } from 'firebase/auth';
+import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 
 
 const phoneLoginSchema = z.object({
@@ -46,46 +46,36 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
-  // Phone auth state
   const [phone, setPhone] = React.useState('');
   const [otp, setOtp] = React.useState('');
   const [isOtpSent, setIsOtpSent] = React.useState(false);
-  const [isRecaptchaReady, setIsRecaptchaReady] = React.useState(false);
 
   const phoneForm = useForm<PhoneLoginFormValues>({
     resolver: zodResolver(phoneLoginSchema),
     defaultValues: { phone: '' },
   });
-
-  // Check if reCAPTCHA is already ready from page load
-  React.useEffect(() => {
-    if (isOpen) {
-        if (window.recaptchaVerifier) {
-            setIsRecaptchaReady(true);
-        } else {
-            // Fallback in case it wasn't ready on page load
-             const recaptchaContainer = document.getElementById('recaptcha-container');
-             if (recaptchaContainer) {
-                setupRecaptcha(recaptchaContainer, () => {
-                    setIsRecaptchaReady(true);
-                });
-             }
-        }
-    }
-  }, [isOpen]);
   
 
   const handleSendOtp = async (data: PhoneLoginFormValues) => {
     setIsSubmitting(true);
     setPhone(data.phone);
-    if (!window.recaptchaVerifier) {
-      toast({ title: 'reCAPTCHA not ready, please wait.', variant: 'destructive'});
-      setIsSubmitting(false);
-      return;
-    }
-    
+
     try {
-      const confirmationResult = await sendOtp(data.phone, window.recaptchaVerifier);
+      // Initialize reCAPTCHA verifier on demand
+      const recaptchaContainer = document.getElementById('recaptcha-container');
+      if (!recaptchaContainer) {
+          throw new Error("reCAPTCHA container not found.");
+      }
+      
+      const verifier = await new Promise<RecaptchaVerifier>((resolve, reject) => {
+          try {
+            setupRecaptcha(recaptchaContainer, () => resolve(window.recaptchaVerifier!));
+          } catch(e) {
+            reject(e);
+          }
+      });
+
+      const confirmationResult = await sendOtp(data.phone, verifier);
       window.confirmationResult = confirmationResult;
       setIsOtpSent(true);
       toast({
@@ -95,6 +85,7 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
     } catch (error: any) {
       console.error("OTP send error:", error);
       toast({ title: 'Failed to send OTP', description: error.message, variant: 'destructive'});
+      // Reset reCAPTCHA if it exists
       if (window.grecaptcha && window.recaptchaVerifier) {
         window.grecaptcha.reset(window.recaptchaVerifier.widgetId);
       }
@@ -112,16 +103,15 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
       }
       
       const result = await confirmationResult.confirm(otp);
-      const user = result.user;
-
+      
       let customer = await getCustomerByPhone(phone);
       if (!customer) {
         // Create new customer
         const newCustomerData: Omit<Customer, 'id'> & { id: string } = {
-          id: user.uid,
+          id: result.user.uid,
           name: `User ${phone.substring(6)}`,
           phone: phone,
-          email: user.email || undefined,
+          email: result.user.email || undefined,
         };
         await createCustomer(newCustomerData);
         customer = newCustomerData;
@@ -179,9 +169,9 @@ export function CustomerLoginModal({ isOpen, onOpenChange, onSuccessfulLogin }: 
                         )}
                     />
                     
-                    <Button type="submit" disabled={isSubmitting || !isRecaptchaReady} className="w-full">
-                        {isSubmitting || !isRecaptchaReady ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Phone className="mr-2 h-4 w-4" />}
-                        {isSubmitting ? 'Sending...' : isRecaptchaReady ? 'Send OTP' : 'Initializing...'}
+                    <Button type="submit" disabled={isSubmitting} className="w-full">
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Phone className="mr-2 h-4 w-4" />}
+                        {isSubmitting ? 'Sending...' : 'Send OTP'}
                     </Button>
                 </form>
             </Form>
