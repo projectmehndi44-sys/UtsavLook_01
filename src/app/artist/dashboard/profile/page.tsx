@@ -25,6 +25,7 @@ import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { v4 as uuidv4 } from 'uuid';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const serviceAreaSchema = z.object({
   id: z.string(),
@@ -78,6 +79,13 @@ const profileSchema = z.object({
 
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
+
+const serviceItems = [
+    { id: 'mehndi', label: 'Mehndi' },
+    { id: 'makeup', label: 'Makeup' },
+    { id: 'photography', label: 'Photography' },
+] as const;
+
 
 export default function ArtistProfilePage() {
     const { artist, setArtist } = useArtistPortal();
@@ -141,7 +149,7 @@ export default function ArtistProfilePage() {
         if (!artist) return;
         
         const firstServiceArea = data.serviceAreas[0];
-        const locationString = `${firstServiceArea.localities.split(',')[0].trim()}, ${firstServiceArea.district}, ${firstServiceArea.state}`;
+        const locationString = `${firstServiceArea.localities.split(',')[0].trim()}, ${firstServiceArea.district}`;
         
         const dataToUpdate: Partial<Artist> = {
             name: data.name,
@@ -315,32 +323,48 @@ export default function ArtistProfilePage() {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <CardContent className="space-y-6 pt-2">
-                                        <FormField control={form.control} name="services" render={() => (
-                                            <FormItem>
-                                                <FormLabel>Services Offered</FormLabel>
-                                                <div className="flex gap-4 items-center">
-                                                    <FormField control={form.control} name="services" render={({ field }) => (
-                                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                                            <FormControl><input type="checkbox" checked={field.value?.includes('mehndi')} onChange={(e) => { field.onChange(e.target.checked ? [...field.value, 'mehndi'] : field.value?.filter(v => v !== 'mehndi')) }} className="hidden" id="service-mehndi"/></FormControl>
-                                                            <Label htmlFor="service-mehndi" className="flex items-center gap-2 cursor-pointer rounded-md border p-2 hover:bg-muted/50 data-[state=checked]:bg-accent/20 data-[state=checked]:border-accent"><input type="checkbox" className="h-4 w-4 accent-primary" checked={field.value?.includes('mehndi')} readOnly/> Mehndi</Label>
-                                                        </FormItem>
-                                                    )} />
-                                                     <FormField control={form.control} name="services" render={({ field }) => (
-                                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                                            <FormControl><input type="checkbox" checked={field.value?.includes('makeup')} onChange={(e) => { field.onChange(e.target.checked ? [...field.value, 'makeup'] : field.value?.filter(v => v !== 'makeup')) }} className="hidden" id="service-makeup" /></FormControl>
-                                                            <Label htmlFor="service-makeup" className="flex items-center gap-2 cursor-pointer rounded-md border p-2 hover:bg-muted/50 data-[state=checked]:bg-accent/20 data-[state=checked]:border-accent"><input type="checkbox" className="h-4 w-4 accent-primary" checked={field.value?.includes('makeup')} readOnly /> Makeup</Label>
-                                                        </FormItem>
-                                                    )} />
-                                                     <FormField control={form.control} name="services" render={({ field }) => (
-                                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                                            <FormControl><input type="checkbox" checked={field.value?.includes('photography')} onChange={(e) => { field.onChange(e.target.checked ? [...field.value, 'photography'] : field.value?.filter(v => v !== 'photography')) }} className="hidden" id="service-photography" /></FormControl>
-                                                            <Label htmlFor="service-photography" className="flex items-center gap-2 cursor-pointer rounded-md border p-2 hover:bg-muted/50 data-[state=checked]:bg-accent/20 data-[state=checked]:border-accent"><input type="checkbox" className="h-4 w-4 accent-primary" checked={field.value?.includes('photography')} readOnly /> Photography</Label>
-                                                        </FormItem>
-                                                    )} />
-                                                </div>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
+                                        <FormField
+                                            control={form.control}
+                                            name="services"
+                                            render={() => (
+                                                <FormItem>
+                                                    <FormLabel>Services Offered</FormLabel>
+                                                    <div className="flex gap-4 items-center">
+                                                        {serviceItems.map((item) => (
+                                                        <FormField
+                                                            key={item.id}
+                                                            control={form.control}
+                                                            name="services"
+                                                            render={({ field }) => {
+                                                            return (
+                                                                <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                    checked={field.value?.includes(item.id)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        return checked
+                                                                        ? field.onChange([...(field.value || []), item.id])
+                                                                        : field.onChange(
+                                                                            (field.value || []).filter(
+                                                                                (value) => value !== item.id
+                                                                            )
+                                                                            )
+                                                                    }}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal">
+                                                                    {item.label}
+                                                                </FormLabel>
+                                                                </FormItem>
+                                                            )
+                                                            }}
+                                                        />
+                                                        ))}
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                         
                                         <div className="grid md:grid-cols-2 gap-4">
                                             {watchServices.includes('mehndi') && (
