@@ -42,7 +42,7 @@ export default function LoginPage() {
     const [otp, setOtp] = React.useState('');
     const [error, setError] = React.useState('');
     const [timer, setTimer] = React.useState(0);
-    const [captcha, setCaptcha] = React.useState(generateCaptcha());
+    const [captcha, setCaptcha] = React.useState('');
     const [captchaInput, setCaptchaInput] = React.useState('');
 
     const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
@@ -52,6 +52,11 @@ export default function LoginPage() {
         resolver: zodResolver(OTPSchema),
         defaultValues: { phone: '' },
     });
+    
+    // Generate captcha on client-side only to prevent hydration errors
+    React.useEffect(() => {
+        setCaptcha(generateCaptcha());
+    }, []);
 
     React.useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -276,4 +281,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
