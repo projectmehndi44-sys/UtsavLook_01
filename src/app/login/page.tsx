@@ -41,10 +41,11 @@ export default function LoginPage() {
   const handleSendOtp = async (data: PhoneLoginFormValues) => {
     setIsLoading(true);
     try {
-        // Explicitly set the auth domain before creating the verifier.
-        auth.app.options.authDomain = 'studio-163529036-f9a8c.firebaseapp.com';
         const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
+            'parameters': {
+                'authDomain': 'studio-163529036-f9a8c.firebaseapp.com'
+            }
         });
       
         const confirmationResult = await sendOtp(data.phone, recaptchaVerifier);
@@ -61,7 +62,7 @@ export default function LoginPage() {
         if (error.code === 'auth/too-many-requests') {
             description = "You have requested an OTP too many times. Please try again later.";
         } else if (error.code === 'auth/captcha-check-failed') {
-            description = "The reCAPTCHA verification failed. Please try again."
+            description = "The reCAPTCHA verification failed. Please ensure your domain is whitelisted and try again."
         }
         toast({ title: 'Failed to send OTP', description: description, variant: 'destructive' });
     } finally {
