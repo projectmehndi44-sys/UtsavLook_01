@@ -47,7 +47,7 @@ export default function LoginPage() {
     try {
         auth.languageCode = 'en';
 
-        // Clear any previous instance
+        // Clear any previous instance before creating a new one
         if (recaptchaVerifierRef.current) {
             recaptchaVerifierRef.current.clear();
         }
