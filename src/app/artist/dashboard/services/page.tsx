@@ -32,17 +32,20 @@ export default function ArtistServicesPage() {
         if (artist && masterServices.length > 0) {
             const offerings: ArtistServiceOffering[] = [];
             masterServices.forEach(service => {
-                service.categories.forEach(category => {
-                    const existingOffering = artist.serviceOfferings?.find(
-                        o => o.masterPackageId === service.id && o.categoryName === category.name
-                    );
-                    offerings.push({
-                        masterPackageId: service.id,
-                        categoryName: category.name,
-                        isEnabled: existingOffering?.isEnabled || false,
-                        artistPrice: existingOffering?.artistPrice || category.basePrice,
+                // Only create offerings if the artist has opted for the parent service (e.g., 'mehndi')
+                if (artist.services.includes(service.service)) {
+                    service.categories.forEach(category => {
+                        const existingOffering = artist.serviceOfferings?.find(
+                            o => o.masterPackageId === service.id && o.categoryName === category.name
+                        );
+                        offerings.push({
+                            masterPackageId: service.id,
+                            categoryName: category.name,
+                            isEnabled: existingOffering?.isEnabled || false,
+                            artistPrice: existingOffering?.artistPrice || category.basePrice,
+                        });
                     });
-                });
+                }
             });
             form.reset({ offerings });
         }
@@ -71,9 +74,26 @@ export default function ArtistServicesPage() {
         }
     };
 
-    if (!artist || fields.length === 0) {
+    if (!artist || masterServices.length === 0) {
         return <div>Loading services...</div>
     }
+
+    // Filter master services based on the services the artist has signed up for in their profile
+    const availableMasterServices = masterServices.filter(ms => artist.services.includes(ms.service));
+
+    if (availableMasterServices.length === 0) {
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle>My Service Offerings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">You have not selected any primary service categories in your profile. Please go to your <a href="/artist/dashboard/profile" className="underline text-primary">profile</a> and select the services you offer (e.g., Mehndi, Makeup) to configure your packages here.</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
 
     return (
         <Card>
@@ -86,8 +106,8 @@ export default function ArtistServicesPage() {
             <CardContent>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <Accordion type="multiple" defaultValue={masterServices.map(s => s.id)} className="w-full space-y-4">
-                            {masterServices.map((service) => (
+                        <Accordion type="multiple" defaultValue={availableMasterServices.map(s => s.id)} className="w-full space-y-4">
+                            {availableMasterServices.map((service) => (
                                 <AccordionItem key={service.id} value={service.id}>
                                     <Card>
                                         <AccordionTrigger className="p-6 hover:no-underline text-left">
@@ -142,7 +162,8 @@ export default function ArtistServicesPage() {
                                                                                     <Input type="number" {...field} className="pl-8" disabled={!form.watch(`offerings.${fieldIndex}.isEnabled`)}/>
                                                                                 </FormControl>
                                                                             </div>
-                                                                            {form.watch(`offerings.${fieldIndex}.artistPrice`) < category.basePrice && <FormMessage>Your price cannot be lower than the base price of ₹{category.basePrice}.</FormMessage>}
+                                                                            {form.watch(`offerings.${fieldIndex}.artistPrice`) < category.basePrice && <p className="text-sm font-medium text-destructive">Your price cannot be lower than the base price of ₹{category.basePrice}.</p>}
+                                                                            <FormMessage/>
                                                                         </FormItem>
                                                                     )}
                                                                 />
@@ -166,3 +187,5 @@ export default function ArtistServicesPage() {
         </Card>
     );
 }
+
+    
