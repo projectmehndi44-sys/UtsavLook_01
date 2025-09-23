@@ -119,7 +119,7 @@ export default function LoginPage() {
                         title: 'Login Successful!',
                         description: `Welcome back, ${customer.name}!`,
                     });
-                    router.push('/account');
+                    router.push('/');
                 }
 
             } else {
@@ -150,7 +150,7 @@ export default function LoginPage() {
                 title: 'Registration Successful!',
                 description: `Welcome, ${data.name}!`,
             });
-            router.push('/account');
+            router.push('/');
         } catch (error) {
             toast({
                 title: 'Registration Failed',
