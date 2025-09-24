@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,7 +19,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 // Custom component for social share icons to keep JSX clean
 const SocialIcons = {
     WhatsApp: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.75,7.82c-1.39-1.39-3.26-2.18-5.25-2.18c-4.13,0-7.5,3.37-7.5,7.5c0,1.36,0.36,2.64,1.03,3.75L4,20l3.03-1.01c1.08,0.6,2.3,0.93,3.59,0.93h0.01c4.13,0,7.5-3.37,7.5-7.5C18.93,11.08,18.14,9.21,16.75,7.82z M11.5,19.3c-1.12,0-2.2-0.31-3.12-0.87l-0.22-0.13l-2.33,0.77l0.79-2.27l-0.14-0.23c-0.61-1-0.98-2.17-0.98-3.43c0-3.31,2.69-6,6-6c1.61,0,3.09,0.63,4.2,1.76c1.12,1.12,1.76,2.59,1.76,4.2C17.5,16.61,14.81,19.3,11.5,19.3z M15.34,13.25c-0.23-0.12-1.35-0.66-1.56-0.74c-0.21-0.08-0.36-0.12-0.51,0.12c-0.15,0.23-0.59,0.74-0.72,0.88c-0.13,0.15-0.27,0.16-0.5,0.04c-0.23-0.12-0.96-0.35-1.83-1.12c-0.68-0.59-1.14-1.33-1.27-1.56c-0.13-0.23-0.01-0.36,0.1-0.48c0.1-0.11,0.23-0.28,0.34-0.42c0.12-0.15,0.15-0.25,0.23-0.42c0.08-0.17,0.04-0.31-0.02-0.43c-0.06-0.12-0.51-1.22-0.7-1.67c-0.18-0.44-0.37-0.38-0.51-0.39c-0.13-0.01-0.28-0.01-0.43-0.01c-0.15,0-0.39,0.06-0.6,0.3c-0.2,0.25-0.78,0.76-0.78,1.85c0,1.09,0.8,2.14,0.91,2.3c0.12,0.15,1.57,2.4,3.79,3.35c0.53,0.23,0.94,0.36,1.27,0.46c0.55,0.17,1.05,0.14,1.44,0.09c0.44-0.06,1.35-0.55,1.54-1.07c0.19-0.52,0.19-0.97,0.13-1.07C15.7,13.4,15.57,13.37,15.34,13.25z"/></svg>,
-    Twitter: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+    Instagram: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.07-1.645-.07-4.85s.012-3.584.07-4.85c.148-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg>,
     Facebook: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4z"/></svg>,
 };
 
@@ -107,7 +108,16 @@ export default function ArtistHomePage() {
         link.click();
     };
 
-    const handleSocialShare = (platform: 'whatsapp' | 'twitter' | 'facebook') => {
+    const handleSocialShare = (platform: 'whatsapp' | 'instagram' | 'facebook') => {
+        if (platform === 'instagram') {
+            copyShareText();
+            toast({
+                title: 'Text Copied!',
+                description: 'Download the image and paste the text in your Instagram post.',
+            });
+            return;
+        }
+
         const encodedText = encodeURIComponent(shareText);
         const encodedUrl = encodeURIComponent(shareUrl);
         let url = '';
@@ -115,9 +125,6 @@ export default function ArtistHomePage() {
         switch(platform) {
             case 'whatsapp':
                 url = `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`;
-                break;
-            case 'twitter':
-                url = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
                 break;
             case 'facebook':
                 url = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
@@ -266,7 +273,7 @@ export default function ArtistHomePage() {
                             height: 600,
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'flex-end',
+                            justifyContent: 'space-between',
                             padding: '30px',
                             backgroundImage: `url(${benefit.imageUrl})`,
                             backgroundSize: 'cover',
@@ -277,8 +284,12 @@ export default function ArtistHomePage() {
                         }}
                     >
                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%)' }} />
+                         
+                         <div style={{ zIndex: 1, fontFamily: "'Playfair Display', serif", fontSize: '36px', fontWeight: 'bold' }}>
+                            <span style={{ color: 'hsl(var(--accent))' }}>Utsav</span><span style={{ color: 'hsl(var(--primary))' }}>Look</span>
+                         </div>
+
                          <div style={{ zIndex: 1 }}>
-                            <h3 style={{ fontSize: '24px', fontWeight: 'bold', textShadow: '2px 2px 4px rgba(0,0,0,0.7)', margin: 0 }}>UtsavLook</h3>
                             <p style={{ fontSize: '36px', fontWeight: 'bold', lineHeight: 1.2, textShadow: '2px 2px 6px rgba(0,0,0,0.8)', margin: '8px 0 0 0' }}>{benefit.title}</p>
                          </div>
                     </div>
@@ -321,7 +332,7 @@ export default function ArtistHomePage() {
                         </div>
                         <div className="flex justify-around items-center pt-2">
                             <Button variant="ghost" size="icon" onClick={() => handleSocialShare('whatsapp')} className="text-green-500 hover:bg-green-50 hover:text-green-600"><SocialIcons.WhatsApp/></Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleSocialShare('twitter')} className="text-blue-500 hover:bg-blue-50 hover:text-blue-600"><SocialIcons.Twitter/></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleSocialShare('instagram')} className="text-pink-500 hover:bg-pink-50 hover:text-pink-600"><SocialIcons.Instagram/></Button>
                             <Button variant="ghost" size="icon" onClick={() => handleSocialShare('facebook')} className="text-blue-800 hover:bg-blue-50 hover:text-blue-900"><SocialIcons.Facebook/></Button>
                         </div>
                     </DialogFooter>
@@ -331,3 +342,5 @@ export default function ArtistHomePage() {
         </div>
     );
 }
+
+    
