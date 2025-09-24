@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, Briefcase, Bell, User, LogOut, Palette, CalendarOff, IndianRupee, Package, Star, PanelLeft } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Bell, User, LogOut, Palette, CalendarOff, IndianRupee, Package, Star, PanelLeft, Megaphone } from 'lucide-react';
 import type { Artist, Booking, Notification } from '@/lib/types';
 import { getArtist, listenToCollection } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
@@ -203,6 +203,7 @@ export default function ArtistDashboardLayout({
     ];
 
     const sidebarNavLinks = [
+        { href: '/artist/dashboard/promote', label: 'Promote Profile', icon: Megaphone },
         { href: '/artist/dashboard/payouts', label: 'Payouts', icon: IndianRupee },
         { href: '/artist/dashboard/reviews', label: 'Reviews', icon: Star },
         { href: '/artist/dashboard/notifications', label: 'Notifications', icon: Bell },
