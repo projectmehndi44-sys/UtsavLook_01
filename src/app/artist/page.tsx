@@ -23,8 +23,8 @@ const benefits = [
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
-        image: "https://picsum.photos/seed/artist-verified/800/600",
-        "imageHint": "client artist handshake"
+        image: "https://storage.googleapis.com/studiogood/ef353a2b-d08b-4927-aa72-5989f53e6b7c.jpeg",
+        imageHint: "client artist handshake"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
@@ -38,7 +38,7 @@ const benefits = [
         title: "Your Own Referral Code",
         description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
         image: "https://picsum.photos/seed/artist-referral/800/600",
-        "imageHint": "friends sharing phone"
+        imageHint": "friends sharing phone"
     },
     {
         icon: <IndianRupee className="w-8 h-8 text-primary" />,
