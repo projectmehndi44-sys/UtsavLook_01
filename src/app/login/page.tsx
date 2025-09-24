@@ -15,9 +15,10 @@ import { getAuth, RecaptchaVerifier, type ConfirmationResult } from 'firebase/au
 import { getFirebaseApp, sendOtp } from '@/lib/firebase';
 import { Alert } from '@/components/ui/alert';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Loader2, KeyRound } from 'lucide-react';
+import { Loader2, KeyRound, Home } from 'lucide-react';
 import { getCustomer, createCustomer, updateCustomer } from '@/lib/services';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import Link from 'next/link';
 
 const OTPSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
@@ -38,6 +39,9 @@ export default function LoginPage() {
     const [error, setError] = React.useState('');
     const [isNamePromptOpen, setIsNamePromptOpen] = React.useState(false);
     const [newUserId, setNewUserId] = React.useState<string | null>(null);
+    
+    const [timer, setTimer] = React.useState(60);
+    const [isResendDisabled, setIsResendDisabled] = React.useState(true);
 
     const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
     const auth = getAuth(getFirebaseApp());
@@ -55,6 +59,8 @@ export default function LoginPage() {
     const handleSendOtp: SubmitHandler<OTPFormValues> = async (data) => {
         setError('');
         setIsLoading(true);
+        setTimer(60);
+        setIsResendDisabled(true);
 
         try {
             if (recaptchaVerifierRef.current) {
@@ -87,6 +93,19 @@ export default function LoginPage() {
         }
     };
     
+     React.useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isOtpSent && timer > 0) {
+            interval = setInterval(() => {
+                setTimer((prevTimer) => prevTimer - 1);
+            }, 1000);
+        } else if (timer === 0) {
+            setIsResendDisabled(false);
+        }
+        return () => clearInterval(interval);
+    }, [isOtpSent, timer]);
+
+
     const handleVerifyOtp = async () => {
         setError('');
         if (otp.length !== 6) {
@@ -210,6 +229,16 @@ export default function LoginPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Verify OTP
             </Button>
+            <div className="flex justify-center items-center gap-2 text-sm">
+                <Button 
+                    variant="link" 
+                    onClick={() => phoneForm.handleSubmit(handleSendOtp)()}
+                    disabled={isResendDisabled || isLoading}
+                >
+                    Resend OTP
+                </Button>
+                {isResendDisabled && <span className="text-muted-foreground tabular-nums">({timer}s)</span>}
+            </div>
             <Button variant="link" onClick={() => setIsOtpSent(false)} disabled={isLoading}>
                 Change Number
             </Button>
@@ -226,6 +255,11 @@ export default function LoginPage() {
                     <h2 className="text-xl font-bold">Login with Phone</h2>
                 </div>
                 {isOtpSent ? renderOtpForm() : renderPhoneForm()}
+            </div>
+             <div className="text-center text-sm">
+                <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
+                    <Home className="mr-1 h-4 w-4" /> Back to Home
+                </Link>
             </div>
         </div>
     </div>
@@ -265,3 +299,4 @@ export default function LoginPage() {
     </>
   );
 }
+
