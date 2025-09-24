@@ -14,7 +14,7 @@ import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const benefitIcons = {
+const benefitIcons: Record<string, JSX.Element> = {
     "Set Your Own Price": <BarChart className="w-8 h-8 text-primary" />,
     "'UtsavLook Verified' Badge": <Award className="w-8 h-8 text-primary" />,
     "Intelligent Scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
