@@ -33,16 +33,8 @@ const SocialIcons = {
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.413.003 6.557-5.338 11.892-11.894 11.892-1.99 0-3.903-.52-5.586-1.457l-6.354 1.654zm6.838-2.698l.396.235c1.478.882 3.16.136 4.893.136 5.47 0 9.9-4.43 9.9-9.9 0-5.469-4.43-9.9-9.9-9.9s-9.9 4.431-9.9 9.9c0 2.004.604 3.903 1.688 5.586l.235.396-1.07 3.894 3.996-1.044zM12.28 8.92c-.135-.27-.27-.27-.395-.27h-.24c-.12 0-.27.045-.42.225-.15.18-.57.54-.57 1.32 0 .78.585 1.545.66 1.665.075.12.945 1.515 2.31 2.04.315.12.585.195.78.255.3.09.57.075.78-.045.225-.12.945-1.155 1.065-1.395.12-.24.075-.39-.045-.51-.12-.12-.27-.195-.39-.225s-.24-.045-.36 0c-.12.045-.27.135-.39.27-.12.12-.21.225-.3.27s-.165.09-.285 0c-.12-.09-.51-.18-.975-.57-.555-.465-.915-1.035-.96-1.155z"/>
         </svg>
     ),
-    facebook: (
-         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
-        </svg>
-    ),
-    instagram: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.069-4.85.069s-3.584-.011-4.85-.069c-3.225-.149-4.771-1.664-4.919-4.919-.058-1.265-.069-1.645-.069-4.85 0-3.204.011-3.584.069-4.85.149-3.225 1.664-4.771 4.919-4.919 1.266-.058 1.644-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44 1.441-.645 1.441-1.44c0-.795-.645-1.44-1.441-1.44z"/>
-        </svg>
-    ),
+    facebook: <Facebook/>,
+    instagram: <Instagram/>,
 };
 
 
@@ -98,29 +90,42 @@ export default function ArtistHomePage() {
         }
     };
 
-    const handleSocialShare = async () => {
+    const handleSocialShare = async (platform: 'whatsapp' | 'facebook' | 'instagram') => {
         if (!shareableCompositeImage) return;
 
-        try {
-            const blob = await (await fetch(shareableCompositeImage)).blob();
-            const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
-            
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        const blob = await (await fetch(shareableCompositeImage)).blob();
+        const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
+
+        if (platform === 'instagram') {
+             navigator.clipboard.writeText(shareText);
+             toast({
+                title: 'Text Copied & Ready for Instagram!',
+                description: 'Download the image, then open Instagram to create your post.',
+                duration: 5000,
+             });
+             return;
+        }
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+             try {
                 await navigator.share({
                     files: [file],
                     title: 'UtsavLook Artist Benefits',
                     text: shareText,
                 });
-            } else {
-                 toast({
-                    title: "Share Not Supported",
-                    description: "Your browser does not support direct image sharing. You can download the image instead.",
-                    variant: "destructive"
-                });
+            } catch (error) {
+                console.error('Web Share API error:', error);
+                toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
             }
-        } catch (error) {
-             console.error('Web Share API error:', error);
-             toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
+        } else {
+             const encodedText = encodeURIComponent(shareText);
+             let url = '';
+             if (platform === 'whatsapp') {
+                 url = `https://api.whatsapp.com/send?text=${encodedText}`;
+             } else if (platform === 'facebook') {
+                 url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodedText}`;
+             }
+             window.open(url, '_blank');
         }
     };
     
@@ -280,21 +285,30 @@ export default function ArtistHomePage() {
             <Dialog open={!!shareableCompositeImage} onOpenChange={handleCloseDialog}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Share These Benefits</DialogTitle>
-                        <DialogDescription>Your beautiful, all-in-one graphic is ready to share. Use the buttons below or download the image.</DialogDescription>
+                        <DialogTitle>Share Your UtsavLook Benefits</DialogTitle>
+                        <DialogDescription>Your all-in-one graphic is ready. Share it to your favorite platforms or download it.</DialogDescription>
                     </DialogHeader>
                     {shareableCompositeImage && (
                         <Image src={shareableCompositeImage} alt="UtsavLook Artist Benefits" width={1200} height={1200} className="rounded-lg border"/>
                     )}
-                    <DialogFooter className="sm:justify-start gap-2">
-                         <Button onClick={handleSocialShare} variant="default" size="sm" aria-label="Share">
-                            <Share2 className="mr-2 h-4 w-4"/>
-                            Share...
-                         </Button>
-                         <Button onClick={handleDownload} variant="outline" size="sm" aria-label="Download Image"><Download className="mr-2 h-4 w-4"/>Download</Button>
-                         <div className="relative flex-grow">
-                            <Input value={shareText} readOnly className="pr-10"/>
-                            <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
+                    <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
+                         <div className="flex-grow grid grid-cols-3 gap-2">
+                             <Button onClick={() => handleSocialShare('whatsapp')} variant="outline" size="sm" className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+                                {SocialIcons.whatsapp} <span className="ml-2">WhatsApp</span>
+                             </Button>
+                             <Button onClick={() => handleSocialShare('facebook')} variant="outline" size="sm" className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200">
+                                {SocialIcons.facebook} <span className="ml-2">Facebook</span>
+                             </Button>
+                             <Button onClick={() => handleSocialShare('instagram')} variant="outline" size="sm" className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200">
+                                {SocialIcons.instagram} <span className="ml-2">Instagram</span>
+                             </Button>
+                         </div>
+                         <div className="flex items-center gap-2">
+                             <Button onClick={handleDownload} variant="outline" size="icon" aria-label="Download Image"><Download/></Button>
+                             <div className="relative flex-grow">
+                                <Input value={shareText} readOnly className="pr-10 h-10"/>
+                                <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
+                             </div>
                          </div>
                     </DialogFooter>
                 </DialogContent>
