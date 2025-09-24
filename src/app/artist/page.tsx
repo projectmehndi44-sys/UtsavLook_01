@@ -24,7 +24,7 @@ const benefits = [
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
         image: "https://picsum.photos/seed/artist-verified/800/600",
-        imageHint: "client artist handshake"
+        imageHint": "client artist handshake"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
