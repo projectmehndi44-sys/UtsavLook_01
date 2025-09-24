@@ -3,53 +3,95 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Header } from '@/components/utsavlook/Header';
-import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus } from 'lucide-react';
+import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toPng } from 'html-to-image';
+import { useToast } from '@/hooks/use-toast';
 
 const benefits = [
     {
         icon: <BarChart className="w-8 h-8 text-primary" />,
         title: "Set Your Own Price",
         description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
+        image: "https://picsum.photos/seed/artist-price/800/600",
+        imageHint: "artist working studio"
     },
     {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
+        image: "https://picsum.photos/seed/artist-verified/800/600",
+        imageHint: "client artist handshake"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Intelligent Scheduling",
         description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.",
+        image: "https://picsum.photos/seed/artist-schedule/800/600",
+        imageHint: "artist tablet schedule"
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "Your Own Referral Code",
         description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
+        image: "https://picsum.photos/seed/artist-referral/800/600",
+        imageHint: "friends sharing phone"
     },
     {
         icon: <IndianRupee className="w-8 h-8 text-primary" />,
         title: "Transparent Payouts",
         description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.",
+        image: "https://picsum.photos/seed/artist-payout/800/600",
+        imageHint: "person laptop finances"
     },
     {
         icon: <UserPlus className="w-8 h-8 text-primary" />,
         title: "0% Commission Welcome",
         description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
+        image: "https://picsum.photos/seed/artist-welcome/800/600",
+        imageHint: "artist starting work"
     }
 ];
 
 export default function ArtistHomePage() {
     const router = useRouter();
+    const { toast } = useToast();
+    const benefitsRef = React.useRef<HTMLDivElement>(null);
+    const [isSharing, setIsSharing] = React.useState(false);
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
     const [customer, setCustomer] = React.useState(null);
     const [cartCount, setCartCount] = React.useState(0);
+
+    const handleShare = React.useCallback(() => {
+        if (!benefitsRef.current) return;
+        setIsSharing(true);
+        toPng(benefitsRef.current, { cacheBust: true, pixelRatio: 1.5 })
+            .then((dataUrl) => {
+                const link = document.createElement('a');
+                link.download = 'utsavlook-artist-benefits.png';
+                link.href = dataUrl;
+                link.click();
+                 toast({
+                    title: 'Image downloaded!',
+                    description: 'Your shareable benefits image is ready.',
+                });
+            })
+            .catch((err) => {
+                console.error(err);
+                toast({
+                    title: 'Oops!',
+                    description: 'Could not create shareable image. Please try again.',
+                    variant: 'destructive',
+                });
+            })
+            .finally(() => setIsSharing(false));
+    }, [toast]);
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-secondary">
@@ -90,27 +132,44 @@ export default function ArtistHomePage() {
 
                 {/* Benefits Section */}
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
-                    <div className="container px-4 md:px-6">
-                        <h2 className="text-3xl font-bold tracking-tighter text-center sm:text-5xl text-primary font-headline mb-12">
-                            Why Artists Love UtsavLook
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div ref={benefitsRef} className="container px-4 md:px-6 bg-background">
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">
+                                Why Artists Love UtsavLook
+                            </h2>
+                             <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed mx-auto">
+                                A platform designed for your growth, giving you the tools to succeed and the freedom to create.
+                            </p>
+                        </div>
+                        <div className="grid gap-16">
                             {benefits.map((benefit, index) => (
-                                <Card key={index} className="hover:shadow-xl transition-shadow duration-300 flex flex-col text-center items-center bg-card">
-                                    <CardHeader className="items-center">
-                                        <div className="bg-primary/10 p-4 rounded-full">
+                                <div key={index} className={`grid gap-8 md:gap-12 items-center md:grid-cols-2`}>
+                                    <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
+                                        <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
                                             {benefit.icon}
                                         </div>
-                                        <CardTitle className="pt-4">{benefit.title}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="flex-grow">
-                                        <p className="text-sm text-muted-foreground">
+                                        <h3 className="text-2xl md:text-3xl font-bold text-primary">{benefit.title}</h3>
+                                        <p className="text-muted-foreground text-lg">
                                             {benefit.description}
                                         </p>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+                                    <Image
+                                        src={benefit.image}
+                                        alt={benefit.title}
+                                        width={800}
+                                        height={600}
+                                        className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${index % 2 === 1 ? 'md:order-1' : ''}`}
+                                        data-ai-hint={benefit.imageHint}
+                                    />
+                                </div>
                             ))}
                         </div>
+                    </div>
+                     <div className="container px-4 md:px-6 mt-12 text-center">
+                        <Button size="lg" onClick={handleShare} disabled={isSharing}>
+                            {isSharing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Share2 className="mr-2 h-5 w-5" />}
+                            {isSharing ? 'Generating Image...' : 'Share The Benefits'}
+                        </Button>
                     </div>
                 </section>
 
