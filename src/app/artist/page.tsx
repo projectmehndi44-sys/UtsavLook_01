@@ -12,34 +12,46 @@ import { useRouter } from 'next/navigation';
 
 const benefits = [
     {
-        icon: <BarChart className="w-16 h-16 text-primary" />,
+        icon: <BarChart className="w-8 h-8 text-primary" />,
         title: "Set Your Own Price",
         description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
+        image: "https://picsum.photos/seed/pricepower/600/400",
+        aiHint: "creative tools glowing"
     },
     {
-        icon: <Award className="w-16 h-16 text-primary" />,
+        icon: <Award className="w-8 h-8 text-primary" />,
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
+        image: "https://picsum.photos/seed/verifiedbadge/600/400",
+        aiHint: "glass shield"
     },
     {
-        icon: <CalendarCheck className="w-16 h-16 text-primary" />,
+        icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Intelligent Scheduling",
         description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.",
+        image: "https://picsum.photos/seed/smartcalendar/600/400",
+        aiHint: "futuristic calendar"
     },
     {
-        icon: <Sparkles className="w-16 h-16 text-primary" />,
+        icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "Your Own Referral Code",
         description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
+        image: "https://picsum.photos/seed/referralgrowth/600/400",
+        aiHint: "glowing network"
     },
     {
-        icon: <IndianRupee className="w-16 h-16 text-primary" />,
+        icon: <IndianRupee className="w-8 h-8 text-primary" />,
         title: "Transparent Payouts",
         description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.",
+        image: "https://picsum.photos/seed/payoutchart/600/400",
+        aiHint: "3d finance chart"
     },
     {
-        icon: <UserPlus className="w-16 h-16 text-primary" />,
+        icon: <UserPlus className="w-8 h-8 text-primary" />,
         title: "0% Commission Welcome",
         description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
+        image: "https://picsum.photos/seed/welcomeopportunity/600/400",
+        aiHint: "glowing doorway"
     }
 ];
 
@@ -96,16 +108,23 @@ export default function ArtistHomePage() {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {benefits.map((benefit, index) => (
-                                <Card key={index} className="overflow-hidden hover:shadow-2xl transition-shadow duration-300">
-                                     <div className="flex items-center justify-center w-full aspect-video bg-muted/30">
-                                        {benefit.icon}
+                                <Card key={index} className="overflow-hidden hover:shadow-2xl transition-shadow duration-300 flex flex-col">
+                                     <div className="relative w-full aspect-video">
+                                        <Image 
+                                            src={benefit.image} 
+                                            alt={benefit.title} 
+                                            fill
+                                            className="object-cover"
+                                            data-ai-hint={benefit.aiHint}
+                                        />
                                     </div>
                                     <CardHeader className="flex flex-row items-start gap-4">
+                                        {benefit.icon}
                                         <div>
                                             <CardTitle>{benefit.title}</CardTitle>
                                         </div>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="flex-grow">
                                         <p className="text-sm text-muted-foreground">
                                             {benefit.description}
                                         </p>
