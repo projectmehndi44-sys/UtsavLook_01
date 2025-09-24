@@ -80,6 +80,8 @@ export type Customer = {
   phone: string;
   email?: string;
   fcmToken?: string;
+  status?: 'Active' | 'Suspended';
+  createdOn?: Timestamp;
 };
 
 export type CartItem = {

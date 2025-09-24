@@ -12,33 +12,59 @@ import { Badge } from '@/components/ui/badge';
 import type { Customer } from '@/lib/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { listenToCollection } from '@/lib/services';
+import { listenToCollection, updateCustomer, deleteCustomer } from '@/lib/services';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Timestamp } from 'firebase/firestore';
 
-type CustomerWithStatus = Customer & { status: 'Active' | 'Suspended'; registeredOn: string; };
 
 export default function CustomerManagementPage() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
-    const [customers, setCustomers] = React.useState<CustomerWithStatus[]>([]);
+    const [customers, setCustomers] = React.useState<Customer[]>([]);
+    const [dialogState, setDialogState] = React.useState<{ type: 'suspend' | 'delete' | null, data: Customer | null }>({ type: null, data: null });
 
     React.useEffect(() => {
-        const unsubscribe = listenToCollection<Customer>('customers', (fetchedCustomers) => {
-            setCustomers(fetchedCustomers.map((c: Customer) => ({
-                ...c,
-                status: 'Active', // This would come from the customer object in a real app
-                registeredOn: new Date().toLocaleDateString() // This would come from a creation timestamp
-            })));
-        });
-
+        const unsubscribe = listenToCollection<Customer>('customers', setCustomers);
         return () => unsubscribe();
     }, []);
+
+    const confirmAction = async () => {
+        if (!dialogState.data || !dialogState.type) return;
+        const { type, data } = dialogState;
+
+        try {
+            if (type === 'suspend') {
+                const newStatus = data.status === 'Suspended' ? 'Active' : 'Suspended';
+                await updateCustomer(data.id, { status: newStatus });
+                toast({ title: 'Customer Status Updated', description: `${data.name}'s status is now ${newStatus}.` });
+            } else if (type === 'delete') {
+                await deleteCustomer(data.id);
+                toast({ title: 'Customer Deleted', description: `${data.name} has been permanently removed.`, variant: 'destructive' });
+            }
+        } catch (error: any) {
+             toast({ title: 'Action Failed', description: error.message, variant: 'destructive' });
+        } finally {
+            setDialogState({ type: null, data: null });
+        }
+    };
     
-    const handleAction = (action: string, customerId: string) => {
-        toast({
-            title: `Action: ${action}`,
-            description: `Performed '${action}' on customer ${customerId}. (This is a mock action)`,
-        });
+    const getRegisteredDate = (customer: Customer) => {
+        if (customer.createdOn && customer.createdOn instanceof Timestamp) {
+            return customer.createdOn.toDate().toLocaleDateString();
+        }
+        // Fallback for older data that might not have this field
+        return 'N/A';
     }
+
 
     return (
         <>
@@ -79,10 +105,10 @@ export default function CustomerManagementPage() {
                                             <span className="text-muted-foreground">{customer.phone}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{customer.registeredOn}</TableCell>
+                                    <TableCell>{getRegisteredDate(customer)}</TableCell>
                                     <TableCell>
                                         <Badge variant={customer.status === 'Active' ? 'default' : 'destructive'}>
-                                            {customer.status}
+                                            {customer.status || 'Active'}
                                         </Badge>
                                     </TableCell>
                                     {hasPermission('customers', 'edit') && (
@@ -96,12 +122,12 @@ export default function CustomerManagementPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onSelect={() => handleAction('Suspend', customer.id)}>
+                                                    <DropdownMenuItem onSelect={() => setDialogState({ type: 'suspend', data: customer })}>
                                                         <XCircle className="mr-2 h-4 w-4 text-yellow-500" />
-                                                        Suspend
+                                                        {customer.status === 'Suspended' ? 'Reactivate' : 'Suspend'}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onSelect={() => handleAction('Delete', customer.id)}>
-                                                        <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                                                     <DropdownMenuItem onSelect={() => setDialogState({ type: 'delete', data: customer })} className="text-destructive">
+                                                        <Trash2 className="mr-2 h-4 w-4" />
                                                         Delete
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -114,6 +140,24 @@ export default function CustomerManagementPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+             <AlertDialog open={!!dialogState.type} onOpenChange={() => setDialogState({type: null, data: null})}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           {dialogState.type === 'delete' && `This will permanently delete the customer '${dialogState.data?.name}'. This action cannot be undone.`}
+                           {dialogState.type === 'suspend' && `This will ${dialogState.data?.status === 'Suspended' ? 'reactivate' : 'suspend'} the account for '${dialogState.data?.name}'.`}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmAction} className={dialogState.type === 'delete' ? 'bg-destructive hover:bg-destructive/90' : ''}>
+                           Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

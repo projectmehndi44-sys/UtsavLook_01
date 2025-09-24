@@ -186,7 +186,7 @@ export const createCustomer = async (data: Omit<Customer, 'id'> & {id: string}):
     const customerId = data.id; // Use UID from Google or phone auth
     const customerRef = doc(db, "customers", customerId);
     const { id, ...dataToSave } = data;
-    await setDoc(customerRef, dataToSave, { merge: true });
+    await setDoc(customerRef, { ...dataToSave, status: 'Active', createdOn: Timestamp.now() }, { merge: true });
     return customerId;
 };
 
@@ -195,6 +195,15 @@ export const updateCustomer = async (id: string, data: Partial<Customer>): Promi
     const customerRef = doc(db, "customers", id);
     await updateDoc(customerRef, data);
 };
+
+export const deleteCustomer = async (id: string): Promise<void> => {
+    const db = await getDb();
+    // This should ideally be a cloud function for security to delete the auth user as well.
+    // For now, we will just delete the Firestore document.
+    const customerRef = doc(db, "customers", id);
+    await deleteDoc(customerRef);
+};
+
 
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
