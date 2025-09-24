@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/utsavlook/Header';
-import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download, FolderDown, Instagram, Facebook, X } from 'lucide-react';
+import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download, FolderDown, Instagram, Facebook } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,7 +15,7 @@ import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import JSZip from 'jszip';
+import { Input } from '@/components/ui/input';
 
 
 const benefitIcons: Record<string, JSX.Element> = {
@@ -97,49 +98,29 @@ export default function ArtistHomePage() {
         }
     };
 
-    const dataUrlToBlob = async (dataUrl: string) => {
-        const res = await fetch(dataUrl);
-        return await res.blob();
-    };
-
-    const handleSocialShare = async (platform: 'whatsapp' | 'facebook' | 'instagram') => {
+    const handleSocialShare = async () => {
         if (!shareableCompositeImage) return;
 
-        const blob = await dataUrlToBlob(shareableCompositeImage);
-        const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
-
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-             try {
+        try {
+            const blob = await (await fetch(shareableCompositeImage)).blob();
+            const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
                     title: 'UtsavLook Artist Benefits',
                     text: shareText,
                 });
-            } catch (error) {
-                console.error('Web Share API error:', error);
-                toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
-            }
-        } else {
-             // Fallback for desktop or browsers that don't support sharing files
-            let shareUrl = '';
-            const encodedShareText = encodeURIComponent(shareText);
-            const encodedUrl = encodeURIComponent(window.location.href);
-
-            if (platform === 'whatsapp') {
-                shareUrl = `https://api.whatsapp.com/send?text=${encodedShareText}%20${encodedUrl}`;
-            } else if (platform === 'facebook') {
-                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedShareText}`;
-            } else if (platform === 'instagram') {
+            } else {
                  toast({
-                    title: "Ready to post on Instagram!",
-                    description: "Download the image and paste the copied text in your caption.",
-                    duration: 9000,
+                    title: "Share Not Supported",
+                    description: "Your browser does not support direct image sharing. You can download the image instead.",
+                    variant: "destructive"
                 });
-                handleDownload();
-                navigator.clipboard.writeText(shareText);
-                return;
             }
-            window.open(shareUrl, '_blank');
+        } catch (error) {
+             console.error('Web Share API error:', error);
+             toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
         }
     };
     
@@ -306,10 +287,11 @@ export default function ArtistHomePage() {
                         <Image src={shareableCompositeImage} alt="UtsavLook Artist Benefits" width={1200} height={1200} className="rounded-lg border"/>
                     )}
                     <DialogFooter className="sm:justify-start gap-2">
-                         <Button onClick={() => handleSocialShare('whatsapp')} variant="outline" size="icon" aria-label="Share on WhatsApp">{SocialIcons.whatsapp}</Button>
-                         <Button onClick={() => handleSocialShare('instagram')} variant="outline" size="icon" aria-label="Share on Instagram">{SocialIcons.instagram}</Button>
-                         <Button onClick={() => handleSocialShare('facebook')} variant="outline" size="icon" aria-label="Share on Facebook">{SocialIcons.facebook}</Button>
-                         <Button onClick={handleDownload} variant="outline" size="icon" aria-label="Download Image"><Download/></Button>
+                         <Button onClick={handleSocialShare} variant="default" size="sm" aria-label="Share">
+                            <Share2 className="mr-2 h-4 w-4"/>
+                            Share...
+                         </Button>
+                         <Button onClick={handleDownload} variant="outline" size="sm" aria-label="Download Image"><Download className="mr-2 h-4 w-4"/>Download</Button>
                          <div className="relative flex-grow">
                             <Input value={shareText} readOnly className="pr-10"/>
                             <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
@@ -321,4 +303,3 @@ export default function ArtistHomePage() {
     );
 }
 
-    
