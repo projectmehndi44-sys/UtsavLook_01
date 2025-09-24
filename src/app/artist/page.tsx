@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/utsavlook/Header';
-import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download, FolderDown } from 'lucide-react';
+import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download, FolderDown, Instagram, Facebook, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,14 +26,33 @@ const benefitIcons: Record<string, JSX.Element> = {
     "0% Commission Welcome": <UserPlus className="w-8 h-8 text-primary" />,
 };
 
+const SocialIcons = {
+    whatsapp: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.413.003 6.557-5.338 11.892-11.894 11.892-1.99 0-3.903-.52-5.586-1.457l-6.354 1.654zm6.838-2.698l.396.235c1.478.882 3.16.136 4.893.136 5.47 0 9.9-4.43 9.9-9.9 0-5.469-4.43-9.9-9.9-9.9s-9.9 4.431-9.9 9.9c0 2.004.604 3.903 1.688 5.586l.235.396-1.07 3.894 3.996-1.044zM12.28 8.92c-.135-.27-.27-.27-.395-.27h-.24c-.12 0-.27.045-.42.225-.15.18-.57.54-.57 1.32 0 .78.585 1.545.66 1.665.075.12.945 1.515 2.31 2.04.315.12.585.195.78.255.3.09.57.075.78-.045.225-.12.945-1.155 1.065-1.395.12-.24.075-.39-.045-.51-.12-.12-.27-.195-.39-.225s-.24-.045-.36 0c-.12.045-.27.135-.39.27-.12.12-.21.225-.3.27s-.165.09-.285 0c-.12-.09-.51-.18-.975-.57-.555-.465-.915-1.035-.96-1.155z"/>
+        </svg>
+    ),
+    facebook: (
+         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+        </svg>
+    ),
+    instagram: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.069-4.85.069s-3.584-.011-4.85-.069c-3.225-.149-4.771-1.664-4.919-4.919-.058-1.265-.069-1.645-.069-4.85 0-3.204.011-3.584.069-4.85.149-3.225 1.664-4.771 4.919-4.919 1.266-.058 1.644-.069 4.85-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44 1.441-.645 1.441-1.44c0-.795-.645-1.44-1.441-1.44z"/>
+        </svg>
+    ),
+};
+
 
 export default function ArtistHomePage() {
     const router = useRouter();
     const { toast } = useToast();
-    const shareableCardRefs = React.useRef<(HTMLDivElement | null)[]>([]);
     const [isSharing, setIsSharing] = React.useState(false);
+    const [shareableCompositeImage, setShareableCompositeImage] = React.useState<string | null>(null);
     const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const compositeCardRef = React.useRef<HTMLDivElement>(null);
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -44,7 +63,6 @@ export default function ArtistHomePage() {
         setIsLoading(true);
         getBenefitImages().then(data => {
             setBenefits(data);
-            shareableCardRefs.current = shareableCardRefs.current.slice(0, data.length);
             setIsLoading(false);
         }).catch(err => {
             console.error(err);
@@ -53,65 +71,90 @@ export default function ArtistHomePage() {
     }, []);
 
     const shareText = "Join UtsavLook and grow your artistry business! We give you the tools to succeed. #UtsavLookArtist #MehndiArtist #MakeupArtist #ArtistPlatform";
-    const shareUrl = "https://utsavlook.com/artist";
 
-    const copyShareText = () => {
-        navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-        toast({ title: 'Promotional text copied to clipboard!' });
+    const generateCompositeImage = async () => {
+      if (!compositeCardRef.current) {
+        toast({ title: 'Error generating image', variant: 'destructive' });
+        return null;
+      }
+      try {
+        const dataUrl = await toPng(compositeCardRef.current, { quality: 0.95, pixelRatio: 2 });
+        return dataUrl;
+      } catch (err) {
+        console.error("Image generation failed:", err);
+        toast({ title: 'Image generation failed', variant: 'destructive' });
+        return null;
+      }
     };
-
-    const handleShare = async () => {
-        if (shareableCardRefs.current.length === 0) return;
+    
+    const handleShareClick = async () => {
         setIsSharing(true);
-        copyShareText();
-        
-        try {
-             const imagePromises = shareableCardRefs.current.map((ref, index) => {
-                if (!ref) return Promise.resolve(null);
-                return toPng(ref, { 
-                    quality: 0.95,
-                    pixelRatio: 2,
-                }).then(dataUrl => ({ dataUrl, name: `utsavlook-benefit-${benefits[index].id.replace(/\s+/g, '-')}.png` }));
-            });
-
-            const imageData = await Promise.all(imagePromises);
-            
-            const zip = new JSZip();
-            imageData.forEach(img => {
-                if (img) {
-                    // Remove the data URI prefix before adding to zip
-                    zip.file(img.name, img.dataUrl.split(',')[1], { base64: true });
-                }
-            });
-
-            const zipBlob = await zip.generateAsync({ type: 'blob' });
-            
-            // Create a link and trigger download
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(zipBlob);
-            link.download = 'UtsavLook_Benefits.zip';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            toast({
-                title: 'Download Started!',
-                description: 'A .zip file with all benefit images is being downloaded. The promotional text has been copied to your clipboard.',
-                duration: 9000,
-            });
-
-
-        } catch (err) {
-            console.error(err);
-            toast({
-                title: 'Oops!',
-                description: 'Could not create shareable images. Please try again.',
-                variant: 'destructive',
-            });
-        } finally {
+        const imageUrl = await generateCompositeImage();
+        if (imageUrl) {
+            setShareableCompositeImage(imageUrl);
+        } else {
             setIsSharing(false);
         }
     };
+
+    const dataUrlToBlob = async (dataUrl: string) => {
+        const res = await fetch(dataUrl);
+        return await res.blob();
+    };
+
+    const handleSocialShare = async (platform: 'whatsapp' | 'facebook' | 'instagram') => {
+        if (!shareableCompositeImage) return;
+
+        const blob = await dataUrlToBlob(shareableCompositeImage);
+        const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
+
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+             try {
+                await navigator.share({
+                    files: [file],
+                    title: 'UtsavLook Artist Benefits',
+                    text: shareText,
+                });
+            } catch (error) {
+                console.error('Web Share API error:', error);
+                toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
+            }
+        } else {
+             // Fallback for desktop or browsers that don't support sharing files
+            let shareUrl = '';
+            const encodedShareText = encodeURIComponent(shareText);
+            const encodedUrl = encodeURIComponent(window.location.href);
+
+            if (platform === 'whatsapp') {
+                shareUrl = `https://api.whatsapp.com/send?text=${encodedShareText}%20${encodedUrl}`;
+            } else if (platform === 'facebook') {
+                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedShareText}`;
+            } else if (platform === 'instagram') {
+                 toast({
+                    title: "Ready to post on Instagram!",
+                    description: "Download the image and paste the copied text in your caption.",
+                    duration: 9000,
+                });
+                handleDownload();
+                navigator.clipboard.writeText(shareText);
+                return;
+            }
+            window.open(shareUrl, '_blank');
+        }
+    };
+    
+    const handleDownload = () => {
+        if (!shareableCompositeImage) return;
+        const link = document.createElement('a');
+        link.download = `utsavlook-benefits.png`;
+        link.href = shareableCompositeImage;
+        link.click();
+    };
+
+    const handleCloseDialog = () => {
+        setIsSharing(false);
+        setShareableCompositeImage(null);
+    }
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-secondary">
@@ -198,9 +241,9 @@ export default function ArtistHomePage() {
                         </div>
                     </div>
                      <div className="container px-4 md:px-6 mt-12 text-center">
-                        <Button size="lg" onClick={handleShare} disabled={isSharing || isLoading}>
-                            {isSharing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FolderDown className="mr-2 h-5 w-5" />}
-                            {isSharing ? 'Generating Assets...' : 'Download Shareable Assets'}
+                        <Button size="lg" onClick={handleShareClick} disabled={isSharing || isLoading}>
+                            {isSharing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Share2 className="mr-2 h-5 w-5" />}
+                            {isSharing ? 'Generating...' : 'Share The Benefits'}
                         </Button>
                     </div>
                 </section>
@@ -227,37 +270,55 @@ export default function ArtistHomePage() {
                 </section>
             </main>
             
-            {/* Hidden div for html-to-image */}
+            {/* Hidden div for html-to-image to generate the composite image */}
              <div className="absolute -left-[9999px] top-0">
-                {benefits.map((benefit, index) => (
-                    <div
-                        key={benefit.id}
-                        ref={el => shareableCardRefs.current[index] = el}
-                        style={{
-                            width: 1080,
-                            height: 1080,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            padding: '40px',
-                            fontFamily: 'Roboto, sans-serif',
-                            color: 'white',
-                            position: 'relative'
-                        }}
-                    >
-                         <img src={benefit.imageUrl} alt={benefit.title} crossOrigin='anonymous' style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
-                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%)', zIndex: 1 }} />
-                         
-                         <div style={{ zIndex: 2, fontFamily: "'Playfair Display', serif", fontSize: '48px', fontWeight: 'bold' }}>
-                            <span style={{ color: 'hsl(35 80% 55%)' }}>Utsav</span><span style={{ color: 'hsl(25 80% 40%)' }}>Look</span>
-                         </div>
-
-                         <div style={{ zIndex: 2 }}>
-                            <p style={{ fontSize: '64px', fontWeight: 'bold', lineHeight: 1.2, textShadow: '2px 2px 8px rgba(0,0,0,0.9)', margin: 0 }}>{benefit.title}</p>
-                         </div>
+                <div ref={compositeCardRef} style={{ width: 1200, height: 1200, padding: 40, display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, hsl(39, 10%, 98%), hsl(39, 10%, 95%))' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                       <h1 style={{ fontFamily: 'var(--font-playfair-display)', fontSize: '48px' }}>
+                           <span style={{ color: 'hsl(var(--accent))' }}>Utsav</span><span style={{ color: 'hsl(var(--primary))' }}>Look</span>
+                       </h1>
+                        <h2 style={{ fontFamily: 'var(--font-roboto)', fontSize: '32px', color: 'hsl(var(--primary))', fontWeight: 500 }}>Why Artists Love Us</h2>
                     </div>
-                ))}
+                     <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '20px' }}>
+                        {benefits.map((benefit, index) => (
+                             <div key={benefit.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                                <img src={benefit.imageUrl} alt={benefit.title} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%)' }}/>
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px' }}>
+                                    <p style={{ color: 'white', fontFamily: 'var(--font-roboto)', fontSize: '22px', fontWeight: 'bold', lineHeight: 1.2, textShadow: '1px 1px 4px rgba(0,0,0,0.8)', margin: 0 }}>
+                                        {benefit.title}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
+            
+             {/* Share Dialog */}
+            <Dialog open={!!shareableCompositeImage} onOpenChange={handleCloseDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Share These Benefits</DialogTitle>
+                        <DialogDescription>Your beautiful, all-in-one graphic is ready to share. Use the buttons below or download the image.</DialogDescription>
+                    </DialogHeader>
+                    {shareableCompositeImage && (
+                        <Image src={shareableCompositeImage} alt="UtsavLook Artist Benefits" width={1200} height={1200} className="rounded-lg border"/>
+                    )}
+                    <DialogFooter className="sm:justify-start gap-2">
+                         <Button onClick={() => handleSocialShare('whatsapp')} variant="outline" size="icon" aria-label="Share on WhatsApp">{SocialIcons.whatsapp}</Button>
+                         <Button onClick={() => handleSocialShare('instagram')} variant="outline" size="icon" aria-label="Share on Instagram">{SocialIcons.instagram}</Button>
+                         <Button onClick={() => handleSocialShare('facebook')} variant="outline" size="icon" aria-label="Share on Facebook">{SocialIcons.facebook}</Button>
+                         <Button onClick={handleDownload} variant="outline" size="icon" aria-label="Download Image"><Download/></Button>
+                         <div className="relative flex-grow">
+                            <Input value={shareText} readOnly className="pr-10"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
+                         </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
+
+    
