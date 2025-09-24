@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, Download, Copy, Share2, Palette, Star, IndianRupee, Image as ImageIcon } from 'lucide-react';
 import NextImage from 'next/image';
-import { toPng } from 'html-to-image';
 import { fetchPromoImage } from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
 
@@ -20,7 +20,6 @@ export default function PromotePage() {
   const [selectedImages, setSelectedImages] = React.useState<string[]>([]);
   const [generatedImage, setGeneratedImage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const promoCardRef = React.useRef<HTMLDivElement>(null);
 
   const handleImageSelection = (imageUrl: string) => {
     setSelectedImages((prev) => {
@@ -30,6 +29,7 @@ export default function PromotePage() {
       if (prev.length >= 4) {
         toast({
           title: 'Maximum 4 images allowed',
+          description: 'Please unselect an image to choose a new one.',
           variant: 'destructive',
         });
         return prev;
@@ -39,9 +39,9 @@ export default function PromotePage() {
   };
 
   const generatePromo = async () => {
-    if (!artist || !promoCardRef.current || selectedImages.length === 0) {
+    if (!artist || selectedImages.length === 0) {
       toast({
-        title: 'Please select at least one image',
+        title: 'Please select 1 to 4 images',
         variant: 'destructive',
       });
       return;
@@ -50,15 +50,17 @@ export default function PromotePage() {
     setIsLoading(true);
     setGeneratedImage(null);
 
-    try {
-      // Create a high-quality base image from the HTML layout
-      const baseImage = await toPng(promoCardRef.current, { quality: 1.0, pixelRatio: 2 });
+    const primaryService = artist.services[0];
+    const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
 
-      // Send to the Genkit flow for AI enhancement
+    try {
+      // Send the public URLs directly to the server-side AI flow
       const result = await fetchPromoImage({
-        htmlContent: baseImage,
         artistName: artist.name,
-        styleTags: artist.styleTags || [],
+        artistServices: artist.services,
+        artistRating: artist.rating,
+        baseCharge: baseCharge,
+        workImageUrls: selectedImages,
       });
 
       if (result?.imageUrl) {
@@ -68,7 +70,7 @@ export default function PromotePage() {
           description: 'You can now download or share it.',
         });
       } else {
-        throw new Error('Image generation failed.');
+        throw new Error('Image generation failed to return a URL.');
       }
     } catch (error) {
       console.error(error);
@@ -82,12 +84,11 @@ export default function PromotePage() {
     }
   };
 
-  const copyShareText = () => {
-    if (!artist) return;
-    const shareText = `Book my ${artist.services.join(' & ')} services on UtsavLook! Use my referral code ${artist.referralCode} for a ${artist.referralDiscount}% discount on your first booking. Visit my profile: ${window.location.origin}/artist/${artist.id}`;
-    navigator.clipboard.writeText(shareText);
-    toast({ title: 'Copied to clipboard!' });
-  };
+  const shareText = React.useMemo(() => {
+    if (!artist) return '';
+    return `Book my ${artist.services.join(' & ')} services on UtsavLook! Use my referral code ${artist.referralCode} for a ${artist.referralDiscount}% discount. Visit my profile: ${window.location.origin}/artist/${artist.id}`;
+  }, [artist]);
+
   
   const handleDownload = () => {
       if (!generatedImage) return;
@@ -95,6 +96,43 @@ export default function PromotePage() {
       link.download = `utsavlook-promo-${artist?.name.replace(/\s+/g, '-')}.png`;
       link.href = generatedImage;
       link.click();
+  }
+
+  const handleShare = async () => {
+     if (!generatedImage) return;
+    
+     try {
+        const response = await fetch(generatedImage);
+        const blob = await response.blob();
+        const file = new File([blob], `utsavlook-promo.png`, { type: 'image/png' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+             await navigator.share({
+                files: [file],
+                title: 'UtsavLook Artist Promotion',
+                text: shareText,
+            });
+        } else {
+            // Fallback for browsers that don't support sharing files (e.g., desktop)
+            handleDownload();
+            navigator.clipboard.writeText(shareText);
+            toast({
+                title: 'Ready to Share!',
+                description: 'Image downloaded and text copied to clipboard.',
+                duration: 5000,
+            });
+        }
+
+     } catch (error) {
+         console.error('Share failed:', error);
+         toast({
+            title: 'Share Failed',
+            description: 'Could not open share dialog. Downloading image and copying text instead.',
+            variant: 'destructive',
+         });
+         handleDownload();
+         navigator.clipboard.writeText(shareText);
+     }
   }
 
   if (!artist) {
@@ -107,7 +145,7 @@ export default function PromotePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><ImageIcon /> Select Your Best Work</CardTitle>
-            <CardDescription>Choose up to 4 images from your gallery to feature in your promotional graphic.</CardDescription>
+            <CardDescription>Choose 1 to 4 images from your gallery to feature in your promotional graphic.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
@@ -133,7 +171,7 @@ export default function PromotePage() {
               ))}
             </div>
             <Button onClick={generatePromo} disabled={isLoading || selectedImages.length === 0} className="w-full mt-4">
-              {isLoading ? <><Loader2 className="mr-2" /> Generating...</> : <><Sparkles className="mr-2" /> Generate My Promo</>}
+              {isLoading ? <><Loader2 className="mr-2 animate-spin" /> Generating...</> : <><Sparkles className="mr-2" /> Generate My Promo</>}
             </Button>
           </CardContent>
         </Card>
@@ -143,58 +181,35 @@ export default function PromotePage() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Palette/> AI Generated Promotion</CardTitle>
-                <CardDescription>Here is your personalized, AI-enhanced promotional image. Download it or copy the share text below.</CardDescription>
+                <CardDescription>Here is your personalized, AI-enhanced promotional image. Download it or share it directly to social media.</CardDescription>
             </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="aspect-video w-full flex flex-col items-center justify-center bg-muted rounded-lg">
+              <div className="aspect-square w-full flex flex-col items-center justify-center bg-muted rounded-lg">
                 <Loader2 className="w-12 h-12 text-primary animate-spin" />
                 <p className="mt-4 text-muted-foreground">Our AI is designing your graphic...</p>
               </div>
             ) : generatedImage ? (
               <NextImage src={generatedImage} alt="Generated promo" width={1080} height={1080} className="rounded-lg w-full" />
             ) : (
-                <div className="aspect-video w-full flex flex-col items-center justify-center bg-muted rounded-lg">
+                <div className="aspect-square w-full flex flex-col items-center justify-center bg-muted rounded-lg">
                     <p className="text-muted-foreground">Your generated image will appear here.</p>
                 </div>
             )}
-             <div className="grid grid-cols-2 gap-4 mt-4">
-                <Button onClick={handleDownload} disabled={!generatedImage}><Download className="mr-2"/> Download Image</Button>
-                <Button onClick={copyShareText} variant="outline"><Copy className="mr-2"/> Copy Share Text</Button>
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <Button onClick={handleShare} disabled={!generatedImage} className="sm:col-span-2 w-full">
+                    <Share2 className="mr-2"/> Share Now
+                </Button>
+                <Button onClick={handleDownload} disabled={!generatedImage} variant="outline">
+                    <Download className="mr-2"/> Download
+                </Button>
+            </div>
+             <div className="relative mt-4">
+                <Input value={shareText} readOnly className="pr-10"/>
+                <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied promotional text!' }); }}><Copy className="h-4 w-4"/></Button>
             </div>
           </CardContent>
         </Card>
-        
-        {/* Hidden div for html-to-image to render the base layout */}
-        <div className="absolute -left-[9999px]">
-          <div ref={promoCardRef} style={{ width: 1080, height: 1080, background: 'white', padding: '40px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: '#8B4513' }}>UtsavLook</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Star style={{color: '#CD7F32'}}/>
-                    <span style={{fontSize: '32px', fontWeight: 'bold'}}>{artist.rating}</span>
-                </div>
-            </div>
-             <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', padding: '20px 0' }}>
-                {selectedImages.slice(0, 4).map((src, i) => (
-                    <img key={i} src={src} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} alt="" crossOrigin="anonymous"/>
-                ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h2 style={{ fontSize: '64px', fontWeight: 'bold', margin: 0, lineHeight: 1.2 }}>{artist.name}</h2>
-                    <p style={{ fontSize: '32px', margin: 0, textTransform: 'capitalize' }}>{artist.services.join(' • ')} Artist</p>
-                </div>
-                 <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '28px', margin: 0 }}>Starts from</p>
-                    <p style={{ fontSize: '48px', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center' }}>
-                       ₹{Math.min(...Object.values(artist.charges).filter(Boolean) as number[]).toLocaleString()}
-                    </p>
-                </div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   );
