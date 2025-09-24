@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -14,7 +12,8 @@ import { toPng } from 'html-to-image';
 import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
 
 // Custom component for social share icons to keep JSX clean
 const SocialIcons = {
@@ -37,12 +36,15 @@ const benefitIcons: Record<string, JSX.Element> = {
 export default function ArtistHomePage() {
     const router = useRouter();
     const { toast } = useToast();
-    const shareableRef = React.useRef<HTMLDivElement>(null);
+    const shareableCardRefs = React.useRef<(HTMLDivElement | null)[]>([]);
     const [isSharing, setIsSharing] = React.useState(false);
     const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
-    const [generatedImage, setGeneratedImage] = React.useState<string | null>(null);
+    const [generatedImages, setGeneratedImages] = React.useState<string[]>([]);
     const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
+    const [carouselApi, setCarouselApi] = React.useState<CarouselApi>()
+    const [currentSlide, setCurrentSlide] = React.useState(0);
+
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -53,6 +55,7 @@ export default function ArtistHomePage() {
         setIsLoading(true);
         getBenefitImages().then(data => {
             setBenefits(data);
+            shareableCardRefs.current = shareableCardRefs.current.slice(0, data.length);
             setIsLoading(false);
         }).catch(err => {
             console.error(err);
@@ -64,22 +67,30 @@ export default function ArtistHomePage() {
     const shareUrl = "https://utsavlook.com/artist";
 
     const handleShare = async () => {
-        if (!shareableRef.current) return;
+        if (shareableCardRefs.current.length === 0) return;
         setIsSharing(true);
         setIsShareModalOpen(true);
-        setGeneratedImage(null);
+        setGeneratedImages([]);
 
         try {
-            const dataUrl = await toPng(shareableRef.current, { 
-                quality: 0.95,
-                pixelRatio: 2,
+             const imagePromises = shareableCardRefs.current.map(ref => {
+                if (!ref) return Promise.resolve(null);
+                return toPng(ref, { 
+                    quality: 0.95,
+                    pixelRatio: 2,
+                    style: {
+                       fontFamily: "'Roboto', sans-serif" 
+                    }
+                });
             });
-            setGeneratedImage(dataUrl);
+
+            const dataUrls = await Promise.all(imagePromises);
+            setGeneratedImages(dataUrls.filter((url): url is string => url !== null));
         } catch (err) {
             console.error(err);
             toast({
                 title: 'Oops!',
-                description: 'Could not create shareable image. Please try again.',
+                description: 'Could not create shareable images. Please try again.',
                 variant: 'destructive',
             });
             setIsShareModalOpen(false);
@@ -89,10 +100,10 @@ export default function ArtistHomePage() {
     };
     
     const handleDownload = () => {
-        if (!generatedImage) return;
+        if (generatedImages.length === 0) return;
         const link = document.createElement('a');
-        link.download = `utsavlook-artist-benefits.png`;
-        link.href = generatedImage;
+        link.download = `utsavlook-benefit-${currentSlide}.png`;
+        link.href = generatedImages[currentSlide];
         link.click();
     };
 
@@ -119,6 +130,15 @@ export default function ArtistHomePage() {
         navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
         toast({ title: 'Copied to clipboard!' });
     };
+    
+      React.useEffect(() => {
+        if (!carouselApi) return;
+        
+        const onSelect = () => setCurrentSlide(carouselApi.selectedScrollSnap());
+        carouselApi.on("select", onSelect);
+        
+        return () => { carouselApi.off("select", onSelect) };
+      }, [carouselApi]);
 
 
     return (
@@ -208,7 +228,7 @@ export default function ArtistHomePage() {
                      <div className="container px-4 md:px-6 mt-12 text-center">
                         <Button size="lg" onClick={handleShare} disabled={isSharing || isLoading}>
                             {isSharing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Share2 className="mr-2 h-5 w-5" />}
-                            {isSharing ? 'Generating Image...' : 'Share The Benefits'}
+                            {isSharing ? 'Generating Images...' : 'Share The Benefits'}
                         </Button>
                     </div>
                 </section>
@@ -236,66 +256,78 @@ export default function ArtistHomePage() {
             </main>
             
             {/* Hidden div for html-to-image */}
-            <div className="absolute -left-[9999px] top-0">
-                 <div ref={shareableRef} style={{ width: 1200, height: 630, padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'linear-gradient(to bottom right, #fff8f0, #f8f0e8)', fontFamily: 'Roboto, sans-serif' }}>
-                    <div style={{ textAlign: 'center', marginBottom: 30 }}>
-                        <h2 style={{ fontSize: '56px', fontWeight: 'bold', color: '#8B4513', fontFamily: 'Playfair Display, serif', margin: 0 }}>
-                            Why Artists Love UtsavLook
-                        </h2>
-                         <p style={{ fontSize: '22px', color: '#5D4037', maxWidth: 800, margin: '10px auto 0' }}>
-                            A platform designed for your growth, giving you the tools to succeed and the freedom to create.
-                        </p>
+             <div className="absolute -left-[9999px] top-0">
+                {benefits.map((benefit, index) => (
+                    <div
+                        key={benefit.id}
+                        ref={el => shareableCardRefs.current[index] = el}
+                        style={{
+                            width: 600,
+                            height: 600,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                            padding: '30px',
+                            backgroundImage: `url(${benefit.imageUrl})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            fontFamily: "'Roboto', sans-serif",
+                            color: 'white',
+                            position: 'relative'
+                        }}
+                    >
+                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%)' }} />
+                         <div style={{ zIndex: 1 }}>
+                            <h3 style={{ fontSize: '24px', fontWeight: 'bold', textShadow: '2px 2px 4px rgba(0,0,0,0.7)', margin: 0 }}>UtsavLook</h3>
+                            <p style={{ fontSize: '36px', fontWeight: 'bold', lineHeight: 1.2, textShadow: '2px 2px 6px rgba(0,0,0,0.8)', margin: '8px 0 0 0' }}>{benefit.title}</p>
+                         </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px', perspective: '1000px' }}>
-                        {benefits.map((benefit, index) => {
-                             const rotationY = (index % 3 - 1) * -10; // -10, 0, 10
-                             const rotationX = index < 3 ? 5 : -5;
-                            return (
-                            <div key={benefit.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #eee', transform: `rotateY(${rotationY}deg) rotateX(${rotationX}deg)`}}>
-                                <div style={{ background: 'rgba(139, 69, 19, 0.1)', padding: '16px', borderRadius: '50%', marginBottom: '16px', display: 'inline-flex' }}>
-                                    {React.cloneElement(benefitIcons[benefit.id as keyof typeof benefitIcons], {style: {width: 32, height: 32, color: '#8B4513'}})}
-                                </div>
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#8B4513', marginBottom: '8px', fontFamily: 'Playfair Display, serif' }}>{benefit.title}</h3>
-                                <p style={{ fontSize: '14px', color: '#5D4037', lineHeight: 1.5, margin: 0 }}>
-                                    {benefit.description}
-                                </p>
-                            </div>
-                        )})}
-                    </div>
-                </div>
+                ))}
             </div>
 
+
             <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-xl">
                     <DialogHeader>
                         <DialogTitle>Share the UtsavLook Benefits</DialogTitle>
                         <DialogDescription>
-                            Your professional shareable image is ready. Download it or share it directly to your favorite platforms.
+                            Your professional shareable cards are ready. Choose one to download or share directly to your favorite platforms.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="text-center p-4">
-                        {generatedImage ? (
-                            <Image src={generatedImage} alt="Shareable benefits of UtsavLook" width={600} height={315} className="rounded-lg border"/>
-                        ) : (
+                    <div className="text-center py-4">
+                        {(isSharing || generatedImages.length === 0) ? (
                             <div className="flex flex-col items-center justify-center gap-4 py-8">
                                 <Loader2 className="w-10 h-10 text-primary animate-spin"/>
-                                <p className="text-muted-foreground">Generating your professional image...</p>
+                                <p className="text-muted-foreground">Generating your professional images...</p>
                             </div>
+                        ) : (
+                             <Carousel setApi={setCarouselApi} className="w-full max-w-sm mx-auto">
+                                <CarouselContent>
+                                    {generatedImages.map((imgSrc, index) => (
+                                    <CarouselItem key={index}>
+                                        <Image src={imgSrc} alt={`Shareable benefit ${index + 1}`} width={400} height={400} className="rounded-lg border shadow-lg mx-auto"/>
+                                    </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                                <CarouselPrevious />
+                                <CarouselNext />
+                            </Carousel>
                         )}
                     </div>
-                     <div className="grid grid-cols-2 gap-2">
-                        <Button onClick={handleDownload} disabled={!generatedImage}><Download className="mr-2"/> Download</Button>
-                        <Button onClick={copyShareText} variant="outline"><Copy className="mr-2"/> Copy Text</Button>
-                    </div>
-                    <div className="flex justify-around items-center pt-2">
-                         <Button variant="ghost" size="icon" onClick={() => handleSocialShare('whatsapp')} className="text-green-500 hover:bg-green-50 hover:text-green-600"><SocialIcons.WhatsApp/></Button>
-                         <Button variant="ghost" size="icon" onClick={() => handleSocialShare('twitter')} className="text-blue-500 hover:bg-blue-50 hover:text-blue-600"><SocialIcons.Twitter/></Button>
-                         <Button variant="ghost" size="icon" onClick={() => handleSocialShare('facebook')} className="text-blue-800 hover:bg-blue-50 hover:text-blue-900"><SocialIcons.Facebook/></Button>
-                    </div>
+                    <DialogFooter className="sm:flex-col sm:gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button onClick={handleDownload} disabled={isSharing || generatedImages.length === 0}><Download className="mr-2"/> Download</Button>
+                            <Button onClick={copyShareText} variant="outline"><Copy className="mr-2"/> Copy Text</Button>
+                        </div>
+                        <div className="flex justify-around items-center pt-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleSocialShare('whatsapp')} className="text-green-500 hover:bg-green-50 hover:text-green-600"><SocialIcons.WhatsApp/></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleSocialShare('twitter')} className="text-blue-500 hover:bg-blue-50 hover:text-blue-600"><SocialIcons.Twitter/></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleSocialShare('facebook')} className="text-blue-800 hover:bg-blue-50 hover:text-blue-900"><SocialIcons.Facebook/></Button>
+                        </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
         </div>
     );
 }
-
