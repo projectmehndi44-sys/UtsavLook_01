@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -14,7 +15,7 @@ import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchPromoImage } from '@/app/actions';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const benefitIcons: Record<string, JSX.Element> = {
     "Set Your Own Price": <BarChart className="w-8 h-8 text-primary" />,
@@ -243,8 +244,13 @@ export default function ArtistHomePage() {
 
             <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
                 <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Your Shareable Image is Ready!</DialogTitle>
+                        <DialogDescription>
+                            Download the image below and share it on your social media.
+                        </DialogDescription>
+                    </DialogHeader>
                     <div className="text-center p-4">
-                        <h3 className="text-2xl font-bold mb-4 text-primary">Your Shareable Image is Ready!</h3>
                         {generatedImage ? (
                             <div>
                                 <Image src={generatedImage} alt="Shareable benefits of UtsavLook" width={600} height={400} className="rounded-lg border"/>
