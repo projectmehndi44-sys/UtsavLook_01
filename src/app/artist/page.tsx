@@ -8,8 +8,8 @@ import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
 
 const benefits = [
     {
@@ -24,7 +24,7 @@ const benefits = [
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
         image: "https://picsum.photos/seed/artist-verified/800/600",
-        imageHint": "client artist handshake"
+        "imageHint": "client artist handshake"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
@@ -38,7 +38,7 @@ const benefits = [
         title: "Your Own Referral Code",
         description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
         image: "https://picsum.photos/seed/artist-referral/800/600",
-        imageHint: "friends sharing phone"
+        "imageHint": "friends sharing phone"
     },
     {
         icon: <IndianRupee className="w-8 h-8 text-primary" />,
