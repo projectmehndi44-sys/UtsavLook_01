@@ -216,7 +216,7 @@ export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDo
 
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
-    const config = await getConfigDocument<any>('benefitImages');
+    const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
     if (config && config.benefitImages) {
         return config.benefitImages;
     }
@@ -344,5 +344,8 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
 };
 
     
+
+    
+
 
     

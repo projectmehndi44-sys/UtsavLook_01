@@ -43,6 +43,7 @@ const benefitImageSchema = z.object({
   id: z.string(),
   title: z.string(),
   imageUrl: z.string().url('Must be a valid URL'),
+  description: z.string(), // Added description
 });
 
 const benefitFormSchema = z.object({
@@ -109,6 +110,14 @@ export default function ImageManagementPage() {
         }
     };
     
+    const handleBenefitImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const newUrl = URL.createObjectURL(file);
+            benefitsForm.setValue(`benefitImages.${index}.imageUrl`, newUrl, { shouldDirty: true });
+        }
+    };
+
     const confirmDelete = () => {
         if (imageToDelete !== null) {
             remove(imageToDelete);
@@ -142,15 +151,26 @@ export default function ImageManagementPage() {
                         <CardContent className="space-y-6">
                             {benefitFields.map((field, index) => (
                                 <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                    <div className="md:col-span-1">
+                                    <div className="md:col-span-1 space-y-2">
                                         <NextImage src={benefitsForm.watch(`benefitImages.${index}.imageUrl`)} alt={field.id} width={300} height={225} className="rounded-md object-cover w-full aspect-[4/3]"/>
+                                        <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent">
+                                            <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                                            <p className="mt-2 text-xs text-muted-foreground">Click to upload new image</p>
+                                            <Input 
+                                                id={`image-upload-${index}`} 
+                                                type="file" 
+                                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                                accept="image/*" 
+                                                onChange={(e) => handleBenefitImageUpload(e, index)} 
+                                            />
+                                        </div>
                                     </div>
                                     <div className="md:col-span-2 space-y-4">
                                          <FormField control={benefitsForm.control} name={`benefitImages.${index}.title`} render={({ field }) => (
                                             <FormItem><FormLabel>Benefit Title</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
                                         )} />
-                                         <FormField control={benefitsForm.control} name={`benefitImages.${index}.imageUrl`} render={({ field }) => (
-                                            <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
+                                        <FormField control={benefitsForm.control} name={`benefitImages.${index}.description`} render={({ field }) => (
+                                            <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
                                         )} />
                                     </div>
                                 </Card>
@@ -236,5 +256,7 @@ export default function ImageManagementPage() {
         </div>
     );
 }
+
+    
 
     
