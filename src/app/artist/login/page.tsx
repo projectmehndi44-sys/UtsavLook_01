@@ -16,6 +16,7 @@ import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'fir
 import { getFirebaseApp } from '@/lib/firebase';
 import { Separator } from '@/components/ui/separator';
 import { getArtist } from '@/lib/services';
+import { useArtistPortal } from '../dashboard/layout';
 
 export default function ArtistLoginPage() {
     const router = useRouter();
@@ -24,11 +25,17 @@ export default function ArtistLoginPage() {
     const [password, setPassword] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
     const auth = getAuth(getFirebaseApp());
+    const { artist, isLoading: isArtistLoading } = useArtistPortal();
     
     // State for forgot password
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
+    React.useEffect(() => {
+        if (!isArtistLoading && artist) {
+            router.push('/artist/dashboard');
+        }
+    }, [artist, isArtistLoading, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,6 +103,15 @@ export default function ArtistLoginPage() {
             });
         }
     };
+
+    if (isArtistLoading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
+
+    if (artist) {
+        // This will be caught by the useEffect and redirected, but this prevents flashing the login form.
+        return null;
+    }
 
     return (
         <>
