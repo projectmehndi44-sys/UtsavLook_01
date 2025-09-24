@@ -294,6 +294,3 @@ export default function ArtistHomePage() {
         </div>
     );
 }
-
-
-
