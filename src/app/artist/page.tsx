@@ -4,15 +4,17 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/utsavlook/Header';
-import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2 } from 'lucide-react';
+import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { fetchPromoImage } from '@/app/actions';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const benefitIcons: Record<string, JSX.Element> = {
     "Set Your Own Price": <BarChart className="w-8 h-8 text-primary" />,
@@ -31,6 +33,8 @@ export default function ArtistHomePage() {
     const [isSharing, setIsSharing] = React.useState(false);
     const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [generatedImage, setGeneratedImage] = React.useState<string | null>(null);
+    const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -48,31 +52,51 @@ export default function ArtistHomePage() {
         });
     }, []);
 
-    const handleShare = React.useCallback(() => {
+    const handleShare = async () => {
         if (!benefitsRef.current) return;
         setIsSharing(true);
-        html2canvas(benefitsRef.current, { useCORS: true, scale: 1.5, backgroundColor: '#fdfcfc' })
-            .then((canvas) => {
-                const dataUrl = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = 'utsavlook-artist-benefits.png';
-                link.href = dataUrl;
-                link.click();
-                 toast({
-                    title: 'Image downloaded!',
-                    description: 'Your shareable benefits image is ready.',
-                });
-            })
-            .catch((err) => {
-                console.error(err);
-                toast({
-                    title: 'Oops!',
-                    description: 'Could not create shareable image. Please try again.',
-                    variant: 'destructive',
-                });
-            })
-            .finally(() => setIsSharing(false));
-    }, [toast]);
+        setIsShareModalOpen(true);
+        setGeneratedImage(null);
+
+        try {
+            const baseImage = await toPng(benefitsRef.current, { 
+                quality: 0.95, 
+                backgroundColor: '#fdfcfc',
+                pixelRatio: 2, // Higher resolution
+            });
+
+            const result = await fetchPromoImage({
+                htmlContent: baseImage,
+                artistName: "UtsavLook Artists", // Generic name for platform promotion
+                styleTags: ["professional", "growth", "community"],
+            });
+            
+            if (result?.imageUrl) {
+                setGeneratedImage(result.imageUrl);
+            } else {
+                throw new Error("AI image generation failed.");
+            }
+
+        } catch (err) {
+            console.error(err);
+            toast({
+                title: 'Oops!',
+                description: 'Could not create shareable image. Please try again.',
+                variant: 'destructive',
+            });
+            setIsShareModalOpen(false);
+        } finally {
+            setIsSharing(false);
+        }
+    };
+    
+    const handleDownload = () => {
+        if (!generatedImage) return;
+        const link = document.createElement('a');
+        link.download = `utsavlook-artist-benefits.png`;
+        link.href = generatedImage;
+        link.click();
+    };
 
 
     return (
@@ -114,7 +138,7 @@ export default function ArtistHomePage() {
 
                 {/* Benefits Section */}
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
-                    <div ref={benefitsRef} className="container px-4 md:px-6 bg-background">
+                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">
                                 Why Artists Love UtsavLook
@@ -153,6 +177,7 @@ export default function ArtistHomePage() {
                                         width={800}
                                         height={600}
                                         className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${index % 2 === 1 ? 'md:order-1' : ''}`}
+                                        crossOrigin="anonymous"
                                     />
                                 </div>
                             ))}
@@ -187,10 +212,54 @@ export default function ArtistHomePage() {
                     </div>
                 </section>
             </main>
+            
+             {/* Hidden div for html-to-image */}
+            <div className="absolute -left-[9999px]">
+                <div ref={benefitsRef} style={{ width: 1200, padding: 40, background: '#fdfcfc' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                         <h2 style={{ fontSize: '60px', fontWeight: 'bold', color: '#8B4513', fontFamily: 'serif' }}>
+                            Why Artists Love UtsavLook
+                        </h2>
+                         <p style={{ fontSize: '24px', color: '#555', maxWidth: 800, margin: '0 auto' }}>
+                            A platform designed for your growth, giving you the tools to succeed and the freedom to create.
+                        </p>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
+                        {benefits.map((benefit) => (
+                            <div key={benefit.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(139, 69, 19, 0.1)', padding: '16px', borderRadius: '50%', marginBottom: '16px', display: 'inline-block' }}>
+                                    {/* This is a placeholder. A better solution would be to inline SVGs. */}
+                                    <span style={{ fontSize: '32px' }}>✨</span> 
+                                </div>
+                                <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#8B4513', marginBottom: '8px' }}>{benefit.title}</h3>
+                                <p style={{ fontSize: '16px', color: '#555', lineHeight: 1.5 }}>
+                                    {benefit.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+                <DialogContent>
+                    <div className="text-center p-4">
+                        <h3 className="text-2xl font-bold mb-4 text-primary">Your Shareable Image is Ready!</h3>
+                        {generatedImage ? (
+                            <div>
+                                <Image src={generatedImage} alt="Shareable benefits of UtsavLook" width={600} height={400} className="rounded-lg border"/>
+                                <Button onClick={handleDownload} className="w-full mt-4">Download</Button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center gap-4 py-8">
+                                <Loader2 className="w-10 h-10 text-primary animate-spin"/>
+                                <p className="text-muted-foreground">AI is adding the final touches...</p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }
-
-    
-
-    
