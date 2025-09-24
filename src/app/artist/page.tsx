@@ -12,46 +12,34 @@ import { useRouter } from 'next/navigation';
 
 const benefits = [
     {
-        icon: <BarChart className="w-10 h-10 text-primary" />,
+        icon: <BarChart className="w-16 h-16 text-primary" />,
         title: "Set Your Own Price",
         description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
-        image: "https://picsum.photos/seed/price/600/400",
-        aiHint: "artist working"
     },
     {
-        icon: <Award className="w-10 h-10 text-primary" />,
+        icon: <Award className="w-16 h-16 text-primary" />,
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
-        aiHint: "happy customer",
-        image: "https://picsum.photos/seed/badge/600/400"
     },
     {
-        icon: <CalendarCheck className="w-10 h-10 text-primary" />,
+        icon: <CalendarCheck className="w-16 h-16 text-primary" />,
         title: "Intelligent Scheduling",
         description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.",
-        aiHint: "managing schedule",
-        image: "https://picsum.photos/seed/schedule/600/400"
     },
     {
-        icon: <Sparkles className="w-10 h-10 text-primary" />,
+        icon: <Sparkles className="w-16 h-16 text-primary" />,
         title: "Your Own Referral Code",
         description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
-        aiHint: "friends sharing",
-        image: "https://picsum.photos/seed/referral/600/400"
     },
     {
-        icon: <IndianRupee className="w-10 h-10 text-primary" />,
+        icon: <IndianRupee className="w-16 h-16 text-primary" />,
         title: "Transparent Payouts",
         description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.",
-        aiHint: "financial planning",
-        image: "https://picsum.photos/seed/payouts/600/400"
     },
     {
-        icon: <UserPlus className="w-10 h-10 text-primary" />,
+        icon: <UserPlus className="w-16 h-16 text-primary" />,
         title: "0% Commission Welcome",
         description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
-        aiHint: "welcome handshake",
-        image: "https://picsum.photos/seed/welcome/600/400"
     }
 ];
 
@@ -109,17 +97,10 @@ export default function ArtistHomePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {benefits.map((benefit, index) => (
                                 <Card key={index} className="overflow-hidden hover:shadow-2xl transition-shadow duration-300">
-                                     <div className="relative w-full aspect-video">
-                                        <Image
-                                            src={benefit.image}
-                                            alt={benefit.title}
-                                            fill
-                                            className="object-cover"
-                                            data-ai-hint={benefit.aiHint}
-                                        />
+                                     <div className="flex items-center justify-center w-full aspect-video bg-muted/30">
+                                        {benefit.icon}
                                     </div>
                                     <CardHeader className="flex flex-row items-start gap-4">
-                                        {benefit.icon}
                                         <div>
                                             <CardTitle>{benefit.title}</CardTitle>
                                         </div>
