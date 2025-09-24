@@ -2,17 +2,17 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift } from 'lucide-react';
 import NextImage from 'next/image';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { getPlaceholderImages, savePlaceholderImages } from '@/lib/services';
+import type { ImagePlaceholder, BenefitImage } from '@/lib/types';
+import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages } from '@/lib/services';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -38,46 +38,74 @@ const formSchema = z.object({
     images: z.array(imageSchema),
 });
 
+
+const benefitImageSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  imageUrl: z.string().url('Must be a valid URL'),
+});
+
+const benefitFormSchema = z.object({
+    benefitImages: z.array(benefitImageSchema)
+});
+
+
 export default function ImageManagementPage() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
     const [isLoading, setIsLoading] = React.useState(true);
     const [imageToDelete, setImageToDelete] = React.useState<number | null>(null);
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const placeholderForm = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            images: [],
-        }
+        defaultValues: { images: [] }
+    });
+    
+    const benefitsForm = useForm<z.infer<typeof benefitFormSchema>>({
+        resolver: zodResolver(benefitFormSchema),
+        defaultValues: { benefitImages: [] }
     });
 
-    const { fields, append, remove } = useFieldArray({
-        control: form.control,
+    const { fields: placeholderFields, append, remove } = useFieldArray({
+        control: placeholderForm.control,
         name: "images"
     });
+    
+    const { fields: benefitFields } = useFieldArray({
+        control: benefitsForm.control,
+        name: "benefitImages"
+    });
+
 
     React.useEffect(() => {
         setIsLoading(true);
-        getPlaceholderImages().then(data => {
-            form.reset({ images: data });
+        Promise.all([
+            getPlaceholderImages(),
+            getBenefitImages()
+        ]).then(([placeholderData, benefitData]) => {
+            placeholderForm.reset({ images: placeholderData });
+            benefitsForm.reset({ benefitImages: benefitData });
             setIsLoading(false);
         });
-    }, [form]);
+    }, [placeholderForm, benefitsForm]);
 
-    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    const onPlaceholderSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
             await savePlaceholderImages(data.images);
-            toast({
-                title: 'Images Saved',
-                description: 'Your image library has been updated successfully.',
-            });
+            toast({ title: 'Placeholder Images Saved', description: 'Your image library has been updated.' });
         } catch (error) {
             console.error("Failed to save images:", error);
-            toast({
-                title: 'Error Saving Images',
-                description: 'Could not update the image library.',
-                variant: 'destructive',
-            });
+            toast({ title: 'Error Saving Images', description: 'Could not update the image library.', variant: 'destructive' });
+        }
+    };
+    
+    const onBenefitSubmit: SubmitHandler<z.infer<typeof benefitFormSchema>> = async (data) => {
+        try {
+            await saveBenefitImages(data.benefitImages);
+            toast({ title: 'Benefit Images Saved', description: 'The artist benefits images have been updated successfully.' });
+        } catch (error) {
+            console.error("Failed to save images:", error);
+            toast({ title: 'Error Saving Images', description: 'Could not update the benefit images.', variant: 'destructive' });
         }
     };
     
@@ -94,40 +122,80 @@ export default function ImageManagementPage() {
     }
 
     return (
-        <>
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-lg font-semibold md:text-2xl">Site Image Management</h1>
             </div>
-             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
+            
+            {/* New Artist Benefits Image Management */}
+             <Form {...benefitsForm}>
+                <form onSubmit={benefitsForm.handleSubmit(onBenefitSubmit)}>
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <ImageIcon className="w-6 h-6 text-primary"/> Image Library
+                                <Gift className="w-6 h-6 text-primary"/> Artist Benefits Images
                             </CardTitle>
                             <CardDescription>
-                                Add, edit, or remove the placeholder and marketing images used throughout the site.
+                                Update the images shown on the "For Artists" page for each benefit category.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {fields.map((field, index) => (
+                            {benefitFields.map((field, index) => (
                                 <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                                     <div className="md:col-span-1">
-                                        <NextImage src={form.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
+                                        <NextImage src={benefitsForm.watch(`benefitImages.${index}.imageUrl`)} alt={field.id} width={300} height={225} className="rounded-md object-cover w-full aspect-[4/3]"/>
+                                    </div>
+                                    <div className="md:col-span-2 space-y-4">
+                                         <FormField control={benefitsForm.control} name={`benefitImages.${index}.title`} render={({ field }) => (
+                                            <FormItem><FormLabel>Benefit Title</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
+                                        )} />
+                                         <FormField control={benefitsForm.control} name={`benefitImages.${index}.imageUrl`} render={({ field }) => (
+                                            <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
+                                        )} />
+                                    </div>
+                                </Card>
+                            ))}
+                        </CardContent>
+                    </Card>
+                     <div className="mt-6">
+                        <Button type="submit" className="w-full" disabled={benefitsForm.formState.isSubmitting || !hasPermission('settings', 'edit')}>
+                            <Save className="mr-2 h-4 w-4" /> Save Benefit Images
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+            
+            
+             <Form {...placeholderForm}>
+                <form onSubmit={placeholderForm.handleSubmit(onPlaceholderSubmit)}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ImageIcon className="w-6 h-6 text-primary"/> Placeholder Image Library
+                            </CardTitle>
+                            <CardDescription>
+                                Add, edit, or remove the general placeholder and marketing images used throughout the site.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {placeholderFields.map((field, index) => (
+                                <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                    <div className="md:col-span-1">
+                                        <NextImage src={placeholderForm.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                     </div>
                                     <div className="md:col-span-2 space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name={`images.${index}.id`} render={({ field }) => (
+                                            <FormField control={placeholderForm.control} name={`images.${index}.id`} render={({ field }) => (
                                                 <FormItem><FormLabel>Image ID</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
                                             )} />
-                                            <FormField control={form.control} name={`images.${index}.imageHint`} render={({ field }) => (
+                                            <FormField control={placeholderForm.control} name={`images.${index}.imageHint`} render={({ field }) => (
                                                 <FormItem><FormLabel>AI Hint</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
                                             )} />
                                         </div>
-                                         <FormField control={form.control} name={`images.${index}.imageUrl`} render={({ field }) => (
+                                         <FormField control={placeholderForm.control} name={`images.${index}.imageUrl`} render={({ field }) => (
                                             <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
                                         )} />
-                                        <FormField control={form.control} name={`images.${index}.description`} render={({ field }) => (
+                                        <FormField control={placeholderForm.control} name={`images.${index}.description`} render={({ field }) => (
                                             <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
                                         )} />
                                          <Button type="button" variant="destructive" size="sm" onClick={() => setImageToDelete(index)} disabled={!hasPermission('settings', 'edit')}>
@@ -138,13 +206,13 @@ export default function ImageManagementPage() {
                             ))}
                              <Button type="button" variant="outline" onClick={() => append({ id: `new-image-${Date.now()}`, description: '', imageUrl: 'https://picsum.photos/800/600', imageHint: '' })}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
-                                Add New Image
+                                Add New Placeholder Image
                             </Button>
                         </CardContent>
                     </Card>
                     <div className="mt-6">
-                        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || !hasPermission('settings', 'edit')}>
-                            <Save className="mr-2 h-4 w-4" /> Save All Changes
+                        <Button type="submit" className="w-full" disabled={placeholderForm.formState.isSubmitting || !hasPermission('settings', 'edit')}>
+                            <Save className="mr-2 h-4 w-4" /> Save All Placeholder Changes
                         </Button>
                     </div>
                 </form>
@@ -165,6 +233,8 @@ export default function ImageManagementPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </>
+        </div>
     );
 }
+
+    

@@ -9,6 +9,13 @@ export type ImagePlaceholder = {
   imageHint: string;
 }
 
+export type BenefitImage = {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
 export type PackageCategory = {
   name: 'Normal' | 'Premium' | 'ULTRA PREMIUM';
   description: string;
@@ -225,5 +232,7 @@ export interface RawArtistRecommendation {
   charge: number;
   reason: string;
 }
+
+    
 
     

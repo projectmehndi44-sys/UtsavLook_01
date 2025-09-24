@@ -2,7 +2,7 @@
 
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
-import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder } from '@/lib/types';
+import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
 
 
@@ -28,6 +28,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
         if (data && data.hasOwnProperty('promos')) return data.promos as T;
         if (data && data.hasOwnProperty('locations')) return data.locations as T;
         if (data && data.hasOwnProperty('images')) return data.images as T;
+        if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
         return data as T; // Fallback for flat config docs
     }
     return null;
@@ -44,6 +45,7 @@ async function setConfigDocument(docId: string, data: any): Promise<void> {
     else if (docId === 'promotions') dataToSet = { promos: data };
     else if (docId === 'availableLocations') dataToSet = data; // Locations are now stored at the root of the doc
     else if (docId === 'placeholderImages') dataToSet = { images: data };
+    else if (docId === 'benefitImages') dataToSet = { benefitImages: data };
     
     await setDoc(docRef, dataToSet);
 }
@@ -212,6 +214,28 @@ export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
 };
 export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', images);
 
+
+export const getBenefitImages = async (): Promise<BenefitImage[]> => {
+    const config = await getConfigDocument<any>('benefitImages');
+    if (config && config.benefitImages) {
+        return config.benefitImages;
+    }
+    // Return a default structure if it doesn't exist
+    const defaultBenefits = [
+        { id: 'Set Your Own Price', title: "Set Your Own Price", description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.", imageUrl: 'https://picsum.photos/seed/artist-price/800/600' },
+        { id: "'UtsavLook Verified' Badge", title: "'UtsavLook Verified' Badge", description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.", imageUrl: 'https://picsum.photos/seed/artist-verified/800/600' },
+        { id: 'Intelligent Scheduling', title: "Intelligent Scheduling", description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.", imageUrl: 'https://picsum.photos/seed/artist-schedule/800/600' },
+        { id: 'Your Own Referral Code', title: "Your Own Referral Code", description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.", imageUrl: 'https://picsum.photos/seed/artist-referral/800/600' },
+        { id: 'Transparent Payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
+        { id: '0% Commission Welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
+    ];
+    // Optionally save the default structure to Firestore
+    await saveBenefitImages(defaultBenefits);
+    return defaultBenefits;
+};
+export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', images);
+
+
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
     const config = await getConfigDocument<Record<string, string[]>>('availableLocations');
     return config || {};
@@ -318,5 +342,7 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     const config = await getConfigDocument<any>('masterServices');
     return config || [];
 };
+
+    
 
     

@@ -10,67 +10,48 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import html2canvas from 'html2canvas';
+import { getBenefitImages } from '@/lib/services';
+import type { BenefitImage, Customer } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const benefits = [
-    {
-        icon: <BarChart className="w-8 h-8 text-primary" />,
-        title: "Set Your Own Price",
-        description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
-        image: "https://storage.googleapis.com/studiogood/b0163777-62a2-4a0b-9dfd-b8d9c614c274.jpeg",
-        imageHint: "artist pricing packages"
-    },
-    {
-        icon: <Award className="w-8 h-8 text-primary" />,
-        title: "'UtsavLook Verified' Badge",
-        description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
-        image: "https://storage.googleapis.com/studiogood/ef353a2b-d08b-4927-aa72-5989f53e6b7c.jpeg",
-        imageHint: "client artist handshake"
-    },
-    {
-        icon: <CalendarCheck className="w-8 h-8 text-primary" />,
-        title: "Intelligent Scheduling",
-        description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.",
-        image: "https://picsum.photos/seed/artist-schedule/800/600",
-        imageHint: "artist tablet schedule"
-    },
-    {
-        icon: <Sparkles className="w-8 h-8 text-primary" />,
-        title: "Your Own Referral Code",
-        description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
-        image: "https://picsum.photos/seed/artist-referral/800/600",
-        imageHint": "friends sharing phone"
-    },
-    {
-        icon: <IndianRupee className="w-8 h-8 text-primary" />,
-        title: "Transparent Payouts",
-        description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.",
-        image: "https://picsum.photos/seed/artist-payout/800/600",
-        imageHint: "person laptop finances"
-    },
-    {
-        icon: <UserPlus className="w-8 h-8 text-primary" />,
-        title: "0% Commission Welcome",
-        description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
-        image: "https://picsum.photos/seed/artist-welcome/800/600",
-        imageHint: "artist starting work"
-    }
-];
+const benefitIcons = {
+    "Set Your Own Price": <BarChart className="w-8 h-8 text-primary" />,
+    "'UtsavLook Verified' Badge": <Award className="w-8 h-8 text-primary" />,
+    "Intelligent Scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
+    "Your Own Referral Code": <Sparkles className="w-8 h-8 text-primary" />,
+    "Transparent Payouts": <IndianRupee className="w-8 h-8 text-primary" />,
+    "0% Commission Welcome": <UserPlus className="w-8 h-8 text-primary" />,
+};
+
 
 export default function ArtistHomePage() {
     const router = useRouter();
     const { toast } = useToast();
     const benefitsRef = React.useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = React.useState(false);
+    const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
-    const [customer, setCustomer] = React.useState(null);
+    const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [cartCount, setCartCount] = React.useState(0);
+    
+    React.useEffect(() => {
+        setIsLoading(true);
+        getBenefitImages().then(data => {
+            setBenefits(data);
+            setIsLoading(false);
+        }).catch(err => {
+            console.error(err);
+            setIsLoading(false);
+        });
+    }, []);
 
     const handleShare = React.useCallback(() => {
         if (!benefitsRef.current) return;
         setIsSharing(true);
-        html2canvas(benefitsRef.current, { useCORS: true, scale: 1.5 })
+        html2canvas(benefitsRef.current, { useCORS: true, scale: 1.5, backgroundColor: '#fdfcfc' })
             .then((canvas) => {
                 const dataUrl = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
@@ -143,11 +124,23 @@ export default function ArtistHomePage() {
                             </p>
                         </div>
                         <div className="grid gap-16">
-                            {benefits.map((benefit, index) => (
+                            {isLoading ? (
+                                Array.from({length: 6}).map((_, index) => (
+                                    <div key={index} className="grid gap-8 md:gap-12 items-center md:grid-cols-2">
+                                        <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
+                                            <Skeleton className="h-16 w-16 rounded-full" />
+                                            <Skeleton className="h-8 w-3/4" />
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-5/6" />
+                                        </div>
+                                        <Skeleton className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${index % 2 === 1 ? 'md:order-1' : ''}`} />
+                                    </div>
+                                ))
+                            ) : benefits.map((benefit, index) => (
                                 <div key={index} className={`grid gap-8 md:gap-12 items-center md:grid-cols-2`}>
                                     <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
                                         <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
-                                            {benefit.icon}
+                                            {benefitIcons[benefit.id as keyof typeof benefitIcons]}
                                         </div>
                                         <h3 className="text-2xl md:text-3xl font-bold text-primary">{benefit.title}</h3>
                                         <p className="text-muted-foreground text-lg">
@@ -155,19 +148,18 @@ export default function ArtistHomePage() {
                                         </p>
                                     </div>
                                     <Image
-                                        src={benefit.image}
+                                        src={benefit.imageUrl}
                                         alt={benefit.title}
                                         width={800}
                                         height={600}
                                         className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${index % 2 === 1 ? 'md:order-1' : ''}`}
-                                        data-ai-hint={benefit.imageHint}
                                     />
                                 </div>
                             ))}
                         </div>
                     </div>
                      <div className="container px-4 md:px-6 mt-12 text-center">
-                        <Button size="lg" onClick={handleShare} disabled={isSharing}>
+                        <Button size="lg" onClick={handleShare} disabled={isSharing || isLoading}>
                             {isSharing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Share2 className="mr-2 h-5 w-5" />}
                             {isSharing ? 'Generating Image...' : 'Share The Benefits'}
                         </Button>
@@ -198,3 +190,5 @@ export default function ArtistHomePage() {
         </div>
     );
 }
+
+    
