@@ -8,7 +8,7 @@ import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 
 const benefits = [
@@ -70,8 +70,9 @@ export default function ArtistHomePage() {
     const handleShare = React.useCallback(() => {
         if (!benefitsRef.current) return;
         setIsSharing(true);
-        toPng(benefitsRef.current, { cacheBust: true, pixelRatio: 1.5 })
-            .then((dataUrl) => {
+        html2canvas(benefitsRef.current, { useCORS: true, scale: 1.5 })
+            .then((canvas) => {
+                const dataUrl = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
                 link.download = 'utsavlook-artist-benefits.png';
                 link.href = dataUrl;
