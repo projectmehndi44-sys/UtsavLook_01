@@ -16,8 +16,8 @@ const benefits = [
         icon: <BarChart className="w-8 h-8 text-primary" />,
         title: "Set Your Own Price",
         description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
-        image: "https://picsum.photos/seed/artist-price/800/600",
-        imageHint: "artist working studio"
+        image: "https://storage.googleapis.com/studiogood/b0163777-62a2-4a0b-9dfd-b8d9c614c274.jpeg",
+        imageHint: "artist pricing packages"
     },
     {
         icon: <Award className="w-8 h-8 text-primary" />,
