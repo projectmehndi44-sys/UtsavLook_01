@@ -8,12 +8,13 @@ import type { Artist, Booking, Customer } from '@/lib/types';
 import { getCustomer, getArtists, getBookings, listenToCollection } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
 import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
-import { signOutUser } from '@/lib/firebase';
+import { signOutUser, getFirebaseApp } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LayoutGrid, Briefcase, User, LogOut, Home } from 'lucide-react';
 import { getSafeDate } from '@/lib/utils';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 // 1. Create a context
 interface AccountContextType {
@@ -50,35 +51,31 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
     const [bookings, setBookings] = React.useState<Booking[]>([]);
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const auth = getAuth(getFirebaseApp());
 
-    const handleLogout = React.useCallback(() => {
-        signOutUser();
+    const handleLogout = React.useCallback(async () => {
+        await signOutUser();
         localStorage.removeItem('currentCustomerId');
         toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
         router.push('/');
     }, [router, toast]);
 
-    useInactivityTimeout(handleLogout, 300000); // 5 minutes
+    useInactivityTimeout(handleLogout, 600000); // 10 minutes
 
-    const fetchData = React.useCallback(async () => {
-        const customerId = localStorage.getItem('currentCustomerId');
-        if (!customerId) {
-            router.push('/login');
-            return;
-        }
-
+    const fetchData = React.useCallback(async (uid: string) => {
         try {
             const [fetchedCustomer, fetchedArtists] = await Promise.all([
-                getCustomer(customerId),
+                getCustomer(uid),
                 getArtists(),
             ]);
 
             if (!fetchedCustomer) {
-                handleLogout();
+                await handleLogout();
                 return;
             }
             
             setCustomer(fetchedCustomer);
+            localStorage.setItem('currentCustomerId', fetchedCustomer.id);
             setArtists(fetchedArtists);
 
         } catch (error) {
@@ -87,11 +84,23 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
         } finally {
             setIsLoading(false);
         }
-    }, [router, toast, handleLogout]);
+    }, [toast, handleLogout]);
 
     React.useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await fetchData(user.uid);
+            } else {
+                // If there's no authenticated user in Firebase, ensure logout state is clean.
+                localStorage.removeItem('currentCustomerId');
+                setCustomer(null);
+                setIsLoading(false);
+                router.push('/login');
+            }
+        });
+        return () => unsubscribe();
+    }, [auth, fetchData, router]);
+
 
      React.useEffect(() => {
         if (!customer?.id) return;
@@ -109,7 +118,7 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
         artists,
         upcomingBookings: bookings.filter(b => getSafeDate(b.eventDate) >= new Date() && (b.status === 'Confirmed' || b.status === 'Pending Approval' || b.status === 'Needs Assignment')),
         pastBookings: bookings.filter(b => getSafeDate(b.eventDate) < new Date() || b.status === 'Completed' || b.status === 'Cancelled' || b.status === 'Disputed'),
-        fetchData,
+        fetchData: () => fetchData(auth.currentUser?.uid || ''),
     };
 
     if (isLoading || !customer) {
