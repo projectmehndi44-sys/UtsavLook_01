@@ -80,35 +80,6 @@ export default function ArtistHomePage() {
         }
     };
 
-    const handleActualShare = async () => {
-        if (!shareableCompositeImage) return;
-
-        const blob = await (await fetch(shareableCompositeImage)).blob();
-        const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-             try {
-                await navigator.share({
-                    files: [file],
-                    title: 'UtsavLook Artist Benefits',
-                    text: shareText,
-                });
-            } catch (error) {
-                console.error('Web Share API error:', error);
-                toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
-            }
-        } else {
-             // Fallback for desktop or unsupported browsers
-             handleDownload();
-             navigator.clipboard.writeText(shareText);
-             toast({
-                title: 'Ready to Share!',
-                description: 'Image downloaded and text copied to clipboard. You can now post it to your favorite social media platform.',
-                duration: 5000,
-             });
-        }
-    };
-    
     const handleDownload = () => {
         if (!shareableCompositeImage) return;
         const link = document.createElement('a');
@@ -117,6 +88,36 @@ export default function ArtistHomePage() {
         link.click();
     };
 
+    const handleActualShare = async () => {
+        if (!shareableCompositeImage) return;
+
+        const blob = await (await fetch(shareableCompositeImage)).blob();
+        const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
+        
+        // Use the Web Share API if available
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+             try {
+                await navigator.share({
+                    files: [file],
+                    title: 'UtsavLook Artist Benefits',
+                    text: shareText,
+                });
+            } catch (error) {
+                // This can happen if the user cancels the share dialog
+                console.info('Web Share API action cancelled or failed:', error);
+            }
+        } else {
+             // Fallback for desktop or unsupported browsers
+             handleDownload();
+             navigator.clipboard.writeText(shareText);
+             toast({
+                title: 'Ready to Share!',
+                description: 'Image downloaded and text copied. You can now post it to your favorite social media platform.',
+                duration: 5000,
+             });
+        }
+    };
+    
     const handleCloseDialog = () => {
         setIsSharing(false);
         setShareableCompositeImage(null);
@@ -240,10 +241,10 @@ export default function ArtistHomePage() {
              <div className="absolute -left-[9999px] top-0">
                 <div ref={compositeCardRef} style={{ width: 1200, height: 1200, padding: 40, display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, hsl(39, 10%, 98%), hsl(39, 10%, 95%))' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingLeft: 20, paddingRight: 20 }}>
-                       <h1 style={{ fontFamily: 'var(--font-playfair-display)', fontSize: '48px' }}>
-                           <span style={{ color: 'hsl(var(--accent))' }}>Utsav</span><span style={{ color: 'hsl(var(--primary))' }}>Look</span>
+                        <h1 className="font-headline" style={{ fontSize: '48px' }}>
+                           <span style={{ color: 'hsl(35 80% 55%)' }}>Utsav</span><span style={{ color: 'hsl(25 80% 40%)' }}>Look</span>
                        </h1>
-                        <h2 style={{ fontFamily: 'var(--font-roboto)', fontSize: '32px', color: 'hsl(var(--primary))', fontWeight: 500 }}>Why Artists Love Us</h2>
+                        <h2 style={{ fontFamily: 'var(--font-roboto)', fontSize: '32px', color: 'hsl(25 80% 40%)', fontWeight: 500 }}>Why Artists Love Us</h2>
                     </div>
                      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: '20px' }}>
                         {benefits.map((benefit, index) => (
@@ -275,11 +276,12 @@ export default function ArtistHomePage() {
                          <Button onClick={handleActualShare} className="w-full">
                             <Share2 className="mr-2 h-4 w-4" /> Share Now
                          </Button>
-                         <div className="flex-grow w-full">
-                             <div className="relative">
-                                <Input value={shareText} readOnly className="pr-10 h-10"/>
-                                <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
-                             </div>
+                         <div className="flex items-center gap-2">
+                            <Button onClick={handleDownload} variant="outline" size="icon" aria-label="Download Image"><Download/></Button>
+                            <div className="relative flex-grow">
+                               <Input value={shareText} readOnly className="pr-10"/>
+                               <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
+                            </div>
                          </div>
                     </DialogFooter>
                 </DialogContent>
@@ -287,4 +289,5 @@ export default function ArtistHomePage() {
         </div>
     );
 }
+
 
