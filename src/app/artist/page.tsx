@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/utsavlook/Header';
-import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download, FolderDown, Instagram, Facebook } from 'lucide-react';
+import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -25,16 +25,6 @@ const benefitIcons: Record<string, JSX.Element> = {
     "Your Own Referral Code": <Sparkles className="w-8 h-8 text-primary" />,
     "Transparent Payouts": <IndianRupee className="w-8 h-8 text-primary" />,
     "0% Commission Welcome": <UserPlus className="w-8 h-8 text-primary" />,
-};
-
-const SocialIcons = {
-    whatsapp: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.487 5.235 3.487 8.413.003 6.557-5.338 11.892-11.894 11.892-1.99 0-3.903-.52-5.586-1.457l-6.354 1.654zm6.838-2.698l.396.235c1.478.882 3.16.136 4.893.136 5.47 0 9.9-4.43 9.9-9.9 0-5.469-4.43-9.9-9.9-9.9s-9.9 4.431-9.9 9.9c0 2.004.604 3.903 1.688 5.586l.235.396-1.07 3.894 3.996-1.044zM12.28 8.92c-.135-.27-.27-.27-.395-.27h-.24c-.12 0-.27.045-.42.225-.15.18-.57.54-.57 1.32 0 .78.585 1.545.66 1.665.075.12.945 1.515 2.31 2.04.315.12.585.195.78.255.3.09.57.075.78-.045.225-.12.945-1.155 1.065-1.395.12-.24.075-.39-.045-.51-.12-.12-.27-.195-.39-.225s-.24-.045-.36 0c-.12.045-.27.135-.39.27-.12.12-.21.225-.3.27s-.165.09-.285 0c-.12-.09-.51-.18-.975-.57-.555-.465-.915-1.035-.96-1.155z"/>
-        </svg>
-    ),
-    facebook: <Facebook/>,
-    instagram: <Instagram/>,
 };
 
 
@@ -90,21 +80,11 @@ export default function ArtistHomePage() {
         }
     };
 
-    const handleSocialShare = async (platform: 'whatsapp' | 'facebook' | 'instagram') => {
+    const handleActualShare = async () => {
         if (!shareableCompositeImage) return;
 
         const blob = await (await fetch(shareableCompositeImage)).blob();
         const file = new File([blob], 'utsavlook-benefits.png', { type: 'image/png' });
-
-        if (platform === 'instagram') {
-             navigator.clipboard.writeText(shareText);
-             toast({
-                title: 'Text Copied & Ready for Instagram!',
-                description: 'Download the image, then open Instagram to create your post.',
-                duration: 5000,
-             });
-             return;
-        }
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
              try {
@@ -118,14 +98,14 @@ export default function ArtistHomePage() {
                 toast({ title: 'Could not share', description: 'Your browser prevented the share dialog from opening.', variant: 'destructive' });
             }
         } else {
-             const encodedText = encodeURIComponent(shareText);
-             let url = '';
-             if (platform === 'whatsapp') {
-                 url = `https://api.whatsapp.com/send?text=${encodedText}`;
-             } else if (platform === 'facebook') {
-                 url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodedText}`;
-             }
-             window.open(url, '_blank');
+             // Fallback for desktop or unsupported browsers
+             handleDownload();
+             navigator.clipboard.writeText(shareText);
+             toast({
+                title: 'Ready to Share!',
+                description: 'Image downloaded and text copied to clipboard. You can now post it to your favorite social media platform.',
+                duration: 5000,
+             });
         }
     };
     
@@ -259,7 +239,7 @@ export default function ArtistHomePage() {
             {/* Hidden div for html-to-image to generate the composite image */}
              <div className="absolute -left-[9999px] top-0">
                 <div ref={compositeCardRef} style={{ width: 1200, height: 1200, padding: 40, display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, hsl(39, 10%, 98%), hsl(39, 10%, 95%))' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingLeft: 20, paddingRight: 20 }}>
                        <h1 style={{ fontFamily: 'var(--font-playfair-display)', fontSize: '48px' }}>
                            <span style={{ color: 'hsl(var(--accent))' }}>Utsav</span><span style={{ color: 'hsl(var(--primary))' }}>Look</span>
                        </h1>
@@ -292,20 +272,11 @@ export default function ArtistHomePage() {
                         <Image src={shareableCompositeImage} alt="UtsavLook Artist Benefits" width={1200} height={1200} className="rounded-lg border"/>
                     )}
                     <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-                         <div className="flex-grow grid grid-cols-3 gap-2">
-                             <Button onClick={() => handleSocialShare('whatsapp')} variant="outline" size="sm" className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
-                                {SocialIcons.whatsapp} <span className="ml-2">WhatsApp</span>
-                             </Button>
-                             <Button onClick={() => handleSocialShare('facebook')} variant="outline" size="sm" className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200">
-                                {SocialIcons.facebook} <span className="ml-2">Facebook</span>
-                             </Button>
-                             <Button onClick={() => handleSocialShare('instagram')} variant="outline" size="sm" className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200">
-                                {SocialIcons.instagram} <span className="ml-2">Instagram</span>
-                             </Button>
-                         </div>
-                         <div className="flex items-center gap-2">
-                             <Button onClick={handleDownload} variant="outline" size="icon" aria-label="Download Image"><Download/></Button>
-                             <div className="relative flex-grow">
+                         <Button onClick={handleActualShare} className="w-full">
+                            <Share2 className="mr-2 h-4 w-4" /> Share Now
+                         </Button>
+                         <div className="flex-grow w-full">
+                             <div className="relative">
                                 <Input value={shareText} readOnly className="pr-10 h-10"/>
                                 <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
                              </div>
@@ -316,3 +287,4 @@ export default function ArtistHomePage() {
         </div>
     );
 }
+
