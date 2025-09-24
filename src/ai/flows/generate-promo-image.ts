@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate a promotional social media image for an artist.
@@ -33,7 +34,7 @@ const generatePromoImagePrompt = ai.definePrompt({
   name: 'generatePromoImagePrompt',
   input: { schema: PromoImageInputSchema },
   output: { schema: PromoImageOutputSchema },
-  model: 'googleai/gemini-2.5-flash-image-preview',
+  model: 'googleai/gemini-pro-vision',
   config: {
     responseModalities: ['TEXT', 'IMAGE'],
   },
