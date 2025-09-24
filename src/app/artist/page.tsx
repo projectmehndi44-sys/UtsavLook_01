@@ -15,7 +15,7 @@ const benefits = [
         icon: <BarChart className="w-10 h-10 text-primary" />,
         title: "Set Your Own Price",
         description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
-        image: "https://images.unsplash.com/photo-1599692881883-9395b41a5f57?q=80&w=600&h=400&fit=crop",
+        image: "https://picsum.photos/seed/price/600/400",
         aiHint: "artist working"
     },
     {
@@ -23,35 +23,35 @@ const benefits = [
         title: "'UtsavLook Verified' Badge",
         description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.",
         aiHint: "happy customer",
-        image: "https://images.unsplash.com/photo-1554224324-4d61d19b884c?q=80&w=600&h=400&fit=crop"
+        image: "https://picsum.photos/seed/badge/600/400"
     },
     {
         icon: <CalendarCheck className="w-10 h-10 text-primary" />,
         title: "Intelligent Scheduling",
         description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.",
         aiHint: "managing schedule",
-        image: "https://images.unsplash.com/photo-1554224155-1696413565d3?q=80&w=600&h=400&fit=crop"
+        image: "https://picsum.photos/seed/schedule/600/400"
     },
     {
         icon: <Sparkles className="w-10 h-10 text-primary" />,
         title: "Your Own Referral Code",
         description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.",
         aiHint: "friends sharing",
-        image: "https://images.unsplash.com/photo-1522881193457-31ae824a86a5?q=80&w=600&h=400&fit=crop"
+        image: "https://picsum.photos/seed/referral/600/400"
     },
     {
         icon: <IndianRupee className="w-10 h-10 text-primary" />,
         title: "Transparent Payouts",
         description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.",
         aiHint: "financial planning",
-        image: "https://images.unsplash.com/photo-1554224154-26032f3a6275?q=80&w=600&h=400&fit=crop"
+        image: "https://picsum.photos/seed/payouts/600/400"
     },
     {
         icon: <UserPlus className="w-10 h-10 text-primary" />,
         title: "0% Commission Welcome",
         description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
         aiHint: "welcome handshake",
-        image: "https://images.unsplash.com/photo-1560264280-424c88e12258?q=80&w=600&h=400&fit=crop"
+        image: "https://picsum.photos/seed/welcome/600/400"
     }
 ];
 
