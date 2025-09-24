@@ -12,11 +12,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
 import { Separator } from '@/components/ui/separator';
 import { getArtist } from '@/lib/services';
-import { useArtistPortal } from '../dashboard/layout';
 
 export default function ArtistLoginPage() {
     const router = useRouter();
@@ -25,17 +24,22 @@ export default function ArtistLoginPage() {
     const [password, setPassword] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
     const auth = getAuth(getFirebaseApp());
-    const { artist, isLoading: isArtistLoading } = useArtistPortal();
     
     // State for forgot password
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
     React.useEffect(() => {
-        if (!isArtistLoading && artist) {
-            router.push('/artist/dashboard');
-        }
-    }, [artist, isArtistLoading, router]);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const artistProfile = await getArtist(user.uid);
+                if (artistProfile) {
+                    router.push('/artist/dashboard');
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, [auth, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -103,15 +107,6 @@ export default function ArtistLoginPage() {
             });
         }
     };
-
-    if (isArtistLoading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-    }
-
-    if (artist) {
-        // This will be caught by the useEffect and redirected, but this prevents flashing the login form.
-        return null;
-    }
 
     return (
         <>
@@ -195,5 +190,3 @@ export default function ArtistLoginPage() {
         </>
     );
 }
-
-    
