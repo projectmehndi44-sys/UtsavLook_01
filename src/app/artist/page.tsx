@@ -14,10 +14,9 @@ import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import * as htmlToImage from 'html-to-image';
-import { Facebook, Instagram, Send, Bot } from 'lucide-react'; // Assuming a generic 'WhatsappIcon' for now.
+import { Facebook, Instagram, Send, Bot } from 'lucide-react'; 
+import { fetchArtistBenefitsPromoImage } from '../actions';
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -46,7 +45,6 @@ export default function ArtistHomePage() {
     const [isLoading, setIsLoading] = React.useState(true);
     const [isGenerating, setIsGenerating] = React.useState(false);
     
-    const compositeCardRef = React.useRef<HTMLDivElement>(null);
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -67,21 +65,22 @@ export default function ArtistHomePage() {
     const shareText = "Join UtsavLook and grow your artistry business! We give you the tools to succeed. #UtsavLookArtist #MehndiArtist #MakeupArtist #ArtistPlatform";
 
     const generateCompositeImage = async (): Promise<string | null> => {
-      if (!compositeCardRef.current) return null;
-      try {
-        const dataUrl = await htmlToImage.toPng(compositeCardRef.current, {
-          quality: 1.0,
-          pixelRatio: 2, // For higher resolution
-          cacheBust: true,
-          fontEmbedCSS: '' // Ensure fonts are embedded
-        });
-        return dataUrl;
-      } catch (err) {
-        console.error("Image generation failed:", err);
-        toast({ title: 'Image generation failed', variant: 'destructive' });
-        return null;
-      }
+        try {
+            const benefitsData = benefits.map(b => ({ title: b.title, description: b.description }));
+            const result = await fetchArtistBenefitsPromoImage({ benefits: benefitsData });
+
+            if (!result.imageUrl) {
+                throw new Error("AI failed to return an image.");
+            }
+            return result.imageUrl;
+
+        } catch (err) {
+            console.error("Image generation failed:", err);
+            toast({ title: 'Image generation failed', variant: 'destructive' });
+            return null;
+        }
     };
+
 
     const handleShareClick = async () => {
         setIsSharing(true);
@@ -248,12 +247,12 @@ export default function ArtistHomePage() {
                 <DialogContent className="sm:max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>Share Your UtsavLook Benefits</DialogTitle>
-                        <DialogDescription>Your all-in-one graphic is ready. Share it to your favorite platforms or download it.</DialogDescription>
+                        <DialogDescription>Your AI-generated graphic is ready. Share it to your favorite platforms or download it.</DialogDescription>
                     </DialogHeader>
                     {isGenerating ? (
                         <div className="flex flex-col items-center justify-center h-96">
                             <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                            <p className="mt-4 text-muted-foreground">Creating your shareable image...</p>
+                            <p className="mt-4 text-muted-foreground">Our AI is designing your shareable image...</p>
                         </div>
                     ) : shareableCompositeImage && (
                         <div className="grid md:grid-cols-2 gap-8 items-center">
@@ -280,29 +279,6 @@ export default function ArtistHomePage() {
                     )}
                 </DialogContent>
             </Dialog>
-
-             {/* Hidden div for image generation */}
-             <div ref={compositeCardRef} className="fixed -left-[9999px] top-0 p-10 bg-[#F5F5DC]">
-                 <style>{`
-                    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap');
-                 `}</style>
-                <div className="w-[1080px] h-[1080px] bg-[#F5F5DC] flex flex-col items-center justify-center p-8 font-body">
-                    <h1 className="font-headline text-7xl font-bold text-[#8B4513] mb-8">Why Artists Love UtsavLook</h1>
-                    <div className="w-full" style={{ perspective: '2000px' }}>
-                        <div className="grid grid-cols-3 gap-6 w-full transition-transform duration-500" style={{ transformStyle: 'preserve-3d', transform: 'rotateY(-10deg) rotateX(5deg)' }}>
-                            {benefits.map((benefit, index) => (
-                                <div key={benefit.id} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-black/10 flex flex-col items-center text-center" style={{ transform: `translateZ(${index * 10}px)`}}>
-                                    <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
-                                        {React.cloneElement(benefitIcons[benefit.id as keyof typeof benefitIcons], { className: "w-10 h-10 text-primary" })}
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-primary mb-2">{benefit.title}</h3>
-                                    <p className="text-lg text-black/70">{benefit.description}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }

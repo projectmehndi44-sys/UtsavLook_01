@@ -4,6 +4,7 @@
 import { getStyleMatch, type StyleMatchInput } from "@/ai/flows/style-match";
 import { getPersonalizedArtistRecommendations, type PersonalizedArtistRecommendationsInput } from "@/ai/flows/personalized-artist-recommendation";
 import { generatePromoImage, type PromoImageInput } from "@/ai/flows/generate-promo-image";
+import { generateArtistBenefitsPromo, type GenerateArtistBenefitsPromoInput } from "@/ai/flows/generate-artist-benefits-promo";
 
 export async function fetchStyleMatch(input: StyleMatchInput) {
     return await getStyleMatch(input);
@@ -16,4 +17,8 @@ export async function fetchRecommendations(input: PersonalizedArtistRecommendati
 
 export async function fetchPromoImage(input: PromoImageInput) {
     return await generatePromoImage(input);
+}
+
+export async function fetchArtistBenefitsPromoImage(input: GenerateArtistBenefitsPromoInput) {
+    return await generateArtistBenefitsPromo(input);
 }

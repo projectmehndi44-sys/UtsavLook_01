@@ -5,3 +5,4 @@ import '@/ai/flows/our-works-image-selection.ts';
 import '@/ai/flows/style-match.ts';
 import '@/ai/flows/personalized-artist-recommendation.ts';
 import '@/ai/flows/generate-promo-image.ts';
+import '@/ai/flows/generate-artist-benefits-promo.ts';
