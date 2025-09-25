@@ -23,7 +23,7 @@ const PromoImageInputSchema = z.object({
       })
     )
     .min(1)
-    .max(6)
+    .max(4)
     .describe("An array of objects containing public URLs or data URIs for the artist's best work images."),
 });
 export type PromoImageInput = z.infer<typeof PromoImageInputSchema>;
@@ -41,6 +41,7 @@ const generatePromoImagePrompt = ai.definePrompt({
   name: 'generatePromoImagePrompt',
   input: { schema: PromoImageInputSchema },
   output: { schema: PromoImageOutputSchema },
+  model: 'googleai/gemini-2.5-flash-image-preview',
   config: {
     responseModalities: ['TEXT', 'IMAGE'],
   },
