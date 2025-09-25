@@ -15,6 +15,7 @@ import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import * as htmlToImage from 'html-to-image';
 import { Facebook, Instagram, Send, Bot } from 'lucide-react'; // Assuming a generic 'WhatsappIcon' for now.
 
