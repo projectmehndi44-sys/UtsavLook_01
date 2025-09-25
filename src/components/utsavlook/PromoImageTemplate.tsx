@@ -1,6 +1,6 @@
 
 'use client';
-import { Star, IndianRupee } from 'lucide-react';
+import { Star, IndianRupee, Palette } from 'lucide-react';
 import React from 'react';
 
 export interface PromoImageTemplateProps {
@@ -36,106 +36,110 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
         display: 'flex',
         flexDirection: 'column',
         fontFamily: '"Roboto", sans-serif',
-        background: 'radial-gradient(circle, hsl(40 55% 95% / 0.8) 0%, hsl(25 75% 32% / 0.9) 100%)',
+        background: 'hsl(var(--brand-rich-henna))',
         position: 'relative',
         color: '#8B4513',
         overflow: 'hidden',
       }}
     >
-      {/* Image Collage */}
-      {workImages.map((src, index) => (
-        <div
-          key={index}
-          style={{
-            position: 'absolute',
-            ...imagePositions[index],
-            boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-            borderRadius: '12px',
-            border: '8px solid white',
-            overflow: 'hidden',
-          }}
-        >
-          <img
-            src={src}
-            crossOrigin="anonymous"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-            alt={`Collage image ${index + 1}`}
-          />
-        </div>
-      ))}
+      {/* Image Collage Section */}
+       <div style={{
+            width: '100%',
+            height: '75%',
+            position: 'relative',
+            background: 'radial-gradient(circle, hsl(40 55% 95%) 0%, hsl(25 75% 40%) 100%)'
+       }}>
+            {workImages.map((src, index) => (
+                <div
+                key={index}
+                style={{
+                    position: 'absolute',
+                    ...imagePositions[index],
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+                    borderRadius: '12px',
+                    border: '8px solid white',
+                    overflow: 'hidden',
+                }}
+                >
+                <img
+                    src={src}
+                    crossOrigin="anonymous"
+                    style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    }}
+                    alt={`Collage image ${index + 1}`}
+                />
+                </div>
+            ))}
+       </div>
 
-      {/* Foreground content */}
-      <div
-        style={{
+
+      {/* Bottom Information Panel */}
+        <div style={{
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '40px',
+          justifyContent: 'center',
+          padding: '20px 40px',
           width: '100%',
-          height: '100%',
+          height: '25%',
           position: 'relative',
           zIndex: 3,
-          boxSizing: 'border-box'
-        }}
-      >
-        {/* Top Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{fontFamily: 'var(--font-playfair-display)', fontSize: '48px', fontWeight: 'bold' }}>
-                <span style={{color: 'hsl(var(--accent))'}}>Utsav</span>
-                <span style={{color: 'hsl(var(--primary))'}}>Look</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(255,255,255,0.8)', padding: '8px 16px', borderRadius: '9999px', border: '1px solid #CD7F32' }}>
-                <Star style={{ width: '28px', height: '28px', color: '#CD7F32', fill: '#CD7F32' }} />
-                <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#8B4513' }}>{artistRating.toFixed(1)}</span>
-            </div>
-        </div>
+          boxSizing: 'border-box',
+          backgroundColor: 'hsl(var(--brand-soft-sand))',
+          borderTop: '4px solid hsl(var(--brand-golden-bronze))'
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Left Side: Artist Info */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                    {artistProfilePic && (
+                        <img
+                            src={artistProfilePic}
+                            crossOrigin="anonymous"
+                            style={{
+                            width: '100px',
+                            height: '100px',
+                            objectFit: 'cover',
+                            borderRadius: '50%',
+                            border: '6px solid white',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                            flexShrink: 0
+                            }}
+                            alt={artistName}
+                        />
+                    )}
+                    <div>
+                        <h2 style={{ fontFamily: '"Roboto", sans-serif', fontSize: '48px', fontWeight: 'bold', margin: 0, lineHeight: 1.2, color: 'hsl(var(--primary))' }}>
+                            {artistName}
+                        </h2>
+                        <p style={{ fontSize: '24px', color: '#CD7F32', margin: '4px 0 0 0', fontWeight: '500' }}>
+                            {artistServices}
+                        </p>
+                    </div>
+                </div>
 
-        {/* Bottom Section */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-           {artistProfilePic && (
-              <img
-                src={artistProfilePic}
-                crossOrigin="anonymous"
-                style={{
-                  width: '100px',
-                  height: '100px',
-                  objectFit: 'cover',
-                  borderRadius: '50%',
-                  border: '6px solid white',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                  flexShrink: 0
-                }}
-                alt={artistName}
-              />
-            )}
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.85)',
-            backdropFilter: 'blur(10px)',
-            padding: '20px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            flexGrow: 1
-          }}>
-            <h2 style={{ fontFamily: '"Roboto", sans-serif', fontSize: '48px', fontWeight: 'bold', margin: 0, lineHeight: 1.2, color: 'hsl(var(--primary))' }}>
-                {artistName}
-            </h2>
-            <p style={{ fontSize: '24px', color: '#CD7F32', margin: '4px 0 0 0', fontWeight: '500' }}>
-              {artistServices}
-            </p>
-             <p style={{ fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0 0 0' }}>
-                Starts from
-                <span style={{ fontWeight: 'bold', fontSize: '28px', display: 'flex', alignItems: 'center'}}>
-                    <IndianRupee style={{ width: '22px', height: '22px' }} />{baseCharge.toLocaleString()}
-                </span>
-            </p>
-          </div>
+                 {/* Right Side: UtsavLook Branding & Price */}
+                 <div style={{textAlign: 'right'}}>
+                    <div style={{fontFamily: '"Playfair Display", serif', fontSize: '48px', fontWeight: 'bold' }}>
+                        <span style={{color: 'hsl(var(--accent))'}}>Utsav</span>
+                        <span style={{color: 'hsl(var(--primary))'}}>Look</span>
+                    </div>
+                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px', marginTop: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Star style={{ width: '28px', height: '28px', color: '#CD7F32', fill: '#CD7F32' }} />
+                            <span style={{ fontSize: '28px', fontWeight: 'bold', color: '#8B4513' }}>{artistRating.toFixed(1)}</span>
+                        </div>
+                        <div style={{ fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            Starts from
+                            <span style={{ fontWeight: 'bold', fontSize: '28px', display: 'flex', alignItems: 'center'}}>
+                                <IndianRupee style={{ width: '22px', height: '22px' }} />{baseCharge.toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+                 </div>
+            </div>
         </div>
-      </div>
     </div>
   );
 };
