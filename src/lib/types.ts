@@ -16,6 +16,10 @@ export type BenefitImage = {
   imageUrl: string;
 }
 
+export type PromotionalImage = {
+    imageUrl: string;
+}
+
 export type PackageCategory = {
   name: 'Normal' | 'Premium' | 'ULTRA PREMIUM';
   description: string;

@@ -235,6 +235,13 @@ export const getBenefitImages = async (): Promise<BenefitImage[]> => {
 };
 export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', { benefitImages: images });
 
+export const getPromotionalImage = async (): Promise<{ imageUrl: string } | null> => {
+    return getConfigDocument<{ imageUrl: string }>('promotionalImage');
+};
+
+export const savePromotionalImage = async (data: { imageUrl: string }): Promise<void> => {
+    return setConfigDocument('promotionalImage', data);
+};
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
     const config = await getConfigDocument<Record<string, string[]>>('availableLocations');

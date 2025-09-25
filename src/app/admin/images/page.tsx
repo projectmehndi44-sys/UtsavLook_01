@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift, Megaphone } from 'lucide-react';
 import NextImage from 'next/image';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { ImagePlaceholder, BenefitImage } from '@/lib/types';
-import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages } from '@/lib/services';
+import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage } from '@/lib/services';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -56,6 +56,8 @@ export default function ImageManagementPage() {
     const { hasPermission } = useAdminAuth();
     const [isLoading, setIsLoading] = React.useState(true);
     const [imageToDelete, setImageToDelete] = React.useState<number | null>(null);
+    const [promoImage, setPromoImage] = React.useState<string | null>(null);
+    const [isSavingPromo, setIsSavingPromo] = React.useState(false);
 
     const placeholderForm = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -82,10 +84,12 @@ export default function ImageManagementPage() {
         setIsLoading(true);
         Promise.all([
             getPlaceholderImages(),
-            getBenefitImages()
-        ]).then(([placeholderData, benefitData]) => {
+            getBenefitImages(),
+            getPromotionalImage()
+        ]).then(([placeholderData, benefitData, promoData]) => {
             placeholderForm.reset({ images: placeholderData });
             benefitsForm.reset({ benefitImages: benefitData });
+            if (promoData) setPromoImage(promoData.imageUrl);
             setIsLoading(false);
         });
     }, [placeholderForm, benefitsForm]);
@@ -117,6 +121,32 @@ export default function ImageManagementPage() {
             benefitsForm.setValue(`benefitImages.${index}.imageUrl`, newUrl, { shouldDirty: true });
         }
     };
+    
+    const handlePromoImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // This is a temporary local URL for preview.
+            // On save, you should upload to a persistent storage (e.g., Firebase Storage)
+            // and save that URL. For this example, we'll work with the local URL.
+             setPromoImage(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSavePromoImage = async () => {
+        if (!promoImage) return;
+        setIsSavingPromo(true);
+        try {
+            // In a real app, upload the `promoImage` file if it's a local object URL,
+            // get the permanent URL, then save it.
+            await savePromotionalImage({ imageUrl: promoImage });
+            toast({ title: 'Promotional Image Saved', description: 'The main artist benefits promo image has been updated.' });
+        } catch (error) {
+            console.error("Failed to save promo image:", error);
+            toast({ title: 'Error', description: 'Could not save the promotional image.', variant: 'destructive' });
+        } finally {
+            setIsSavingPromo(false);
+        }
+    };
 
     const confirmDelete = () => {
         if (imageToDelete !== null) {
@@ -135,6 +165,46 @@ export default function ImageManagementPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-lg font-semibold md:text-2xl">Site Image Management</h1>
             </div>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Megaphone className="w-6 h-6 text-primary"/> Artist Benefits Promotional Image
+                    </CardTitle>
+                    <CardDescription>
+                        Upload the single, high-quality promotional image that will be used for the "Share Benefits" feature on the "For Artists" page.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div className="space-y-2">
+                            {promoImage ? (
+                                <NextImage src={promoImage} alt="Promotional Image Preview" width={1080} height={1080} className="rounded-md object-contain w-full border-4 border-accent p-1" />
+                            ) : (
+                                <div className="aspect-square w-full bg-muted rounded-md flex items-center justify-center text-muted-foreground">
+                                    <p>No image uploaded</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 text-center hover:border-accent flex flex-col items-center justify-center">
+                            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <p className="mt-4 text-sm text-muted-foreground">Click to upload or drag & drop</p>
+                             <p className="text-xs text-muted-foreground">Recommended size: 1080x1080px</p>
+                            <Input 
+                                id="promo-image-upload" 
+                                type="file" 
+                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                accept="image/*" 
+                                onChange={handlePromoImageUpload}
+                            />
+                        </div>
+                    </div>
+                     <Button onClick={handleSavePromoImage} className="w-full" disabled={isSavingPromo || !hasPermission('settings', 'edit')}>
+                        <Save className="mr-2 h-4 w-4" /> 
+                        {isSavingPromo ? 'Saving...' : 'Save Promotional Image'}
+                    </Button>
+                </CardContent>
+            </Card>
             
             {/* New Artist Benefits Image Management */}
              <Form {...benefitsForm}>
