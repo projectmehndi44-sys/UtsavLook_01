@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LayoutDashboard, Briefcase, Bell, User, LogOut, Palette, CalendarOff, IndianRupee, Package, Star, PanelLeft, Megaphone } from 'lucide-react';
 import type { Artist, Booking, Notification } from '@/lib/types';
-import { getArtist, listenToCollection } from '@/lib/services';
+import { getArtist, listenToCollection, getDb } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -170,7 +170,7 @@ export default function ArtistDashboardLayout({
     React.useEffect(() => {
         if (!artist?.id) return;
         
-        getFirestore(getFirebaseApp()).then(db => {
+        getDb().then(db => {
             const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
             const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
                 const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
