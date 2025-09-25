@@ -41,7 +41,6 @@ const generatePromoImagePrompt = ai.definePrompt({
   name: 'generatePromoImagePrompt',
   input: { schema: PromoImageInputSchema },
   output: { schema: PromoImageOutputSchema },
-  model: 'googleai/gemini-2.5-flash',
   config: {
     responseModalities: ['TEXT', 'IMAGE'],
   },
