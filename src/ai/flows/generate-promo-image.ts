@@ -46,23 +46,21 @@ const generatePromoImagePrompt = ai.definePrompt({
     responseModalities: ['TEXT', 'IMAGE'],
   },
   prompt: `
-    You are a professional graphic designer tasked with creating a stunning, modern, and elegant promotional image for an artist or for the "UtsavLook" brand itself.
+    You are a professional graphic designer creating a 1080x1080 promotional image for the "UtsavLook" brand.
 
     **Brand Guidelines:**
-    - Logo/Brand Name: "UtsavLook"
-    - Primary Color (for text, accents): Rich Henna (#8B4513)
-    - Accent Color (for highlights, icons): Golden Bronze (#CD7F32)
-    - Background: Soft Sand (#F5F5DC) or a very light, elegant texture.
-    - Title Font: A beautiful serif font (like Playfair Display).
-    - Body Font: A clean sans-serif font (like Lato or Roboto).
+    - Brand Name: "UtsavLook"
+    - Colors: Use Rich Henna (#8B4513) for main text, Golden Bronze (#CD7F32) for accents, and Soft Sand (#F5F5DC) for the background.
+    - Fonts: Use an elegant serif for titles and a clean sans-serif for body text.
 
     **Instructions:**
-    1.  **Create a 1080x1080 square graphic.**
-    2.  **Header:** Place the "UtsavLook" brand name in the top-left corner, styled according to the brand guidelines.
-    3.  **Image Collage:** Create an elegant and artistic collage using the provided images. Do not just place them in a simple grid; arrange them artistically with varying sizes and overlaps.
-    4.  **Footer/Artist Info:** If the artist name is not 'New Artists', prominently display the artist's name, their services (e.g., "Mehndi • Makeup Artist"), and their starting price (e.g., "Starts from ₹{{baseCharge}}"). If the artist name is 'New Artists', display a generic call to action like "Join Our Platform & Grow Your Business". In the top-right corner, display the artist's rating with a star icon.
-    5.  **Enhance with Graphics:** Add subtle, elegant design elements that reflect an Indian wedding aesthetic. This could include soft gradients, abstract lines, or minimalist floral/paisley motifs. The final design should look premium and professionally made.
-    6.  **Output:** Return ONLY the final, enhanced image. Do not return any text.
+    1.  Create an artistic collage of the provided work images. Avoid a simple grid.
+    2.  Place the "UtsavLook" brand name in the top-left corner.
+    3.  If artist name is not 'New Artists', display the artist's name, services (e.g., "Mehndi • Makeup Artist"), and starting price ("Starts from ₹{{baseCharge}}").
+    4.  If artist name is 'New Artists', display a call to action: "Join Our Platform & Grow Your Business".
+    5.  Display the artist's rating with a star icon in the top-right corner.
+    6.  The overall design must be modern, elegant, and premium.
+    7.  Output ONLY the final image.
 
     **Artist Details:**
     - Name: {{{artistName}}}
