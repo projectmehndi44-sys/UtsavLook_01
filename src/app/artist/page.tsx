@@ -10,12 +10,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { toPng } from 'html-to-image';
 import { getBenefitImages } from '@/lib/services';
 import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { fetchPromoImage } from '@/app/actions';
 
 
 const benefitIcons: Record<string, JSX.Element> = {
@@ -35,7 +35,6 @@ export default function ArtistHomePage() {
     const [shareableCompositeImage, setShareableCompositeImage] = React.useState<string | null>(null);
     const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
-    const compositeCardRef = React.useRef<HTMLDivElement>(null);
 
     // These states are added for header compatibility, but the main logic is for non-logged-in artists.
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -55,31 +54,37 @@ export default function ArtistHomePage() {
 
     const shareText = "Join UtsavLook and grow your artistry business! We give you the tools to succeed. #UtsavLookArtist #MehndiArtist #MakeupArtist #ArtistPlatform";
 
-    const generateCompositeImage = async () => {
-      if (!compositeCardRef.current) {
-        toast({ title: 'Error generating image', variant: 'destructive' });
-        return null;
-      }
-      try {
-        const dataUrl = await toPng(compositeCardRef.current, { quality: 0.95, pixelRatio: 2 });
-        return dataUrl;
-      } catch (err) {
-        console.error("Image generation failed:", err);
-        toast({ title: 'Image generation failed', variant: 'destructive' });
-        return null;
-      }
-    };
-    
-    const handleShareClick = async () => {
+    const generateAndShare = async () => {
         setIsSharing(true);
-        const imageUrl = await generateCompositeImage();
-        if (imageUrl) {
-            setShareableCompositeImage(imageUrl);
-        } else {
+        setShareableCompositeImage(null);
+
+        const benefitImageUrls = benefits.map(b => b.imageUrl);
+
+        try {
+            const result = await fetchPromoImage({
+                artistName: 'New Artists', // Generic for this page
+                artistServices: ['Mehndi', 'Makeup', 'Photography'],
+                artistRating: 5.0,
+                baseCharge: 0,
+                workImageUrls: benefitImageUrls,
+            });
+
+            if (result?.imageUrl) {
+                setShareableCompositeImage(result.imageUrl);
+            } else {
+                throw new Error('Image generation failed to return a URL.');
+            }
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'An error occurred',
+                description: 'Could not generate the promotional image. Please try again.',
+                variant: 'destructive',
+            });
             setIsSharing(false);
         }
     };
-
+    
     const handleDownload = () => {
         if (!shareableCompositeImage) return;
         const link = document.createElement('a');
@@ -213,9 +218,9 @@ export default function ArtistHomePage() {
                         </div>
                     </div>
                      <div className="container px-4 md:px-6 mt-12 text-center">
-                        <Button size="lg" onClick={handleShareClick} disabled={isSharing || isLoading}>
-                            {isSharing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Share2 className="mr-2 h-5 w-5" />}
-                            {isSharing ? 'Generating...' : 'Share The Benefits'}
+                        <Button size="lg" onClick={generateAndShare} disabled={isSharing || isLoading}>
+                            {isSharing && !shareableCompositeImage ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Share2 className="mr-2 h-5 w-5" />}
+                            {isSharing && !shareableCompositeImage ? 'Generating...' : 'Share The Benefits'}
                         </Button>
                     </div>
                 </section>
@@ -242,31 +247,6 @@ export default function ArtistHomePage() {
                 </section>
             </main>
             
-            {/* Hidden div for html-to-image to generate the composite image */}
-             <div className="absolute -left-[9999px] top-0">
-                <div ref={compositeCardRef} style={{ width: 1200, height: 600, display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, hsl(39, 10%, 98%), hsl(39, 10%, 95%))' }}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px' }}>
-                        <h1 className="font-headline" style={{ fontSize: '48px' }}>
-                           <span style={{ color: 'hsl(35 80% 55%)' }}>Utsav</span><span style={{ color: 'hsl(25 80% 40%)' }}>Look</span>
-                       </h1>
-                        <h2 style={{ fontFamily: 'var(--font-roboto)', fontSize: '32px', color: 'hsl(25 80% 40%)', fontWeight: 500 }}>Why Artists Love Us</h2>
-                    </div>
-                     <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px', padding: '0 20px 20px 20px' }}>
-                        {benefits.map((benefit, index) => (
-                             <div key={benefit.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-                                <img src={benefit.imageUrl} alt={benefit.title} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%)' }}/>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px' }}>
-                                    <p style={{ color: 'white', fontFamily: 'var(--font-roboto)', fontSize: '18px', fontWeight: 'bold', lineHeight: 1.2, textShadow: '1px 1px 4px rgba(0,0,0,0.8)', margin: 0 }}>
-                                        {benefit.title}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-            
              {/* Share Dialog */}
             <Dialog open={!!shareableCompositeImage} onOpenChange={handleCloseDialog}>
                 <DialogContent>
@@ -275,7 +255,7 @@ export default function ArtistHomePage() {
                         <DialogDescription>Your all-in-one graphic is ready. Share it to your favorite platforms or download it.</DialogDescription>
                     </DialogHeader>
                     {shareableCompositeImage && (
-                        <Image src={shareableCompositeImage} alt="UtsavLook Artist Benefits" width={1200} height={600} className="rounded-lg border"/>
+                        <Image src={shareableCompositeImage} alt="UtsavLook Artist Benefits" width={1080} height={1080} className="rounded-lg border w-full"/>
                     )}
                     <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
                          <Button onClick={handleActualShare} className="w-full">

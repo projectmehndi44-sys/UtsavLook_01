@@ -18,7 +18,7 @@ const PromoImageInputSchema = z.object({
   workImageUrls: z
     .array(z.string().url())
     .min(1)
-    .max(4)
+    .max(6)
     .describe("An array of public URLs for the artist's best work images. The AI will create a collage from these."),
 });
 export type PromoImageInput = z.infer<typeof PromoImageInputSchema>;
@@ -41,7 +41,7 @@ const generatePromoImagePrompt = ai.definePrompt({
     responseModalities: ['TEXT', 'IMAGE'],
   },
   prompt: `
-    You are a professional graphic designer tasked with creating a stunning, modern, and elegant promotional image for an artist for the "UtsavLook" brand.
+    You are a professional graphic designer tasked with creating a stunning, modern, and elegant promotional image for an artist or for the "UtsavLook" brand itself.
 
     **Brand Guidelines:**
     - Logo/Brand Name: "UtsavLook"
@@ -53,9 +53,9 @@ const generatePromoImagePrompt = ai.definePrompt({
 
     **Instructions:**
     1.  **Create a 1080x1080 square graphic.**
-    2.  **Header:** Place the "UtsavLook" brand name in the top-left corner, styled according to the brand guidelines. In the top-right, display the artist's rating with a star icon.
-    3.  **Image Collage:** Create an elegant collage using the provided images: {{{workImageUrls}}}. Do not just place them in a simple grid; arrange them artistically.
-    4.  **Footer/Artist Info:** Prominently display the artist's name, their services (e.g., "Mehndi • Makeup Artist"), and their starting price (e.g., "Starts from ₹{{baseCharge}}").
+    2.  **Header:** Place the "UtsavLook" brand name in the top-left corner, styled according to the brand guidelines.
+    3.  **Image Collage:** Create an elegant and artistic collage using the provided images. Do not just place them in a simple grid; arrange them artistically with varying sizes and overlaps.
+    4.  **Footer/Artist Info:** If the artist name is not 'New Artists', prominently display the artist's name, their services (e.g., "Mehndi • Makeup Artist"), and their starting price (e.g., "Starts from ₹{{baseCharge}}"). If the artist name is 'New Artists', display a generic call to action like "Join Our Platform & Grow Your Business". In the top-right corner, display the artist's rating with a star icon.
     5.  **Enhance with Graphics:** Add subtle, elegant design elements that reflect an Indian wedding aesthetic. This could include soft gradients, abstract lines, or minimalist floral/paisley motifs. The final design should look premium and professionally made.
     6.  **Output:** Return ONLY the final, enhanced image. Do not return any text.
 
