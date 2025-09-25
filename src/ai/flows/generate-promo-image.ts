@@ -15,11 +15,16 @@ const PromoImageInputSchema = z.object({
   artistServices: z.array(z.string()).describe("The services the artist provides (e.g., 'mehndi', 'makeup')."),
   artistRating: z.number().describe("The artist's average rating."),
   baseCharge: z.number().describe("The artist's starting price for services."),
-  workImageUrls: z
-    .array(z.string().url())
+  workImages: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        contentType: z.string(),
+      })
+    )
     .min(1)
     .max(6)
-    .describe("An array of public URLs for the artist's best work images. The AI will create a collage from these."),
+    .describe("An array of objects containing public URLs and content types for the artist's best work images."),
 });
 export type PromoImageInput = z.infer<typeof PromoImageInputSchema>;
 
@@ -65,8 +70,8 @@ const generatePromoImagePrompt = ai.definePrompt({
     - Rating: {{artistRating}}
     - Starting Price: {{baseCharge}}
     - Work Images:
-      {{#each workImageUrls}}
-        - {{media url=this}}
+      {{#each workImages}}
+        - {{media url=this.url contentType=this.contentType}}
       {{/each}}
   `,
 });
