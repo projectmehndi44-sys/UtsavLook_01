@@ -93,5 +93,3 @@ export function PhotographyIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-
-    

@@ -349,10 +349,3 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     const config = await getConfigDocument<any>('masterServices');
     return config || [];
 };
-
-    
-
-    
-
-
-    
