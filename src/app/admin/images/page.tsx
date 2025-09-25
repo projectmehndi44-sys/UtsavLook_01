@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift, Megaphone } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift, Megaphone, Loader2 } from 'lucide-react';
 import NextImage from 'next/image';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { ImagePlaceholder, BenefitImage } from '@/lib/types';
-import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage } from '@/lib/services';
+import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage, uploadSiteImage } from '@/lib/services';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -55,6 +55,7 @@ export default function ImageManagementPage() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
     const [isLoading, setIsLoading] = React.useState(true);
+    const [isUploading, setIsUploading] = React.useState<Record<string, boolean>>({});
     const [imageToDelete, setImageToDelete] = React.useState<number | null>(null);
     const [promoImage, setPromoImage] = React.useState<string | null>(null);
     const [isSavingPromo, setIsSavingPromo] = React.useState(false);
@@ -113,42 +114,47 @@ export default function ImageManagementPage() {
             toast({ title: 'Error Saving Images', description: 'Could not update the benefit images.', variant: 'destructive' });
         }
     };
+
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, uploadPath: string, onUploadComplete: (url: string) => void) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const uploadKey = `${uploadPath}-${file.name}`;
+        setIsUploading(prev => ({...prev, [uploadKey]: true}));
+        try {
+            const downloadURL = await uploadSiteImage(file, uploadPath);
+            onUploadComplete(downloadURL);
+            toast({ title: "Upload successful!", description: "Image has been uploaded." });
+        } catch (error) {
+            console.error("Upload failed", error);
+            toast({ title: "Upload failed", description: "Could not upload the image.", variant: "destructive" });
+        } finally {
+            setIsUploading(prev => ({...prev, [uploadKey]: false}));
+        }
+    };
     
     const handleBenefitImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const newUrl = URL.createObjectURL(file);
-            benefitsForm.setValue(`benefitImages.${index}.imageUrl`, newUrl, { shouldDirty: true });
-        }
+        handleImageUpload(event, 'site-images/benefits', (url) => {
+            benefitsForm.setValue(`benefitImages.${index}.imageUrl`, url, { shouldDirty: true });
+        });
     };
 
     const handlePlaceholderImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            // This is a temporary local URL for preview.
-            // On save, you should upload to a persistent storage (e.g., Firebase Storage)
-            // and save that URL. For this example, we'll just update the form state with the local URL.
-            const newUrl = URL.createObjectURL(file);
-            placeholderForm.setValue(`images.${index}.imageUrl`, newUrl, { shouldDirty: true });
-        }
+         handleImageUpload(event, 'site-images/placeholders', (url) => {
+            placeholderForm.setValue(`images.${index}.imageUrl`, url, { shouldDirty: true });
+        });
     };
     
     const handlePromoImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            // This is a temporary local URL for preview.
-            // On save, you should upload to a persistent storage (e.g., Firebase Storage)
-            // and save that URL. For this example, we'll work with the local URL.
-             setPromoImage(URL.createObjectURL(file));
-        }
+        handleImageUpload(event, 'site-images/promo', (url) => {
+            setPromoImage(url);
+        });
     };
 
     const handleSavePromoImage = async () => {
         if (!promoImage) return;
         setIsSavingPromo(true);
         try {
-            // In a real app, upload the `promoImage` file if it's a local object URL,
-            // get the permanent URL, then save it.
             await savePromotionalImage({ imageUrl: promoImage });
             toast({ title: 'Promotional Image Saved', description: 'The main artist benefits promo image has been updated.' });
         } catch (error) {
@@ -198,7 +204,7 @@ export default function ImageManagementPage() {
                             )}
                         </div>
                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 text-center hover:border-accent flex flex-col items-center justify-center">
-                            <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                            {isUploading['site-images/promo'] ? <Loader2 className="h-12 w-12 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-12 w-12 text-muted-foreground" /> }
                             <p className="mt-4 text-sm text-muted-foreground">Click to upload or drag & drop</p>
                              <p className="text-xs text-muted-foreground">Recommended size: 1080x1080px</p>
                             <Input 
@@ -207,6 +213,7 @@ export default function ImageManagementPage() {
                                 className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
                                 accept="image/*" 
                                 onChange={handlePromoImageUpload}
+                                disabled={isUploading['site-images/promo']}
                             />
                         </div>
                     </div>
@@ -235,7 +242,7 @@ export default function ImageManagementPage() {
                                     <div className="md:col-span-1 space-y-2">
                                         <NextImage src={benefitsForm.watch(`benefitImages.${index}.imageUrl`)} alt={field.id} width={300} height={225} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent">
-                                            <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                                            {isUploading[`site-images/benefits-${field.id}`] ? <Loader2 className="h-8 w-8 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-8 w-8 text-muted-foreground" />}
                                             <p className="mt-2 text-xs text-muted-foreground">Click to upload new image</p>
                                             <Input 
                                                 id={`image-upload-${index}`} 
@@ -243,6 +250,7 @@ export default function ImageManagementPage() {
                                                 className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
                                                 accept="image/*" 
                                                 onChange={(e) => handleBenefitImageUpload(e, index)} 
+                                                disabled={isUploading[`site-images/benefits-${field.id}`]}
                                             />
                                         </div>
                                     </div>
@@ -284,7 +292,7 @@ export default function ImageManagementPage() {
                                     <div className="md:col-span-1 space-y-2">
                                         <NextImage src={placeholderForm.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-2 text-center hover:border-accent">
-                                            <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
+                                            {isUploading[`site-images/placeholders-${field.id}`] ? <Loader2 className="h-6 w-6 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-6 w-6 text-muted-foreground" />}
                                              <p className="mt-1 text-xs text-muted-foreground">Click to upload</p>
                                             <Input 
                                                 id={`placeholder-upload-${index}`} 
@@ -292,6 +300,7 @@ export default function ImageManagementPage() {
                                                 className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
                                                 accept="image/*" 
                                                 onChange={(e) => handlePlaceholderImageUpload(e, index)} 
+                                                disabled={isUploading[`site-images/placeholders-${field.id}`]}
                                             />
                                         </div>
                                     </div>

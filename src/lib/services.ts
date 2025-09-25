@@ -1,8 +1,26 @@
 
+
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirebaseApp } from './firebase';
+
+// New function to upload images to Firebase Storage
+export const uploadSiteImage = async (file: File, path: string): Promise<string> => {
+    const app = getFirebaseApp();
+    const storage = getStorage(app);
+    const storageRef = ref(storage, `${path}/${file.name}-${Date.now()}`);
+    
+    // Upload the file
+    const snapshot = await uploadBytes(storageRef, file);
+    
+    // Get the permanent download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    return downloadURL;
+};
 
 
 // Generic function to get a single document
