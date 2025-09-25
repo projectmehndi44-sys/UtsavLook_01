@@ -76,7 +76,7 @@ const signOutUser = () => {
     return signOut(auth);
 }
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp };
+export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore };
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;

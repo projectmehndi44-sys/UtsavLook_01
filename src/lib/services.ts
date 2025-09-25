@@ -367,4 +367,4 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     return config || [];
 };
 
-    
+export { getDb };
