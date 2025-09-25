@@ -40,34 +40,23 @@ export type PromoImageOutput = z.infer<typeof PromoImageOutputSchema>;
 const generatePromoImagePrompt = ai.definePrompt({
   name: 'generatePromoImagePrompt',
   input: { schema: PromoImageInputSchema },
-  output: { schema: PromoImageOutputSchema },
+  output: { schema: PromoImage_Background_OutputSchema },
   model: 'googleai/gemini-2.5-flash-image-preview',
   config: {
     responseModalities: ['TEXT', 'IMAGE'],
   },
   prompt: `
-    You are a professional graphic designer creating a 1080x1080 promotional image for the "UtsavLook" brand.
+    You are a professional graphic designer. Your task is to create a single, elegant, 1080x1080 background image.
 
-    **Brand Guidelines:**
-    - Brand Name: "UtsavLook"
-    - Colors: Use Rich Henna (#8B4513) for main text, Golden Bronze (#CD7F32) for accents, and Soft Sand (#F5F5DC) for the background.
-    - Fonts: Use an elegant serif for titles and a clean sans-serif for body text.
+    This background will be used for a promotional graphic for the "UtsavLook" brand, which specializes in festive and wedding services like mehndi and makeup.
 
     **Instructions:**
-    1.  Create an artistic collage of the provided work images. Avoid a simple grid.
-    2.  Place the "UtsavLook" brand name in the top-left corner.
-    3.  If artist name is not 'New Artists', display the artist's name, services (e.g., "Mehndi • Makeup Artist"), and starting price ("Starts from ₹{{baseCharge}}").
-    4.  If artist name is 'New Artists', display a call to action: "Join Our Platform & Grow Your Business".
-    5.  Display the artist's rating with a star icon in the top-right corner.
-    6.  The overall design must be modern, elegant, and premium.
-    7.  Output ONLY the final image.
+    1.  Create an artistic and beautiful collage using the provided work images.
+    2.  The collage should be aesthetically pleasing, suitable for a premium brand. Avoid a simple grid layout; think more creative and overlapping.
+    3.  The final output must be a 1080x1080 image.
+    4.  Do NOT add any text, logos, or other graphic elements. Your only job is to create the background collage from the images.
 
-    **Artist Details:**
-    - Name: {{{artistName}}}
-    - Services: {{{artistServices}}}
-    - Rating: {{artistRating}}
-    - Starting Price: {{baseCharge}}
-    - Work Images:
+    **Work Images to use:**
       {{#each workImages}}
         - {{media url=this.url contentType=this.contentType}}
       {{/each}}

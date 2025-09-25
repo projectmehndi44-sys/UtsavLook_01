@@ -6,13 +6,14 @@ import { useArtistPortal } from '../layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, Download, Copy, Share2, Palette, Star, IndianRupee, Image as ImageIcon, Upload } from 'lucide-react';
+import { Loader2, Sparkles, Download, Copy, Share2, Upload } from 'lucide-react';
 import NextImage from 'next/image';
 import { fetchPromoImage } from '@/app/actions';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { PromoImageTemplate, type PromoImageTemplateProps } from '@/components/utsavlook/PromoImageTemplate';
+import { toPng } from 'html-to-image';
+
 
 type ImageObject = {
   url: string;
@@ -35,8 +36,11 @@ export default function PromotePage() {
   const { toast } = useToast();
 
   const [selectedImages, setSelectedImages] = React.useState<ImageObject[]>([]);
-  const [generatedImage, setGeneratedImage] = React.useState<string | null>(null);
+  const [generatedBackground, setGeneratedBackground] = React.useState<string | null>(null);
+  const [finalImage, setFinalImage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const finalImageRef = React.useRef<HTMLDivElement>(null);
+
 
   const handleImageSelection = (imageUrl: string) => {
     setSelectedImages((prev) => {
@@ -86,12 +90,14 @@ export default function PromotePage() {
     }
 
     setIsLoading(true);
-    setGeneratedImage(null);
+    setGeneratedBackground(null);
+    setFinalImage(null);
 
     const primaryService = artist.services[0];
     const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
 
     try {
+      // 1. Fetch the background collage from the AI
       const imageInputs = selectedImages.map(img => ({
         url: img.url,
         contentType: img.type === 'local' ? img.url.substring(img.url.indexOf(':') + 1, img.url.indexOf(';')) : 'image/jpeg',
@@ -106,13 +112,13 @@ export default function PromotePage() {
       });
 
       if (result?.imageUrl) {
-        setGeneratedImage(result.imageUrl);
+        setGeneratedBackground(result.imageUrl);
         toast({
-          title: 'Your promo image is ready!',
-          description: 'You can now download or share it.',
+          title: 'Background generated!',
+          description: 'Now composing your final promo image...',
         });
       } else {
-        throw new Error('Image generation failed to return a URL.');
+        throw new Error('AI failed to return a background image.');
       }
     } catch (error) {
       console.error(error);
@@ -121,10 +127,30 @@ export default function PromotePage() {
         description: 'Could not generate the promotional image. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setIsLoading(false);
     }
   };
+
+   // Effect to render final image once background is ready
+  React.useEffect(() => {
+    if (generatedBackground && finalImageRef.current) {
+      toPng(finalImageRef.current, { cacheBust: true, pixelRatio: 2 })
+        .then((dataUrl) => {
+          setFinalImage(dataUrl);
+          setIsLoading(false);
+           toast({
+            title: 'Your promo image is ready!',
+            description: 'You can now download or share it.',
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+          toast({ title: 'Error', description: 'Could not render final image.', variant: 'destructive'});
+          setIsLoading(false);
+        });
+    }
+  }, [generatedBackground, toast]);
+
 
   const shareText = React.useMemo(() => {
     if (!artist) return '';
@@ -133,18 +159,18 @@ export default function PromotePage() {
 
   
   const handleDownload = () => {
-      if (!generatedImage) return;
+      if (!finalImage) return;
       const link = document.createElement('a');
       link.download = `utsavlook-promo-${artist?.name.replace(/\s+/g, '-')}.png`;
-      link.href = generatedImage;
+      link.href = finalImage;
       link.click();
   }
 
   const handleShare = async () => {
-     if (!generatedImage) return;
+     if (!finalImage) return;
     
      try {
-        const response = await fetch(generatedImage);
+        const response = await fetch(finalImage);
         const blob = await response.blob();
         const file = new File([blob], `utsavlook-promo.png`, { type: 'image/png' });
         
@@ -155,7 +181,6 @@ export default function PromotePage() {
                 text: shareText,
             });
         } else {
-            // Fallback for browsers that don't support sharing files (e.g., desktop)
             handleDownload();
             navigator.clipboard.writeText(shareText);
             toast({
@@ -181,12 +206,29 @@ export default function PromotePage() {
     return <p>Loading...</p>;
   }
 
+  const primaryService = artist.services[0];
+  const templateProps: PromoImageTemplateProps = {
+    backgroundImageUrl: generatedBackground,
+    artistName: artist.name,
+    artistServices: artist.services.join(' • '),
+    artistRating: artist.rating,
+    baseCharge: artist.charges?.[primaryService] || artist.charge || 0,
+  };
+
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Hidden div for rendering */}
+       {generatedBackground && (
+          <div ref={finalImageRef} className="fixed -left-[9999px] top-0">
+             <PromoImageTemplate {...templateProps} />
+          </div>
+        )}
+        
       <div className="lg:col-span-1 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ImageIcon /> Select Your Best Work</CardTitle>
+            <CardTitle className="flex items-center gap-2">1. Select Your Best Work</CardTitle>
             <CardDescription>Choose 1 to 4 images from your gallery or upload new ones.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -245,7 +287,7 @@ export default function PromotePage() {
       <div className="lg:col-span-2 space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Palette/> AI Generated Promotion</CardTitle>
+                <CardTitle className="flex items-center gap-2">2. Share Your Promo</CardTitle>
                 <CardDescription>Here is your personalized, AI-enhanced promotional image. Download it or share it directly to social media.</CardDescription>
             </CardHeader>
           <CardContent>
@@ -254,18 +296,18 @@ export default function PromotePage() {
                 <Loader2 className="w-12 h-12 text-primary animate-spin" />
                 <p className="mt-4 text-muted-foreground">Our AI is designing your graphic...</p>
               </div>
-            ) : generatedImage ? (
-              <NextImage src={generatedImage} alt="Generated promo" width={1080} height={1080} className="rounded-lg w-full" />
+            ) : finalImage ? (
+              <NextImage src={finalImage} alt="Generated promo" width={1080} height={1080} className="rounded-lg w-full" />
             ) : (
                 <div className="aspect-square w-full flex flex-col items-center justify-center bg-muted rounded-lg">
                     <p className="text-muted-foreground">Your generated image will appear here.</p>
                 </div>
             )}
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                <Button onClick={handleShare} disabled={!generatedImage} className="sm:col-span-2 w-full">
+                <Button onClick={handleShare} disabled={!finalImage} className="sm:col-span-2 w-full">
                     <Share2 className="mr-2"/> Share Now
                 </Button>
-                <Button onClick={handleDownload} disabled={!generatedImage} variant="outline">
+                <Button onClick={handleDownload} disabled={!finalImage} variant="outline">
                     <Download className="mr-2"/> Download
                 </Button>
             </div>
