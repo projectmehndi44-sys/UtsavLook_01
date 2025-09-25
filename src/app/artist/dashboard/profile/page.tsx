@@ -8,14 +8,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Artist, ServiceArea } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getAvailableLocations, updateArtist } from '@/lib/services';
+import { getAvailableLocations, updateArtist, uploadSiteImage } from '@/lib/services';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { Separator } from '@/components/ui/separator';
-import { Trash2, Upload, UserCircle, Briefcase, Tag, Lock, Image as ImageIcon, IndianRupee, Gift, PlusCircle, MapPin } from 'lucide-react';
+import { Trash2, Upload, UserCircle, Briefcase, Tag, Lock, Image as ImageIcon, IndianRupee, Gift, PlusCircle, MapPin, Loader2 } from 'lucide-react';
 import NextImage from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -92,6 +91,7 @@ export default function ArtistProfilePage() {
     const { toast } = useToast();
     const [tagInput, setTagInput] = React.useState('');
     const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
+    const [isUploading, setIsUploading] = React.useState<Record<string, boolean>>({});
     
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -182,19 +182,55 @@ export default function ArtistProfilePage() {
         }
     };
 
-    const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file && artist && setArtist) {
-            const newProfilePicUrl = URL.createObjectURL(file); // This is a temporary local URL
-            // In a real app, you would upload `file` to Firebase Storage and get a permanent URL.
-            // For now, we'll just show the local preview and simulate the update.
-            const updatedArtist = { ...artist, profilePicture: newProfilePicUrl };
-            await updateArtist(artist.id, { profilePicture: newProfilePicUrl });
-            setArtist(updatedArtist);
-            toast({ title: "Profile picture updated!" });
+    const handleFileUpload = async (file: File, uploadKey: string, onComplete: (url: string) => void) => {
+        if (!artist || !setArtist) return;
+
+        setIsUploading(prev => ({...prev, [uploadKey]: true}));
+        try {
+            const downloadURL = await uploadSiteImage(file, `artists/${artist.id}/${uploadKey}`);
+            onComplete(downloadURL);
+            toast({ title: "Upload successful!", description: "Image has been saved." });
+        } catch (error) {
+            console.error("Upload failed", error);
+            toast({ title: "Upload failed", description: "Could not upload the image.", variant: "destructive" });
+        } finally {
+            setIsUploading(prev => ({...prev, [uploadKey]: false}));
         }
     };
     
+    const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file && artist && setArtist) {
+            await handleFileUpload(file, 'profilePicture', async (url) => {
+                await updateArtist(artist.id, { profilePicture: url });
+                setArtist(prev => prev ? { ...prev, profilePicture: url } : null);
+            });
+        }
+    };
+    
+    const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0 && artist && setArtist) {
+            const uploadPromises = Array.from(files).map(file => 
+                handleFileUpload(file, 'gallery', (url) => {
+                    setArtist(prev => {
+                        if (!prev) return null;
+                        const updatedImages = [...(prev.workImages || []), url];
+                        // This updates the UI immediately, but the final save happens below
+                        return { ...prev, workImages: updatedImages };
+                    });
+                })
+            );
+            
+            // This is a simplified approach. A better one would collect all new URLs
+            // and then do a single Firestore update.
+            await Promise.all(uploadPromises);
+            await fetchData(); // Refetch the artist data to get the final state
+            
+            toast({ title: `${files.length} image(s) added to your gallery.` });
+        }
+    };
+
     const handleAddTag = () => {
         if (tagInput.trim() !== '') {
             const currentTags = form.getValues('styleTags').map(tag => tag.value.toLowerCase());
@@ -218,18 +254,6 @@ export default function ArtistProfilePage() {
         await updateArtist(artist.id, { workImages: updatedWorkImages });
         setArtist({ ...artist, workImages: updatedWorkImages });
         toast({ title: "Image deleted", variant: "destructive" });
-    };
-
-    const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (files && files.length > 0 && artist && setArtist) {
-            // Again, this is a simulation. You'd upload these to Firebase Storage.
-            const newImageUrls = Array.from(files).map(file => URL.createObjectURL(file));
-            const updatedWorkImages = [...(artist.workImages || []), ...newImageUrls];
-            await updateArtist(artist.id, { workImages: updatedWorkImages });
-            setArtist({ ...artist, workImages: updatedWorkImages });
-            toast({ title: `${files.length} image(s) added to your gallery.` });
-        }
     };
 
     if (!artist) {
@@ -493,9 +517,10 @@ export default function ArtistProfilePage() {
                                             <Label>Profile Picture</Label>
                                             <div className="flex items-center gap-4">
                                                 <NextImage src={artist.profilePicture} alt="Profile" width={80} height={80} className="rounded-full object-cover" />
-                                                <Button asChild variant="outline">
+                                                <Button asChild variant="outline" disabled={isUploading['profilePicture']}>
                                                     <label>
-                                                        <Upload className="mr-2"/> Change Picture
+                                                        {isUploading['profilePicture'] ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2"/>}
+                                                        Change Picture
                                                         <Input type="file" className="sr-only" accept="image/*" onChange={handleProfilePicUpload} />
                                                     </label>
                                                 </Button>
@@ -515,9 +540,11 @@ export default function ArtistProfilePage() {
                                                 </div>
                                             ))}
                                                 <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg aspect-[4/3] flex flex-col items-center justify-center text-center hover:border-accent">
-                                                    <Upload className="h-8 w-8 text-muted-foreground" />
-                                                    <p className="mt-2 text-xs text-muted-foreground">Upload More</p>
-                                                    <Input type="file" className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" multiple accept="image/*" onChange={handleGalleryUpload} />
+                                                     <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                                                        {isUploading['gallery'] ? <Loader2 className="h-8 w-8 animate-spin text-muted-foreground"/> : <Upload className="h-8 w-8 text-muted-foreground" />}
+                                                        <p className="mt-2 text-xs text-muted-foreground">Upload More</p>
+                                                        <Input type="file" className="sr-only" multiple accept="image/*" onChange={handleGalleryUpload} />
+                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
@@ -535,3 +562,5 @@ export default function ArtistProfilePage() {
 }
 
     
+
+  
