@@ -121,6 +121,17 @@ export default function ImageManagementPage() {
             benefitsForm.setValue(`benefitImages.${index}.imageUrl`, newUrl, { shouldDirty: true });
         }
     };
+
+    const handlePlaceholderImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // This is a temporary local URL for preview.
+            // On save, you should upload to a persistent storage (e.g., Firebase Storage)
+            // and save that URL. For this example, we'll just update the form state with the local URL.
+            const newUrl = URL.createObjectURL(file);
+            placeholderForm.setValue(`images.${index}.imageUrl`, newUrl, { shouldDirty: true });
+        }
+    };
     
     const handlePromoImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -270,8 +281,19 @@ export default function ImageManagementPage() {
                         <CardContent className="space-y-6">
                             {placeholderFields.map((field, index) => (
                                 <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                    <div className="md:col-span-1">
+                                    <div className="md:col-span-1 space-y-2">
                                         <NextImage src={placeholderForm.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
+                                        <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-2 text-center hover:border-accent">
+                                            <Upload className="mx-auto h-6 w-6 text-muted-foreground" />
+                                             <p className="mt-1 text-xs text-muted-foreground">Click to upload</p>
+                                            <Input 
+                                                id={`placeholder-upload-${index}`} 
+                                                type="file" 
+                                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                                accept="image/*" 
+                                                onChange={(e) => handlePlaceholderImageUpload(e, index)} 
+                                            />
+                                        </div>
                                     </div>
                                     <div className="md:col-span-2 space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
