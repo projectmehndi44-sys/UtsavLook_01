@@ -8,24 +8,41 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, Download, Copy, Share2, Palette, Star, IndianRupee, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Sparkles, Download, Copy, Share2, Palette, Star, IndianRupee, Image as ImageIcon, Upload } from 'lucide-react';
 import NextImage from 'next/image';
 import { fetchPromoImage } from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
+type ImageObject = {
+  url: string;
+  type: 'gallery' | 'local';
+};
+
+// Helper to convert a file to a data URI
+const fileToDataURI = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+
 export default function PromotePage() {
   const { artist } = useArtistPortal();
   const { toast } = useToast();
 
-  const [selectedImages, setSelectedImages] = React.useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = React.useState<ImageObject[]>([]);
   const [generatedImage, setGeneratedImage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleImageSelection = (imageUrl: string) => {
     setSelectedImages((prev) => {
-      if (prev.includes(imageUrl)) {
-        return prev.filter((url) => url !== imageUrl);
+      const existingIndex = prev.findIndex(img => img.url === imageUrl);
+      if (existingIndex > -1) {
+        return prev.filter((_, index) => index !== existingIndex);
       }
       if (prev.length >= 4) {
         toast({
@@ -35,9 +52,29 @@ export default function PromotePage() {
         });
         return prev;
       }
-      return [...prev, imageUrl];
+      return [...prev, { url: imageUrl, type: 'gallery' }];
     });
   };
+
+  const handleLocalImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    if (selectedImages.length + files.length > 4) {
+      toast({
+        title: 'Maximum 4 images allowed',
+        description: `You can only upload ${4 - selectedImages.length} more image(s).`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const dataUris = await Promise.all(Array.from(files).map(fileToDataURI));
+    const newImages: ImageObject[] = dataUris.map(uri => ({ url: uri, type: 'local' }));
+    
+    setSelectedImages(prev => [...prev, ...newImages]);
+  };
+
 
   const generatePromo = async () => {
     if (!artist || selectedImages.length === 0) {
@@ -55,10 +92,9 @@ export default function PromotePage() {
     const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
 
     try {
-      // Map URLs to the object structure required by the AI flow
-      const imageInputs = selectedImages.map(url => ({
-        url,
-        contentType: 'image/jpeg', // Assuming picsum.photos URLs are JPEGs
+      const imageInputs = selectedImages.map(img => ({
+        url: img.url,
+        contentType: img.type === 'local' ? img.url.substring(img.url.indexOf(':') + 1, img.url.indexOf(';')) : 'image/jpeg',
       }));
 
       const result = await fetchPromoImage({
@@ -151,7 +187,7 @@ export default function PromotePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><ImageIcon /> Select Your Best Work</CardTitle>
-            <CardDescription>Choose 1 to 4 images from your gallery to feature in your promotional graphic.</CardDescription>
+            <CardDescription>Choose 1 to 4 images from your gallery or upload new ones.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
@@ -166,17 +202,40 @@ export default function PromotePage() {
                   />
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Checkbox
-                      checked={selectedImages.includes(src)}
+                      checked={selectedImages.some(img => img.url === src)}
                       className="h-6 w-6 border-white bg-white/20 data-[state=checked]:bg-primary"
                     />
                   </div>
-                  {selectedImages.includes(src) && (
+                  {selectedImages.some(img => img.url === src) && (
                      <div className="absolute inset-0 border-4 border-primary rounded-md pointer-events-none"/>
                   )}
                 </div>
               ))}
+               {/* Display locally selected images */}
+              {selectedImages.filter(img => img.type === 'local').map((image, index) => (
+                <div key={`local-${index}`} className="relative cursor-pointer group" onClick={() => handleImageSelection(image.url)}>
+                  <NextImage
+                    src={image.url}
+                    alt={`Local Upload ${index + 1}`}
+                    width={200}
+                    height={150}
+                    className="rounded-md object-cover w-full aspect-[4/3]"
+                  />
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Checkbox checked={true} className="h-6 w-6 border-white bg-white/20 data-[state=checked]:bg-primary" />
+                  </div>
+                  <div className="absolute inset-0 border-4 border-primary rounded-md pointer-events-none"/>
+                </div>
+              ))}
             </div>
-            <Button onClick={generatePromo} disabled={isLoading || selectedImages.length === 0} className="w-full mt-4">
+             <Button asChild variant="outline" className="w-full mt-4">
+                <label>
+                  <Upload className="mr-2 h-4 w-4"/>
+                  Upload from Device
+                  <Input type="file" className="sr-only" multiple accept="image/*" onChange={handleLocalImageUpload} />
+                </label>
+            </Button>
+            <Button onClick={generatePromo} disabled={isLoading || selectedImages.length === 0} className="w-full mt-2">
               {isLoading ? <><Loader2 className="mr-2 animate-spin" /> Generating...</> : <><Sparkles className="mr-2" /> Generate My Promo</>}
             </Button>
           </CardContent>

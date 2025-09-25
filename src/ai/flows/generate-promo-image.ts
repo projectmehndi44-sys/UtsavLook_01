@@ -18,13 +18,13 @@ const PromoImageInputSchema = z.object({
   workImages: z
     .array(
       z.object({
-        url: z.string().url(),
+        url: z.string(), // Can be a public URL or a data URI
         contentType: z.string(),
       })
     )
     .min(1)
     .max(6)
-    .describe("An array of objects containing public URLs and content types for the artist's best work images."),
+    .describe("An array of objects containing public URLs or data URIs for the artist's best work images."),
 });
 export type PromoImageInput = z.infer<typeof PromoImageInputSchema>;
 
@@ -41,7 +41,7 @@ const generatePromoImagePrompt = ai.definePrompt({
   name: 'generatePromoImagePrompt',
   input: { schema: PromoImageInputSchema },
   output: { schema: PromoImageOutputSchema },
-  model: 'googleai/gemini-pro-vision',
+  model: 'googleai/gemini-2.5-flash',
   config: {
     responseModalities: ['TEXT', 'IMAGE'],
   },
