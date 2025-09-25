@@ -32,7 +32,7 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
     <div
       style={{
         width: 1080,
-        height: 1080,
+        height: 1350,
         display: 'flex',
         flexDirection: 'column',
         fontFamily: '"Roboto", sans-serif',

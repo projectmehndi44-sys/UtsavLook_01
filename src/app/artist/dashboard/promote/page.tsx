@@ -256,14 +256,14 @@ export default function PromotePage() {
             </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="aspect-square w-full flex flex-col items-center justify-center bg-muted rounded-lg">
+              <div className="aspect-[4/5] w-full flex flex-col items-center justify-center bg-muted rounded-lg">
                 <Loader2 className="w-12 h-12 text-primary animate-spin" />
                 <p className="mt-4 text-muted-foreground">Rendering your graphic...</p>
               </div>
             ) : finalImage ? (
-              <NextImage src={finalImage} alt="Generated promo" width={1080} height={1080} className="rounded-lg w-full" />
+              <NextImage src={finalImage} alt="Generated promo" width={1080} height={1350} className="rounded-lg w-full" />
             ) : (
-                <div className="aspect-square w-full flex flex-col items-center justify-center bg-muted rounded-lg">
+                <div className="aspect-[4/5] w-full flex flex-col items-center justify-center bg-muted rounded-lg">
                     <p className="text-muted-foreground">Your generated image will appear here.</p>
                 </div>
             )}
