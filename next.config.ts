@@ -5,6 +5,9 @@ import withPWA from 'next-pwa';
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
+    allowedDevOrigins: [
+        'https://6000-firebase-studio-1757786878069.cluster-cz5nqyh5nreq6ua6gaqd7okl7o.cloudworkstations.dev',
+    ],
     serverActions: {
       maxDuration: 120, // Increase timeout to 2 minutes for AI operations
       bodySizeLimit: '4mb', // Allow larger image uploads
