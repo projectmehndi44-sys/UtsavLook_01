@@ -9,7 +9,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, Download, Copy, Share2, Upload } from 'lucide-react';
 import NextImage from 'next/image';
-import { fetchPromoImage } from '@/app/actions';
 import { Input } from '@/components/ui/input';
 import { PromoImageTemplate, type PromoImageTemplateProps } from '@/components/utsavlook/PromoImageTemplate';
 import { toPng } from 'html-to-image';
@@ -36,7 +35,6 @@ export default function PromotePage() {
   const { toast } = useToast();
 
   const [selectedImages, setSelectedImages] = React.useState<ImageObject[]>([]);
-  const [generatedBackground, setGeneratedBackground] = React.useState<string | null>(null);
   const [finalImage, setFinalImage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const finalImageRef = React.useRef<HTMLDivElement>(null);
@@ -88,57 +86,20 @@ export default function PromotePage() {
       });
       return;
     }
+    if (!finalImageRef.current) {
+        toast({ title: 'Error', description: 'Template not ready.', variant: 'destructive'});
+        return;
+    }
 
     setIsLoading(true);
-    setGeneratedBackground(null);
     setFinalImage(null);
 
-    const primaryService = artist.services[0];
-    const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
-
-    try {
-      // 1. Fetch the background collage from the AI
-      const imageInputs = selectedImages.map(img => ({
-        url: img.url,
-        contentType: img.type === 'local' ? img.url.substring(img.url.indexOf(':') + 1, img.url.indexOf(';')) : 'image/jpeg',
-      }));
-
-      const result = await fetchPromoImage({
-        artistName: artist.name,
-        artistServices: artist.services,
-        artistRating: artist.rating,
-        baseCharge: baseCharge,
-        workImages: imageInputs,
-      });
-
-      if (result?.imageUrl) {
-        setGeneratedBackground(result.imageUrl);
-        toast({
-          title: 'Background generated!',
-          description: 'Now composing your final promo image...',
-        });
-      } else {
-        throw new Error('AI failed to return a background image.');
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: 'An error occurred',
-        description: 'Could not generate the promotional image. Please try again.',
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-    }
-  };
-
-   // Effect to render final image once background is ready
-  React.useEffect(() => {
-    if (generatedBackground && finalImageRef.current) {
-      toPng(finalImageRef.current, { cacheBust: true, pixelRatio: 2 })
+    // The entire generation logic is now on the client
+    setTimeout(() => {
+        toPng(finalImageRef.current!, { cacheBust: true, pixelRatio: 2 })
         .then((dataUrl) => {
           setFinalImage(dataUrl);
-          setIsLoading(false);
-           toast({
+          toast({
             title: 'Your promo image is ready!',
             description: 'You can now download or share it.',
           });
@@ -146,10 +107,12 @@ export default function PromotePage() {
         .catch((err) => {
           console.error(err);
           toast({ title: 'Error', description: 'Could not render final image.', variant: 'destructive'});
-          setIsLoading(false);
+        })
+        .finally(() => {
+            setIsLoading(false);
         });
-    }
-  }, [generatedBackground, toast]);
+    }, 100); // Small timeout to ensure DOM is ready
+  };
 
 
   const shareText = React.useMemo(() => {
@@ -208,7 +171,7 @@ export default function PromotePage() {
 
   const primaryService = artist.services[0];
   const templateProps: PromoImageTemplateProps = {
-    backgroundImageUrl: generatedBackground,
+    workImages: selectedImages.map(img => img.url),
     artistName: artist.name,
     artistServices: artist.services.join(' • '),
     artistRating: artist.rating,
@@ -219,11 +182,11 @@ export default function PromotePage() {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {/* Hidden div for rendering */}
-       {generatedBackground && (
-          <div ref={finalImageRef} className="fixed -left-[9999px] top-0">
-             <PromoImageTemplate {...templateProps} />
+      <div className="fixed -left-[9999px] top-0">
+          <div ref={finalImageRef}>
+            <PromoImageTemplate {...templateProps} />
           </div>
-        )}
+      </div>
         
       <div className="lg:col-span-1 space-y-6">
         <Card>
@@ -288,13 +251,13 @@ export default function PromotePage() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">2. Share Your Promo</CardTitle>
-                <CardDescription>Here is your personalized, AI-enhanced promotional image. Download it or share it directly to social media.</CardDescription>
+                <CardDescription>Here is your personalized promotional image. Download it or share it directly to social media.</CardDescription>
             </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="aspect-square w-full flex flex-col items-center justify-center bg-muted rounded-lg">
                 <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                <p className="mt-4 text-muted-foreground">Our AI is designing your graphic...</p>
+                <p className="mt-4 text-muted-foreground">Rendering your graphic...</p>
               </div>
             ) : finalImage ? (
               <NextImage src={finalImage} alt="Generated promo" width={1080} height={1080} className="rounded-lg w-full" />
