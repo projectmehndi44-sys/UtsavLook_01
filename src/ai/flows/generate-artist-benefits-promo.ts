@@ -42,7 +42,7 @@ const generateArtistBenefitsPromoFlow = ai.defineFlow(
             benefits: z.array(BenefitSchema).describe("An array of benefits for artists, each with a title and description."),
         }) },
         output: { schema: PromoImageOutputSchema },
-        model: 'googleai/gemini-2.5-flash-image-preview',
+        model: 'googleai/gemini-pro-vision',
         config: {
             responseModalities: ['TEXT', 'IMAGE'],
         },
