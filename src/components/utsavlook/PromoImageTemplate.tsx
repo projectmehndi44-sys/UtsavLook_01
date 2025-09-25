@@ -95,18 +95,19 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
         </div>
 
         {/* Bottom Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
            {artistProfilePic && (
               <img
                 src={artistProfilePic}
                 crossOrigin="anonymous"
                 style={{
-                  width: '120px',
-                  height: '120px',
+                  width: '100px',
+                  height: '100px',
                   objectFit: 'cover',
                   borderRadius: '50%',
                   border: '6px solid white',
                   boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                  flexShrink: 0
                 }}
                 alt={artistName}
               />
@@ -114,21 +115,22 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.85)',
             backdropFilter: 'blur(10px)',
-            padding: '24px',
+            padding: '20px',
             borderRadius: '12px',
             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-            border: '1px solid rgba(255,255,255,0.2)'
+            border: '1px solid rgba(255,255,255,0.2)',
+            flexGrow: 1
           }}>
-            <h2 style={{ fontFamily: 'var(--font-dancing-script)', fontSize: '64px', fontWeight: 'bold', margin: 0, lineHeight: 1.1, color: 'hsl(var(--primary))', textShadow: '2px 2px 2px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontFamily: '"Roboto", sans-serif', fontSize: '48px', fontWeight: 'bold', margin: 0, lineHeight: 1.2, color: 'hsl(var(--primary))' }}>
                 {artistName}
             </h2>
-            <p style={{ fontSize: '32px', color: '#CD7F32', margin: '8px 0 0 0', fontWeight: '500' }}>
+            <p style={{ fontSize: '24px', color: '#CD7F32', margin: '4px 0 0 0', fontWeight: '500' }}>
               {artistServices}
             </p>
-             <p style={{ fontSize: '28px', display: 'flex', alignItems: 'center', gap: '8px', margin: '16px 0 0 0' }}>
+             <p style={{ fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0 0 0' }}>
                 Starts from
-                <span style={{ fontWeight: 'bold', fontSize: '36px', display: 'flex', alignItems: 'center'}}>
-                    <IndianRupee style={{ width: '28px', height: '28px' }} />{baseCharge.toLocaleString()}
+                <span style={{ fontWeight: 'bold', fontSize: '28px', display: 'flex', alignItems: 'center'}}>
+                    <IndianRupee style={{ width: '22px', height: '22px' }} />{baseCharge.toLocaleString()}
                 </span>
             </p>
           </div>
