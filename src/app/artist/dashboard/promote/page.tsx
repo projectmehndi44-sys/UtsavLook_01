@@ -176,6 +176,7 @@ export default function PromotePage() {
     artistServices: artist.services.join(' • '),
     artistRating: artist.rating,
     baseCharge: artist.charges?.[primaryService] || artist.charge || 0,
+    artistProfilePic: artist.profilePicture,
   };
 
 

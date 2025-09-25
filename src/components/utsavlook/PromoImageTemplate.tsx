@@ -9,6 +9,7 @@ export interface PromoImageTemplateProps {
   artistServices: string;
   artistRating: number;
   baseCharge: number;
+  artistProfilePic?: string;
 }
 
 export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
@@ -17,6 +18,7 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
   artistServices,
   artistRating,
   baseCharge,
+  artistProfilePic
 }) => {
   // Define positions for a 4-image collage
   const imagePositions = [
@@ -34,10 +36,9 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
         display: 'flex',
         flexDirection: 'column',
         fontFamily: '"Roboto", sans-serif',
-        // Wow background: a subtle radial gradient using brand colors
         background: 'radial-gradient(circle, hsl(40 55% 95% / 0.8) 0%, hsl(25 75% 32% / 0.9) 100%)',
         position: 'relative',
-        color: '#8B4513', // Rich Henna
+        color: '#8B4513',
         overflow: 'hidden',
       }}
     >
@@ -83,8 +84,9 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
       >
         {/* Top Section */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{fontFamily: '"Playfair Display", serif', fontSize: '48px', fontWeight: 'bold', color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
-                UtsavLook
+            <div style={{fontFamily: 'var(--font-playfair-display)', fontSize: '48px', fontWeight: 'bold' }}>
+                <span style={{color: 'hsl(var(--accent))'}}>Utsav</span>
+                <span style={{color: 'hsl(var(--primary))'}}>Look</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(255,255,255,0.8)', padding: '8px 16px', borderRadius: '9999px', border: '1px solid #CD7F32' }}>
                 <Star style={{ width: '28px', height: '28px', color: '#CD7F32', fill: '#CD7F32' }} />
@@ -93,7 +95,22 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
         </div>
 
         {/* Bottom Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
+           {artistProfilePic && (
+              <img
+                src={artistProfilePic}
+                crossOrigin="anonymous"
+                style={{
+                  width: '120px',
+                  height: '120px',
+                  objectFit: 'cover',
+                  borderRadius: '50%',
+                  border: '6px solid white',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                }}
+                alt={artistName}
+              />
+            )}
           <div style={{
             backgroundColor: 'rgba(255, 255, 255, 0.85)',
             backdropFilter: 'blur(10px)',
@@ -102,7 +119,7 @@ export const PromoImageTemplate: React.FC<PromoImageTemplateProps> = ({
             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
             border: '1px solid rgba(255,255,255,0.2)'
           }}>
-            <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: '72px', fontWeight: 'bold', margin: 0, lineHeight: 1.1 }}>
+            <h2 style={{ fontFamily: 'var(--font-dancing-script)', fontSize: '64px', fontWeight: 'bold', margin: 0, lineHeight: 1.1, color: 'hsl(var(--primary))', textShadow: '2px 2px 2px rgba(0,0,0,0.1)' }}>
                 {artistName}
             </h2>
             <p style={{ fontSize: '32px', color: '#CD7F32', margin: '8px 0 0 0', fontWeight: '500' }}>
