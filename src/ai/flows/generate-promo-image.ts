@@ -40,7 +40,7 @@ export type PromoImageOutput = z.infer<typeof PromoImageOutputSchema>;
 const generatePromoImagePrompt = ai.definePrompt({
   name: 'generatePromoImagePrompt',
   input: { schema: PromoImageInputSchema },
-  output: { schema: PromoImage_Background_OutputSchema },
+  output: { schema: PromoImageOutputSchema },
   model: 'googleai/gemini-2.5-flash-image-preview',
   config: {
     responseModalities: ['TEXT', 'IMAGE'],
