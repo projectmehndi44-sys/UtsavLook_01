@@ -204,7 +204,7 @@ export default function ImageManagementPage() {
                         {isSavingPromo ? 'Saving...' : 'Save Promotional Image'}
                     </Button>
                 </CardContent>
-            </Card>>
+            </Card>
             
             {/* New Artist Benefits Image Management */}
              <Form {...benefitsForm}>
@@ -326,3 +326,5 @@ export default function ImageManagementPage() {
         </div>
     );
 }
+
+    

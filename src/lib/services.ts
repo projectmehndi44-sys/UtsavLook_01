@@ -1,5 +1,4 @@
 
-
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
@@ -349,3 +348,5 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
     const config = await getConfigDocument<any>('masterServices');
     return config || [];
 };
+
+    
