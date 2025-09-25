@@ -14,6 +14,7 @@ import type { BenefitImage, Customer } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
     "Set Your Own Price": <IndianRupee className="w-8 h-8 text-primary" />,

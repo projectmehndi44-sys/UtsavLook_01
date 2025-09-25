@@ -12,6 +12,7 @@ import { Loader2, Sparkles, Download, Copy, Share2, Palette, Star, IndianRupee, 
 import NextImage from 'next/image';
 import { fetchPromoImage } from '@/app/actions';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 export default function PromotePage() {
   const { artist } = useArtistPortal();
@@ -54,13 +55,18 @@ export default function PromotePage() {
     const baseCharge = artist.charges?.[primaryService] || artist.charge || 0;
 
     try {
-      // Send the public URLs directly to the server-side AI flow
+      // Map URLs to the object structure required by the AI flow
+      const imageInputs = selectedImages.map(url => ({
+        url,
+        contentType: 'image/jpeg', // Assuming picsum.photos URLs are JPEGs
+      }));
+
       const result = await fetchPromoImage({
         artistName: artist.name,
         artistServices: artist.services,
         artistRating: artist.rating,
         baseCharge: baseCharge,
-        workImageUrls: selectedImages,
+        workImages: imageInputs,
       });
 
       if (result?.imageUrl) {
@@ -214,3 +220,4 @@ export default function PromotePage() {
     </div>
   );
 }
+
