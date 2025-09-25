@@ -52,14 +52,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-const pwaConfig = withPWA({
+const pwaConfig = {
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-})
+};
 
-// Only apply PWA config if not in Turbopack mode
-const finalConfig = process.env.TURBOPACK ? nextConfig : pwaConfig(nextConfig);
+// Correctly merge the PWA config with the main Next.js config
+const finalConfig = withPWA(pwaConfig)(nextConfig);
 
 export default finalConfig;
