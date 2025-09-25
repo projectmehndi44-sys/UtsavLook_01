@@ -43,9 +43,6 @@ const generateArtistBenefitsPromoFlow = ai.defineFlow(
         }) },
         output: { schema: PromoImageOutputSchema },
         model: 'googleai/gemini-pro-vision',
-        config: {
-            responseModalities: ['TEXT', 'IMAGE'],
-        },
         prompt: `
             You are a professional graphic designer tasked with creating a stunning, modern, and elegant promotional image for the "UtsavLook" brand to attract new artists.
 
@@ -67,9 +64,7 @@ const generateArtistBenefitsPromoFlow = ai.defineFlow(
             6.  **Output:** Return ONLY the final, enhanced image as a data URI. Do not return any text.
 
             **Benefits to Include:**
-            {{#each benefits}}
-            - **{{title}}**: {{description}}
-            {{/each}}
+            ${input.benefits.map(b => `- **${b.title}**: ${b.description}`).join('\n')}
         `,
         });
 
