@@ -58,7 +58,10 @@ export default function ArtistHomePage() {
         setIsSharing(true);
         setShareableCompositeImage(null);
 
-        const benefitImageUrls = benefits.map(b => b.imageUrl);
+        const benefitImageInputs = benefits.map(b => ({
+            url: b.imageUrl,
+            contentType: 'image/jpeg', // Assuming jpeg for picsum
+        }));
 
         try {
             const result = await fetchPromoImage({
@@ -66,7 +69,7 @@ export default function ArtistHomePage() {
                 artistServices: ['Mehndi', 'Makeup', 'Photography'],
                 artistRating: 5.0,
                 baseCharge: 0,
-                workImageUrls: benefitImageUrls,
+                workImages: benefitImageInputs,
             });
 
             if (result?.imageUrl) {
