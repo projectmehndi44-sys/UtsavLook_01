@@ -293,20 +293,28 @@ export default function CartPage() {
             return;
         }
 
-        let finalArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
-        let bookingStatus: Booking['status'] = paymentMethod === 'online' ? 'Needs Assignment' : 'Pending Confirmation';
+        // Default flow: Needs admin assignment or phone confirmation
+        let finalArtistIds: string[] = [];
+        let bookingStatus: Booking['status'] = 'Needs Assignment';
 
-        // If an artist referral code was used, override artist and status
+        if (paymentMethod === 'offline') {
+            bookingStatus = 'Pending Confirmation';
+        }
+
+        // If artist was selected manually in cart, send to them for approval
+        const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
+        if (preSelectedArtistIds.length > 0) {
+            finalArtistIds = preSelectedArtistIds;
+            bookingStatus = 'Pending Approval';
+        }
+
+        // If a referral code is used, it OVERRIDES previous selections
         if (appliedCode) {
             const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === appliedCode.toUpperCase());
             if (matchedArtist) {
                 finalArtistIds = [matchedArtist.id];
-                bookingStatus = 'Pending Approval'; // Send directly to artist
+                bookingStatus = 'Pending Approval'; // Send directly to the referred artist
             }
-        }
-         // If artists are pre-selected in cart (not express booking), and no conflicting referral code, send for approval
-        if (finalArtistIds.length > 0 && bookingStatus !== 'Pending Approval') {
-            bookingStatus = 'Pending Approval';
         }
 
         const bookingData: Omit<Booking, 'id'> = {
