@@ -294,7 +294,6 @@ export default function CartPage() {
             return;
         }
 
-        // Default flow: Needs admin assignment or phone confirmation
         let finalArtistIds: string[] = [];
         let bookingStatus: Booking['status'] = 'Needs Assignment';
 
@@ -302,18 +301,18 @@ export default function CartPage() {
             bookingStatus = 'Pending Confirmation';
         }
 
-        // If artist was selected manually in cart, send to them for approval
-        const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
-        
         if (appliedCode) {
             const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === appliedCode.toUpperCase());
             if (matchedArtist) {
                 finalArtistIds = [matchedArtist.id];
-                bookingStatus = 'Pending Approval'; // Send directly to the referred artist
+                bookingStatus = 'Pending Approval';
             }
-        } else if (preSelectedArtistIds.length > 0) {
-            finalArtistIds = preSelectedArtistIds;
-            bookingStatus = 'Pending Approval';
+        } else {
+            const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
+            if (preSelectedArtistIds.length > 0) {
+                finalArtistIds = preSelectedArtistIds;
+                bookingStatus = 'Pending Approval';
+            }
         }
 
         const bookingData: Partial<Booking> = {
@@ -353,7 +352,6 @@ export default function CartPage() {
                 description: "Your booking is being processed. You can view its status in your dashboard.",
             });
             
-            // Clear cart and redirect
             localStorage.removeItem(`cart_${customer.id}`);
             router.push('/account');
 
@@ -375,13 +373,15 @@ export default function CartPage() {
     return (
         <div className="bg-background">
             <div className="container mx-auto px-4 py-12">
-                <div className="flex justify-between items-center mb-4">
+                 <div className="relative mb-4 text-center">
                     <h1 className="font-headline text-6xl md:text-8xl text-primary">
                         My Cart
                     </h1>
-                     <Button asChild variant="outline">
-                        <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
-                    </Button>
+                     <div className="absolute top-0 right-0">
+                        <Button asChild variant="outline">
+                            <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
+                        </Button>
+                    </div>
                 </div>
                 <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
                     Finalize your service selections and provide booking details to confirm your appointments.
