@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -188,7 +189,7 @@ export default function ArtistProfilePage() {
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
             const uploadPath = uploadKey === 'profilePicture' ? `artists/${artist.id}/profile` : `artists/${artist.id}/gallery`;
-            const downloadURL = await uploadSiteImage(file, uploadPath);
+            const downloadURL = await uploadSiteImage(file, uploadPath, true); // Always compress user uploads
             onComplete(downloadURL);
             toast({ title: "Upload successful!", description: "Image has been saved." });
         } catch (error) {
@@ -568,3 +569,4 @@ export default function ArtistProfilePage() {
     
 
   
+

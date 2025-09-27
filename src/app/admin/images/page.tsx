@@ -81,7 +81,7 @@ export default function ImageManagementPage() {
         name: "images"
     });
     
-    const { fields: benefitFields } = useFieldArray({
+    const { fields: benefitFields, replace } = useFieldArray({
         control: benefitsForm.control,
         name: "benefitImages"
     });
@@ -95,11 +95,11 @@ export default function ImageManagementPage() {
             getPromotionalImage()
         ]).then(([placeholderData, benefitData, promoData]) => {
             placeholderForm.reset({ images: placeholderData });
-            benefitsForm.reset({ benefitImages: benefitData });
+            replace(benefitData);
             if (promoData) setPromoImage(promoData.imageUrl);
             setIsLoading(false);
         });
-    }, [placeholderForm, benefitsForm]);
+    }, [placeholderForm, replace]);
 
     const onPlaceholderSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
@@ -121,14 +121,13 @@ export default function ImageManagementPage() {
         }
     };
 
-    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, uploadPath: string, uploadKey: string, onUploadComplete: (url: string) => void) => {
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, uploadPath: string, uploadKey: string, onUploadComplete: (url: string) => void, compress: boolean) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
-            // Admin uploads are not compressed to maintain quality
-            const downloadURL = await uploadSiteImage(file, uploadPath, false);
+            const downloadURL = await uploadSiteImage(file, uploadPath, compress);
             onUploadComplete(downloadURL);
             toast({ title: "Upload successful!", description: "Image has been uploaded." });
         } catch (error) {
@@ -143,21 +142,21 @@ export default function ImageManagementPage() {
         const uploadKey = `benefit-${index}`;
         handleImageUpload(event, 'site-images/benefits', uploadKey, (url) => {
             benefitsForm.setValue(`benefitImages.${index}.imageUrl`, url, { shouldDirty: true });
-        });
+        }, false); // No compression for benefit images
     };
 
     const handlePlaceholderImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
          const uploadKey = `placeholder-${index}`;
          handleImageUpload(event, 'site-images/placeholders', uploadKey, (url) => {
             placeholderForm.setValue(`images.${index}.imageUrl`, url, { shouldDirty: true });
-        });
+        }, true); // Compress placeholder images
     };
     
     const handlePromoImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const uploadKey = 'promo';
         handleImageUpload(event, 'site-images/promo', uploadKey, (url) => {
             setPromoImage(url);
-        });
+        }, false); // No compression for main promo image
     };
 
     const handleSavePromoImage = async () => {
@@ -383,6 +382,7 @@ export default function ImageManagementPage() {
 }
 
     
+
 
 
 
