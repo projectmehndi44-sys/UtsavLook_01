@@ -184,7 +184,7 @@ export default function ArtistProfilePage() {
     };
 
     const handleFileUpload = async (file: File, uploadKey: string, onComplete: (url: string) => void) => {
-        if (!artist || !setArtist) return;
+        if (!artist) return;
 
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
@@ -202,17 +202,17 @@ export default function ArtistProfilePage() {
     
     const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file && artist && setArtist) {
+        if (file && artist) {
             await handleFileUpload(file, 'profilePicture', async (url) => {
                 await updateArtist(artist.id, { profilePicture: url });
-                setArtist(prev => prev ? { ...prev, profilePicture: url } : null);
+                await fetchData(); // Refetch data to ensure UI is in sync
             });
         }
     };
     
     const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        if (!files || files.length === 0 || !artist || !setArtist) return;
+        if (!files || files.length === 0 || !artist) return;
 
         setIsUploading(prev => ({ ...prev, gallery: true }));
         try {
@@ -253,11 +253,11 @@ export default function ArtistProfilePage() {
     };
 
     const handleImageDelete = async (imageSrc: string) => {
-        if (!artist || !artist.workImages || !setArtist) return;
+        if (!artist || !artist.workImages) return;
     
         const updatedWorkImages = artist.workImages.filter(src => src !== imageSrc);
         await updateArtist(artist.id, { workImages: updatedWorkImages });
-        setArtist({ ...artist, workImages: updatedWorkImages });
+        await fetchData(); // Refetch to update UI from source of truth
         toast({ title: "Image deleted", variant: "destructive" });
     };
 
@@ -570,3 +570,6 @@ export default function ArtistProfilePage() {
 
   
 
+
+
+    
