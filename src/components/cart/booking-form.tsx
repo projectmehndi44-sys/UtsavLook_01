@@ -28,7 +28,7 @@ export const bookingFormSchema = z.object({
     locality: z.string().min(1, "Locality/neighborhood is required."),
     address: z.string().min(10, { message: "Please enter a full valid address." }),
     mapLink: z.string().url({ message: "Please enter a valid Google Maps URL."}).optional().or(z.literal('')),
-    contact: z.string().regex(/^\d{10}$/, { message: "Must be a 10-digit phone number." }),
+    contact: z.string().regex(/^(\+91)?\d{10}$/, { message: "Must be a valid 10-digit phone number, optionally with +91." }),
     alternateContact: z.string().optional(),
     travelCharges: z.coerce.number().min(0).optional(),
     guestMehndi: z.object({
