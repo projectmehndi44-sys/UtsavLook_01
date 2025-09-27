@@ -234,10 +234,10 @@ export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDo
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
     const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
-    if (config && config.benefitImages) {
+    if (config && config.benefitImages && config.benefitImages.length > 0) {
         return config.benefitImages;
     }
-    // Return a default structure if it doesn't exist
+    // Return a default structure if it doesn't exist, and save it for future edits.
     const defaultBenefits: BenefitImage[] = [
         { id: 'Set Your Own Price', title: "Set Your Own Price", description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.", imageUrl: 'https://picsum.photos/seed/artist-price/800/600' },
         { id: "'UtsavLook Verified' Badge", title: "'UtsavLook Verified' Badge", description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.", imageUrl: 'https://picsum.photos/seed/artist-verified/800/600' },
@@ -246,7 +246,6 @@ export const getBenefitImages = async (): Promise<BenefitImage[]> => {
         { id: 'Transparent Payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
         { id: '0% Commission Welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
     ];
-    // Optionally save the default structure to Firestore
     await saveBenefitImages(defaultBenefits);
     return defaultBenefits;
 };
