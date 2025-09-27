@@ -58,9 +58,9 @@ export default function ArtistPayoutsPage() {
         setPayouts(pendingPayouts);
         
         const totalPendingGross = pendingPayouts.reduce((sum, b) => {
-            // If offline payment, artist has the cash, so it doesn't contribute to what the platform pays out.
+            const bookingShare = b.amount / (b.artistIds.length || 1);
             if (b.paymentMethod === 'offline') return sum;
-            return sum + b.amount;
+            return sum + bookingShare;
         }, 0);
         
         const taxableAmount = totalPendingGross / 1.18;

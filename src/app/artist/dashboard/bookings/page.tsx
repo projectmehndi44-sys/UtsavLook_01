@@ -42,8 +42,9 @@ function getSafeDate(date: any): Date {
 const BookingDetailsModal = ({ booking, isOpen, onOpenChange, platformFeePercentage }: { booking: Booking | null; isOpen: boolean; onOpenChange: (isOpen: boolean) => void; platformFeePercentage: number; }) => {
     if (!booking) return null;
 
-    const taxableAmount = booking.amount / 1.18;
-    const gstOnService = booking.amount - taxableAmount;
+    const bookingShare = booking.amount / (booking.artistIds.length || 1);
+    const taxableAmount = bookingShare / 1.18;
+    const gstOnService = bookingShare - taxableAmount;
     const platformFee = taxableAmount * platformFeePercentage;
     const netPayout = taxableAmount - platformFee;
     const travelCharges = booking.travelCharges || 0;
@@ -107,7 +108,7 @@ const BookingDetailsModal = ({ booking, isOpen, onOpenChange, platformFeePercent
                             <CardTitle className="text-base flex items-center gap-2"><IndianRupee/> Your Estimated Payout</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
-                            <div className="flex justify-between"><span>Gross Booking Amount</span> <span>₹{booking.amount.toLocaleString()}</span></div>
+                            <div className="flex justify-between"><span>Your Share of Booking</span> <span>₹{bookingShare.toLocaleString()}</span></div>
                             <Separator/>
                             <div className="flex justify-between text-muted-foreground"><span>Less: 18% GST on service</span> <span>- ₹{gstOnService.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
                             <div className="flex justify-between"><strong>Taxable Value</strong> <strong>₹{taxableAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</strong></div>

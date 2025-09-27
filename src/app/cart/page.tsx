@@ -19,10 +19,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { IndianRupee, ShieldCheck } from 'lucide-react';
 
 const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any, onConfirm: (paymentMethod: 'online' | 'offline') => void }) => {
-    const subtotal = items.reduce((sum, item) => sum + item.price, 0);
-    const taxes = subtotal * 0.18;
-    const total = subtotal; // Total is now pre-tax as per new flow
-    const advanceAmount = total * 0.6;
+    const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
+    const taxableAmount = totalAmount / 1.18;
+    const gstAmount = totalAmount - taxableAmount;
+    const advanceAmount = totalAmount * 0.6;
 
 
     return (
@@ -31,9 +31,13 @@ const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any
                 <CardTitle>Booking Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+                <div className="flex justify-between text-muted-foreground">
+                    <span>Taxable Amount (pre-GST)</span>
+                    <span>₹{taxableAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                </div>
                  <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal (incl. 18% GST)</span>
-                    <span>₹{total.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                    <span>GST (18% included)</span>
+                    <span>₹{gstAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                     Note: A travel charge (if applicable) will be communicated by the artist and is payable directly to them at the venue.
@@ -41,14 +45,14 @@ const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any
                  <Separator />
                 <div className="flex justify-between font-bold text-lg text-primary">
                     <span>Total Amount</span>
-                    <span>₹{total.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                    <span>₹{totalAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
                 <Separator/>
                 <div className="space-y-4">
                     <Card className="bg-primary/5 p-4">
                         <h4 className="font-semibold text-primary flex items-center gap-2"><ShieldCheck/> Policies</h4>
-                        <p className="text-xs text-muted-foreground mt-2"><b>Confirmation:</b> Bookings are on a first-come, first-served basis. Pay an advance to confirm your slot instantly.</p>
-                        <p className="text-xs text-muted-foreground mt-1"><b>Refund:</b> Advance payment is only refunded if cancelled 72 hours before the event (cancellation charges apply).</p>
+                        <p className="text-xs text-muted-foreground mt-2"><b>Confirmation:</b> Bookings are accepted on a first-come, first-served basis. Pay an advance to confirm your slot instantly. Unpaid bookings will be confirmed only after a phone consultation.</p>
+                        <p className="text-xs text-muted-foreground mt-1"><b>Refund:</b> Advance payment is only refunded if cancelled 72 hours before the event (cancellation charges apply). This is because dates will be exclusively reserved for you.</p>
                     </Card>
 
                     <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online')}>
@@ -93,7 +97,10 @@ export default function CartPage() {
                 }
             });
         } else {
-            router.push('/');
+            // If user is not logged in but has a temporary item, redirect to login
+            if (localStorage.getItem('tempCartItem')) {
+                router.push('/login');
+            }
         }
         
         getAvailableLocations().then(setAvailableLocations);
