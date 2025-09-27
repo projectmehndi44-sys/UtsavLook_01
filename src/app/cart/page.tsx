@@ -19,6 +19,7 @@ import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const OrderSummary = ({
   items,
