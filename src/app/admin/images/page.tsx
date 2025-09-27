@@ -127,7 +127,8 @@ export default function ImageManagementPage() {
 
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
-            const downloadURL = await uploadSiteImage(file, uploadPath);
+            // Admin uploads are not compressed to maintain quality
+            const downloadURL = await uploadSiteImage(file, uploadPath, false);
             onUploadComplete(downloadURL);
             toast({ title: "Upload successful!", description: "Image has been uploaded." });
         } catch (error) {
@@ -382,6 +383,7 @@ export default function ImageManagementPage() {
 }
 
     
+
 
 
 

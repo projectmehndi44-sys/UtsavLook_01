@@ -9,19 +9,19 @@ import { getFirebaseApp } from './firebase';
 import { compressImage } from './utils';
 
 // New function to upload images to Firebase Storage
-export const uploadSiteImage = async (file: File, path: string): Promise<string> => {
+export const uploadSiteImage = async (file: File, path: string, compress: boolean = true): Promise<string> => {
     const app = getFirebaseApp();
     const storage = getStorage(app);
 
-    // Compress the image before uploading
-    const compressedFile = await compressImage(file);
+    // Conditionally compress the image before uploading
+    const fileToUpload = compress ? await compressImage(file) : file;
     
     // Use a unique name to prevent overwrites
-    const fileName = `${Date.now()}-${compressedFile.name.replace(/\s+/g, '-')}`;
+    const fileName = `${Date.now()}-${fileToUpload.name.replace(/\s+/g, '-')}`;
     const storageRef = ref(storage, `${path}/${fileName}`);
     
-    // Upload the compressed file
-    const snapshot = await uploadBytes(storageRef, compressedFile);
+    // Upload the file
+    const snapshot = await uploadBytes(storageRef, fileToUpload);
     
     // Get the permanent download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
