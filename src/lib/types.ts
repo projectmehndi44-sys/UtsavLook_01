@@ -1,5 +1,4 @@
 
-
 import type { Timestamp } from 'firebase/firestore';
 
 export type ImagePlaceholder = {
@@ -238,9 +237,5 @@ export interface RawArtistRecommendation {
   charge: number;
   reason: string;
 }
-
-    
-
-    
 
     

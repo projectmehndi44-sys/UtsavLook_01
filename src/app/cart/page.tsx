@@ -12,18 +12,90 @@ import { CartItemsList } from "@/components/cart/cart-items-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { CartItem, Customer, Artist } from '@/lib/types';
+import type { CartItem, Customer, Artist, Promotion } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCustomer, createBooking, getAvailableLocations, listenToCollection } from '@/lib/services';
+import { getCustomer, createBooking, getAvailableLocations, listenToCollection, getPromotions } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
-const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any, onConfirm: (paymentMethod: 'online' | 'offline') => void }) => {
-    const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
-    const taxableAmount = totalAmount / 1.18;
-    const gstAmount = totalAmount - taxableAmount;
-    const advanceAmount = totalAmount * 0.6;
+const OrderSummary = ({
+  items,
+  form,
+  onConfirm,
+  artists
+}: {
+  items: CartItem[],
+  form: any,
+  onConfirm: (paymentMethod: 'online' | 'offline', finalAmount: number, appliedCode?: string) => void,
+  artists: Artist[]
+}) => {
+    const [promoCode, setPromoCode] = React.useState('');
+    const [appliedDiscount, setAppliedDiscount] = React.useState<{ type: 'artist' | 'admin', discount: number, code: string, artist?: Artist } | null>(null);
+    const [promoError, setPromoError] = React.useState('');
+    const [adminPromos, setAdminPromos] = React.useState<Promotion[]>([]);
+
+    React.useEffect(() => {
+        getPromotions().then(setAdminPromos);
+    }, []);
+
+    const baseTotalAmount = items.reduce((sum, item) => sum + item.price, 0);
+
+    const handleApplyCode = () => {
+        setPromoError('');
+        if (!promoCode) return;
+
+        const code = promoCode.toUpperCase();
+        
+        // 1. Check for artist referral code
+        const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === code);
+        if (matchedArtist) {
+            setAppliedDiscount({
+                type: 'artist',
+                discount: matchedArtist.referralDiscount || 10,
+                code: matchedArtist.referralCode!,
+                artist: matchedArtist,
+            });
+            // If an artist is chosen via referral, it overrides any previously selected artist.
+            // This is a business logic decision.
+             if(items[0] && items[0].artist?.id !== matchedArtist.id) {
+                items[0].artist = matchedArtist;
+             }
+            return;
+        }
+
+        // 2. Check for admin promotion code
+        const matchedAdminPromo = adminPromos.find(p => p.code.toUpperCase() === code);
+        if (matchedAdminPromo && matchedAdminPromo.isActive) {
+             if (matchedAdminPromo.expiryDate && new Date(matchedAdminPromo.expiryDate) < new Date()) {
+                setPromoError("This promotion has expired.");
+                return;
+            }
+            setAppliedDiscount({
+                type: 'admin',
+                discount: matchedAdminPromo.discount,
+                code: matchedAdminPromo.code
+            });
+            return;
+        }
+
+        setPromoError("Invalid or expired code.");
+    };
+    
+    const handleRemoveCode = () => {
+        setAppliedDiscount(null);
+        setPromoCode('');
+        setPromoError('');
+    }
+
+    const discountedTotal = appliedDiscount 
+        ? baseTotalAmount * (1 - (appliedDiscount.discount / 100))
+        : baseTotalAmount;
+        
+    const taxableAmount = discountedTotal / 1.18;
+    const gstAmount = discountedTotal - taxableAmount;
+    const advanceAmount = discountedTotal * 0.6;
 
 
     return (
@@ -32,18 +104,61 @@ const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any
                 <CardTitle>Booking Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex justify-between text-muted-foreground">
-                    <span>Taxable Amount (pre-GST)</span>
-                    <span>₹{taxableAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
-                </div>
-                 <div className="flex justify-between text-muted-foreground">
-                    <span>GST (18% included)</span>
-                    <span>₹{gstAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                 <div className="space-y-2">
+                    <Label htmlFor="promo-code">Referral / Discount Code</Label>
+                    <div className="flex gap-2">
+                        <Input
+                            id="promo-code"
+                            placeholder="Enter Code"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            disabled={!!appliedDiscount}
+                        />
+                         {appliedDiscount ? (
+                            <Button variant="ghost" size="icon" onClick={handleRemoveCode}>
+                                <X className="h-4 w-4 text-red-500" />
+                            </Button>
+                        ) : (
+                            <Button onClick={handleApplyCode} variant="secondary">Apply</Button>
+                        )}
+                    </div>
+                     {promoError && <p className="text-sm text-destructive">{promoError}</p>}
+                     {appliedDiscount && (
+                        <Alert variant="default" className="bg-green-100 border-green-300 text-green-800 [&>svg]:text-green-800">
+                             <Tag className="h-4 w-4" />
+                            <AlertTitle className="font-semibold">Code Applied!</AlertTitle>
+                            <AlertDescription>
+                                You've saved {appliedDiscount.discount}% with code {appliedDiscount.code}.
+                                {appliedDiscount.type === 'artist' && ` You'll be booked with ${appliedDiscount.artist?.name}.`}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                 </div>
                  <Separator />
+                <div className="flex justify-between text-muted-foreground">
+                    <span>Base Total</span>
+                    <span>₹{baseTotalAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                </div>
+                 {appliedDiscount && (
+                    <div className="flex justify-between text-green-600 font-medium">
+                        <span>Discount ({appliedDiscount.discount}%)</span>
+                        <span>- ₹{(baseTotalAmount - discountedTotal).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                    </div>
+                 )}
+                 <Separator />
                 <div className="flex justify-between font-bold text-lg text-primary">
-                    <span>Total Amount</span>
-                    <span>₹{totalAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                    <span>Final Amount</span>
+                    <span>₹{discountedTotal.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                </div>
+                <div className="text-xs space-y-1 text-muted-foreground">
+                    <div className="flex justify-between">
+                        <span>Taxable Amount (pre-GST)</span>
+                        <span>₹{taxableAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span>GST (18% included)</span>
+                        <span>₹{gstAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                    </div>
                 </div>
                  <Alert className="bg-blue-100 border-blue-300 text-blue-800 [&>svg]:text-blue-800">
                     <Info className="h-4 w-4" />
@@ -69,10 +184,10 @@ const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any
                         </AlertDescription>
                     </Alert>
 
-                    <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online')}>
+                    <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online', discountedTotal, appliedDiscount?.code)}>
                        Pay 60% Advance & Confirm (₹{advanceAmount.toLocaleString(undefined, {maximumFractionDigits: 0})})
                     </Button>
-                    <Button size="lg" variant="outline" className="w-full" onClick={() => onConfirm('offline')}>
+                    <Button size="lg" variant="outline" className="w-full" onClick={() => onConfirm('offline', discountedTotal, appliedDiscount?.code)}>
                        Pay at Venue (Requires Phone Confirmation)
                     </Button>
                 </div>
@@ -97,6 +212,7 @@ export default function CartPage() {
             name: '',
             contact: '',
             eventType: '',
+            eventDate: new Date(),
             serviceDates: [],
             state: '',
             district: '',
@@ -106,6 +222,8 @@ export default function CartPage() {
             alternateContact: '',
             travelCharges: 0,
             notes: '',
+            guestMehndi: { included: false, expectedCount: 0},
+            guestMakeup: { included: false, expectedCount: 0},
         }
     });
 
@@ -152,7 +270,7 @@ export default function CartPage() {
         });
     };
 
-    const handleConfirmAndBook = async (paymentMethod: 'online' | 'offline') => {
+    const handleConfirmAndBook = async (paymentMethod: 'online' | 'offline', finalAmount: number, appliedCode?: string) => {
         const bookingDetails = form.getValues();
         const isValid = await form.trigger();
 
@@ -174,8 +292,22 @@ export default function CartPage() {
             return;
         }
 
-        const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
-        const bookingStatus = paymentMethod === 'online' ? 'Pending Approval' : 'Pending Confirmation';
+        let finalArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
+        let bookingStatus: Booking['status'] = paymentMethod === 'online' ? 'Needs Assignment' : 'Pending Confirmation';
+
+        // If an artist referral code was used, override artist and status
+        if (appliedCode) {
+            const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === appliedCode.toUpperCase());
+            if (matchedArtist) {
+                finalArtistIds = [matchedArtist.id];
+                bookingStatus = 'Pending Approval'; // Send directly to artist
+            }
+        }
+         // If artists are pre-selected in cart (not express booking), and no conflicting referral code, send for approval
+        if (finalArtistIds.length > 0 && bookingStatus !== 'Pending Approval') {
+            bookingStatus = 'Pending Approval';
+        }
+
 
         try {
             await createBooking({
@@ -183,9 +315,9 @@ export default function CartPage() {
                 customerName: bookingDetails.name,
                 customerContact: bookingDetails.contact,
                 alternateContact: bookingDetails.alternateContact,
-                artistIds: Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean))),
+                artistIds: finalArtistIds,
                 items: cartItems,
-                amount: totalAmount,
+                amount: finalAmount,
                 status: bookingStatus,
                 eventType: bookingDetails.eventType,
                 eventDate: Timestamp.fromDate(bookingDetails.eventDate),
@@ -201,6 +333,7 @@ export default function CartPage() {
                 paymentMethod: paymentMethod,
                 paidOut: false,
                 travelCharges: bookingDetails.travelCharges,
+                appliedReferralCode: appliedCode,
             });
 
             toast({
@@ -244,7 +377,7 @@ export default function CartPage() {
                             <BookingForm form={form} availableLocations={availableLocations} showGuestFields={showGuestFields} artists={artists} />
                         </div>
                         <div className="lg:col-span-1">
-                           <OrderSummary items={cartItems} form={form} onConfirm={handleConfirmAndBook} />
+                           <OrderSummary items={cartItems} form={form} onConfirm={handleConfirmAndBook} artists={artists} />
                         </div>
                     </div>
                 ) : (
@@ -262,3 +395,5 @@ export default function CartPage() {
         </div>
     );
 }
+
+    
