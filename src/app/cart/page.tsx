@@ -80,6 +80,20 @@ export default function CartPage() {
 
     const form = useForm<BookingFormValues>({
         resolver: zodResolver(bookingFormSchema),
+        defaultValues: {
+            name: '',
+            contact: '',
+            eventType: '',
+            serviceDates: [],
+            state: '',
+            district: '',
+            locality: '',
+            address: '',
+            mapLink: '',
+            alternateContact: '',
+            travelCharges: 0,
+            notes: '',
+        }
     });
 
     React.useEffect(() => {
@@ -92,9 +106,9 @@ export default function CartPage() {
                     setCartItems(storedCart ? JSON.parse(storedCart) : []);
                     // Pre-fill form with customer data
                     form.reset({
+                        ...form.getValues(),
                         name: customerData.name,
                         contact: customerData.phone,
-                        ...form.getValues(),
                     });
                 }
             });
