@@ -17,9 +17,10 @@ import { useToast } from '@/hooks/use-toast';
 import { getCustomer, createBooking, getAvailableLocations, listenToCollection, getPromotions } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag } from 'lucide-react';
+import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 const OrderSummary = ({
   items,
@@ -303,21 +304,19 @@ export default function CartPage() {
 
         // If artist was selected manually in cart, send to them for approval
         const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
-        if (preSelectedArtistIds.length > 0) {
-            finalArtistIds = preSelectedArtistIds;
-            bookingStatus = 'Pending Approval';
-        }
-
-        // If a referral code is used, it OVERRIDES previous selections
+        
         if (appliedCode) {
             const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === appliedCode.toUpperCase());
             if (matchedArtist) {
                 finalArtistIds = [matchedArtist.id];
                 bookingStatus = 'Pending Approval'; // Send directly to the referred artist
             }
+        } else if (preSelectedArtistIds.length > 0) {
+            finalArtistIds = preSelectedArtistIds;
+            bookingStatus = 'Pending Approval';
         }
 
-        const bookingData: Omit<Booking, 'id'> = {
+        const bookingData: Partial<Booking> = {
             customerId: customer.id,
             customerName: bookingDetails.name,
             customerContact: bookingDetails.contact,
@@ -340,11 +339,14 @@ export default function CartPage() {
             paymentMethod: paymentMethod,
             paidOut: false,
             travelCharges: bookingDetails.travelCharges,
-            ...(appliedCode && { appliedReferralCode: appliedCode }),
         };
 
+        if (appliedCode) {
+            bookingData.appliedReferralCode = appliedCode;
+        }
+
         try {
-            await createBooking(bookingData);
+            await createBooking(bookingData as Omit<Booking, 'id'>);
 
             toast({
                 title: "Booking Request Sent!",
@@ -373,9 +375,14 @@ export default function CartPage() {
     return (
         <div className="bg-background">
             <div className="container mx-auto px-4 py-12">
-                <h1 className="font-headline text-6xl md:text-8xl text-primary mb-4 text-center">
-                    My Cart
-                </h1>
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="font-headline text-6xl md:text-8xl text-primary">
+                        My Cart
+                    </h1>
+                     <Button asChild variant="outline">
+                        <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
+                    </Button>
+                </div>
                 <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
                     Finalize your service selections and provide booking details to confirm your appointments.
                 </p>
