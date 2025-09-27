@@ -121,11 +121,10 @@ export default function ImageManagementPage() {
         }
     };
 
-    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, uploadPath: string, onUploadComplete: (url: string) => void) => {
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, uploadPath: string, uploadKey: string, onUploadComplete: (url: string) => void) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        const uploadKey = `${uploadPath}-${file.name}`;
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
             const downloadURL = await uploadSiteImage(file, uploadPath);
@@ -140,19 +139,22 @@ export default function ImageManagementPage() {
     };
     
     const handleBenefitImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        handleImageUpload(event, 'site-images/benefits', (url) => {
+        const uploadKey = `benefit-${index}`;
+        handleImageUpload(event, 'site-images/benefits', uploadKey, (url) => {
             benefitsForm.setValue(`benefitImages.${index}.imageUrl`, url, { shouldDirty: true });
         });
     };
 
     const handlePlaceholderImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-         handleImageUpload(event, 'site-images/placeholders', (url) => {
+         const uploadKey = `placeholder-${index}`;
+         handleImageUpload(event, 'site-images/placeholders', uploadKey, (url) => {
             placeholderForm.setValue(`images.${index}.imageUrl`, url, { shouldDirty: true });
         });
     };
     
     const handlePromoImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleImageUpload(event, 'site-images/promo', (url) => {
+        const uploadKey = 'promo';
+        handleImageUpload(event, 'site-images/promo', uploadKey, (url) => {
             setPromoImage(url);
         });
     };
@@ -222,7 +224,7 @@ export default function ImageManagementPage() {
                             )}
                         </div>
                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 text-center hover:border-accent flex flex-col items-center justify-center">
-                            {isUploading['site-images/promo'] ? <Loader2 className="h-12 w-12 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-12 w-12 text-muted-foreground" /> }
+                            {isUploading['promo'] ? <Loader2 className="h-12 w-12 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-12 w-12 text-muted-foreground" /> }
                             <p className="mt-4 text-sm text-muted-foreground">Click to upload or drag & drop</p>
                              <p className="text-xs text-muted-foreground">Recommended size: 1080x1080px</p>
                             <Input 
@@ -231,7 +233,7 @@ export default function ImageManagementPage() {
                                 className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
                                 accept="image/*" 
                                 onChange={handlePromoImageUpload}
-                                disabled={isUploading['site-images/promo']}
+                                disabled={isUploading['promo']}
                             />
                         </div>
                     </div>
@@ -260,7 +262,7 @@ export default function ImageManagementPage() {
                                     <div className="md:col-span-1 space-y-2">
                                         <NextImage src={benefitsForm.watch(`benefitImages.${index}.imageUrl`)} alt={field.id} width={300} height={225} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent">
-                                            {isUploading[`site-images/benefits-${field.id}`] ? <Loader2 className="h-8 w-8 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-8 w-8 text-muted-foreground" />}
+                                            {isUploading[`benefit-${index}`] ? <Loader2 className="h-8 w-8 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-8 w-8 text-muted-foreground" />}
                                             <p className="mt-2 text-xs text-muted-foreground">Click to upload new image</p>
                                             <Input 
                                                 id={`image-upload-${index}`} 
@@ -268,7 +270,7 @@ export default function ImageManagementPage() {
                                                 className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
                                                 accept="image/*" 
                                                 onChange={(e) => handleBenefitImageUpload(e, index)} 
-                                                disabled={isUploading[`site-images/benefits-${field.id}`]}
+                                                disabled={isUploading[`benefit-${index}`]}
                                             />
                                         </div>
                                     </div>
@@ -313,7 +315,7 @@ export default function ImageManagementPage() {
                                     <div className="md:col-span-1 space-y-2">
                                         <NextImage src={placeholderForm.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-2 text-center hover:border-accent">
-                                            {isUploading[`site-images/placeholders-${field.id}`] ? <Loader2 className="h-6 w-6 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-6 w-6 text-muted-foreground" />}
+                                            {isUploading[`placeholder-${index}`] ? <Loader2 className="h-6 w-6 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-6 w-6 text-muted-foreground" />}
                                              <p className="mt-1 text-xs text-muted-foreground">Click to upload</p>
                                             <Input 
                                                 id={`placeholder-upload-${index}`} 
@@ -321,7 +323,7 @@ export default function ImageManagementPage() {
                                                 className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
                                                 accept="image/*" 
                                                 onChange={(e) => handlePlaceholderImageUpload(e, index)} 
-                                                disabled={isUploading[`site-images/placeholders-${field.id}`]}
+                                                disabled={isUploading[`placeholder-${index}`]}
                                             />
                                         </div>
                                     </div>
@@ -380,4 +382,5 @@ export default function ImageManagementPage() {
 }
 
     
+
 
