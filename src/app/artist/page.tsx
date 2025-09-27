@@ -186,10 +186,10 @@ export default function ArtistHomePage() {
                                     </div>
                                 ))
                             ) : benefits.map((benefit, index) => (
-                                <div key={index} className={`grid gap-8 md:gap-12 items-center md:grid-cols-2`}>
+                                <div key={benefit.id} className={`grid gap-8 md:gap-12 items-center md:grid-cols-2`}>
                                     <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
                                         <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
-                                           {benefitIcons[benefit.id] || <Sparkles className="w-8 h-8 text-primary" />}
+                                           {benefitIcons[benefit.title] || <Sparkles className="w-8 h-8 text-primary" />}
                                         </div>
                                         <h3 className="text-2xl md:text-3xl font-bold text-primary">{benefit.title}</h3>
                                         <p className="text-muted-foreground text-lg">
