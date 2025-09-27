@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -122,8 +120,13 @@ export default function Home() {
   
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
+        // If user is not logged in, save the item to local storage and redirect
+        localStorage.setItem('tempCartItem', JSON.stringify(item));
         router.push('/login');
-        toast({ title: 'Please Login', description: 'You need to be logged in to add services to your booking.' });
+        toast({ 
+            title: 'Please Login to Continue', 
+            description: 'Your selection will be waiting for you after you log in.' 
+        });
         return;
     }
     const newCartItem: CartItem = { ...item, id: `${item.servicePackage.id}-${Date.now()}` };

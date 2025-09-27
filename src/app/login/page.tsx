@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -19,6 +17,7 @@ import { Loader2, KeyRound, Home } from 'lucide-react';
 import { getCustomer, createCustomer, updateCustomer } from '@/lib/services';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
+import type { CartItem } from '@/lib/types';
 
 const OTPSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
@@ -106,6 +105,29 @@ export default function LoginPage() {
     }, [isOtpSent, timer]);
 
 
+    const processPostLoginActions = (customerId: string) => {
+        const tempCartItemRaw = localStorage.getItem('tempCartItem');
+        if (tempCartItemRaw) {
+            const item: Omit<CartItem, 'id'> = JSON.parse(tempCartItemRaw);
+            const userCartRaw = localStorage.getItem(`cart_${customerId}`) || '[]';
+            const userCart: CartItem[] = JSON.parse(userCartRaw);
+
+            // Add the new item with a unique ID
+            const newCartItem: CartItem = { ...item, id: `${item.servicePackage.id}-${Date.now()}` };
+            const newCart = [...userCart, newCartItem];
+
+            localStorage.setItem(`cart_${customerId}`, JSON.stringify(newCart));
+            localStorage.removeItem('tempCartItem');
+            toast({
+                title: "Item Restored!",
+                description: `${item.servicePackage.name} has been added to your cart.`,
+            });
+            router.push('/cart'); // Redirect to cart to show the restored item
+        } else {
+            router.push('/'); // Default redirect
+        }
+    };
+
     const handleVerifyOtp = async () => {
         setError('');
         if (otp.length !== 6) {
@@ -138,7 +160,7 @@ export default function LoginPage() {
                         title: 'Login Successful!',
                         description: `Welcome back, ${customer.name}!`,
                     });
-                    router.push('/');
+                    processPostLoginActions(customer.id);
                 }
 
             } else {
@@ -169,7 +191,7 @@ export default function LoginPage() {
                 title: 'Registration Successful!',
                 description: `Welcome, ${data.name}!`,
             });
-            router.push('/');
+            processPostLoginActions(newUserId);
         } catch (error) {
             toast({
                 title: 'Registration Failed',
@@ -299,4 +321,3 @@ export default function LoginPage() {
     </>
   );
 }
-
