@@ -255,7 +255,10 @@ export default function ImageManagementPage() {
                                         </div>
                                     </div>
                                     <div className="md:col-span-2 space-y-4">
-                                         <FormField control={benefitsForm.control} name={`benefitImages.${index}.title`} render={({ field }) => (
+                                         <FormField control={benefitsForm.control} name={`benefitImages.${index}.id`} render={({ field }) => (
+                                            <FormItem><FormLabel>Benefit ID</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
+                                        )} />
+                                        <FormField control={benefitsForm.control} name={`benefitImages.${index}.title`} render={({ field }) => (
                                             <FormItem><FormLabel>Benefit Title</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
                                         )} />
                                         <FormField control={benefitsForm.control} name={`benefitImages.${index}.description`} render={({ field }) => (

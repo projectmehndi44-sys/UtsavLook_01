@@ -17,12 +17,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
-    "Set Your Own Price": <IndianRupee className="w-8 h-8 text-primary" />,
-    "'UtsavLook Verified' Badge": <Award className="w-8 h-8 text-primary" />,
-    "Intelligent Scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
-    "Your Own Referral Code": <UserPlus className="w-8 h-8 text-primary" />,
-    "Transparent Payouts": <BarChart className="w-8 h-8 text-primary" />,
-    "0% Commission Welcome": <Sparkles className="w-8 h-8 text-primary" />,
+    "set-your-own-price": <IndianRupee className="w-8 h-8 text-primary" />,
+    "verified-badge": <Award className="w-8 h-8 text-primary" />,
+    "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
+    "referral-code": <UserPlus className="w-8 h-8 text-primary" />,
+    "transparent-payouts": <BarChart className="w-8 h-8 text-primary" />,
+    "zero-commission-welcome": <Sparkles className="w-8 h-8 text-primary" />,
 };
 
 
@@ -189,7 +189,7 @@ export default function ArtistHomePage() {
                                 <div key={benefit.id} className={`grid gap-8 md:gap-12 items-center md:grid-cols-2`}>
                                     <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
                                         <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
-                                           {benefitIcons[benefit.title] || <Sparkles className="w-8 h-8 text-primary" />}
+                                           {benefitIcons[benefit.id] || <Sparkles className="w-8 h-8 text-primary" />}
                                         </div>
                                         <h3 className="text-2xl md:text-3xl font-bold text-primary">{benefit.title}</h3>
                                         <p className="text-muted-foreground text-lg">
@@ -276,5 +276,3 @@ export default function ArtistHomePage() {
         </div>
     );
 }
-
-    
