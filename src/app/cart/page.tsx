@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getCustomer, createBooking, getAvailableLocations, listenToCollection } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { IndianRupee, ShieldCheck } from 'lucide-react';
+import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle } from 'lucide-react';
 
 const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any, onConfirm: (paymentMethod: 'online' | 'offline') => void }) => {
     const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
@@ -40,21 +40,34 @@ const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any
                     <span>GST (18% included)</span>
                     <span>₹{gstAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                    Note: A travel charge may be applicable and is payable directly to the artist at the venue. This will be communicated by the artist after booking.
-                </div>
                  <Separator />
                 <div className="flex justify-between font-bold text-lg text-primary">
                     <span>Total Amount</span>
                     <span>₹{totalAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
+                 <Alert className="bg-blue-100 border-blue-300 text-blue-800 [&>svg]:text-blue-800">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle className="font-semibold">Travel Charges</AlertTitle>
+                    <AlertDescription>
+                        A travel charge may be applicable and is payable directly to the artist at the venue. This will be communicated by the artist after booking.
+                    </AlertDescription>
+                </Alert>
                 <Separator/>
                 <div className="space-y-4">
-                    <Card className="bg-primary/5 p-4">
-                        <h4 className="font-semibold text-primary flex items-center gap-2"><ShieldCheck/> Policies</h4>
-                        <p className="text-xs text-muted-foreground mt-2"><b>Confirmation:</b> Bookings are accepted on a first-come, first-served basis. Pay an advance to confirm your slot instantly. Unpaid bookings will be confirmed only after a phone consultation.</p>
-                        <p className="text-xs text-muted-foreground mt-1"><b>Refund:</b> Advance payment is only refunded if cancelled 72 hours before the event (cancellation charges apply). This is because dates will be exclusively reserved for you.</p>
-                    </Card>
+                     <Alert className="bg-green-100 border-green-300 text-green-800 [&>svg]:text-green-800">
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle className="font-semibold">Confirmation Policy</AlertTitle>
+                        <AlertDescription>
+                           Bookings are accepted on a first-come, first-served basis. Pay an advance to confirm your slot instantly. Unpaid bookings will be confirmed only after a phone consultation.
+                        </AlertDescription>
+                    </Alert>
+                     <Alert variant="destructive" className="bg-red-100 border-red-300 text-red-800 [&>svg]:text-red-800">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle className="font-semibold">Refund Policy</AlertTitle>
+                        <AlertDescription>
+                           Advance payment is only refunded if cancelled 72 hours before the event (cancellation charges apply). This is because dates will be exclusively reserved for you.
+                        </AlertDescription>
+                    </Alert>
 
                     <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online')}>
                        Pay 60% Advance & Confirm (₹{advanceAmount.toLocaleString(undefined, {maximumFractionDigits: 0})})
