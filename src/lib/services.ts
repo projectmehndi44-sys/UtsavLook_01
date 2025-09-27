@@ -256,16 +256,17 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
-    const config = await getConfigDocument<ImagePlaceholder[]>('placeholderImages');
-    return config || [];
+    const config = await getConfigDocument<{ images: ImagePlaceholder[] }>('placeholderImages');
+    return config?.images || [];
 };
 export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', images);
 
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
     const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
-    if (config && Array.isArray(config) && config.length > 0) {
-        return config;
+    
+    if (config && Array.isArray(config.benefitImages) && config.benefitImages.length > 0) {
+        return config.benefitImages;
     }
     
     // If not, create and save the default set, then return it.

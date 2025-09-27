@@ -141,21 +141,21 @@ export default function ImageManagementPage() {
         const uploadKey = `benefit-${index}`;
         handleImageUpload(event, 'site-images/benefits', uploadKey, (url) => {
             benefitsForm.setValue(`benefitImages.${index}.imageUrl`, url, { shouldDirty: true });
-        }, false); // No compression for benefit images
+        }, false);
     };
 
     const handlePlaceholderImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
          const uploadKey = `placeholder-${index}`;
          handleImageUpload(event, 'site-images/placeholders', uploadKey, (url) => {
             placeholderForm.setValue(`images.${index}.imageUrl`, url, { shouldDirty: true });
-        }, true); // Compress placeholder images
+        }, true);
     };
     
     const handlePromoImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const uploadKey = 'promo';
         handleImageUpload(event, 'site-images/promo', uploadKey, (url) => {
             setPromoImage(url);
-        }, false); // No compression for main promo image
+        }, false);
     };
 
     const handleSavePromoImage = async () => {
