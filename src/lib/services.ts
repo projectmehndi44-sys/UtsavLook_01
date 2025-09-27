@@ -288,7 +288,7 @@ export const getAvailableLocations = async (): Promise<Record<string, string[]>>
     const config = await getConfigDocument<Record<string, string[]>>('availableLocations');
     return config || {};
 };
-export const saveAvailableLocations = async (locations: Record<string: string[]): Promise<void> => {
+export const saveAvailableLocations = async (locations: Record<string, string[]>): Promise<void> => {
     await setConfigDocument('availableLocations', locations);
 };
 
