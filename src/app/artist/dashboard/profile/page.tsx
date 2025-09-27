@@ -187,7 +187,8 @@ export default function ArtistProfilePage() {
 
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
-            const downloadURL = await uploadSiteImage(file, `artists/${artist.id}/${uploadKey}`);
+            const uploadPath = uploadKey === 'profilePicture' ? `artists/${artist.id}/profile` : `artists/${artist.id}/gallery`;
+            const downloadURL = await uploadSiteImage(file, uploadPath);
             onComplete(downloadURL);
             toast({ title: "Upload successful!", description: "Image has been saved." });
         } catch (error) {
@@ -210,24 +211,27 @@ export default function ArtistProfilePage() {
     
     const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        if (files && files.length > 0 && artist && setArtist) {
-            const uploadPromises = Array.from(files).map(file => 
-                handleFileUpload(file, 'gallery', (url) => {
-                    setArtist(prev => {
-                        if (!prev) return null;
-                        const updatedImages = [...(prev.workImages || []), url];
-                        // This updates the UI immediately, but the final save happens below
-                        return { ...prev, workImages: updatedImages };
-                    });
-                })
-            );
-            
-            // This is a simplified approach. A better one would collect all new URLs
-            // and then do a single Firestore update.
-            await Promise.all(uploadPromises);
-            await fetchData(); // Refetch the artist data to get the final state
-            
-            toast({ title: `${files.length} image(s) added to your gallery.` });
+        if (!files || files.length === 0 || !artist || !setArtist) return;
+
+        setIsUploading(prev => ({ ...prev, gallery: true }));
+        try {
+            const currentImages = artist.workImages || [];
+            const newUrls: string[] = [];
+
+            for (const file of Array.from(files)) {
+                await handleFileUpload(file, `gallery-${Date.now()}`, (url) => {
+                    newUrls.push(url);
+                });
+            }
+
+            if (newUrls.length > 0) {
+                const updatedImages = [...currentImages, ...newUrls];
+                await updateArtist(artist.id, { workImages: updatedImages });
+                await fetchData(); // Refetch data to ensure UI is in sync with DB
+                toast({ title: `${newUrls.length} image(s) added to your gallery.` });
+            }
+        } finally {
+            setIsUploading(prev => ({ ...prev, gallery: false }));
         }
     };
 

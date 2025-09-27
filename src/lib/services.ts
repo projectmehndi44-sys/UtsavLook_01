@@ -6,15 +6,22 @@ import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, Te
 import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getFirebaseApp } from './firebase';
+import { compressImage } from './utils';
 
 // New function to upload images to Firebase Storage
 export const uploadSiteImage = async (file: File, path: string): Promise<string> => {
     const app = getFirebaseApp();
     const storage = getStorage(app);
-    const storageRef = ref(storage, `${path}/${file.name}-${Date.now()}`);
+
+    // Compress the image before uploading
+    const compressedFile = await compressImage(file);
     
-    // Upload the file
-    const snapshot = await uploadBytes(storageRef, file);
+    // Use a unique name to prevent overwrites
+    const fileName = `${Date.now()}-${compressedFile.name.replace(/\s+/g, '-')}`;
+    const storageRef = ref(storage, `${path}/${fileName}`);
+    
+    // Upload the compressed file
+    const snapshot = await uploadBytes(storageRef, compressedFile);
     
     // Get the permanent download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -31,9 +38,8 @@ export const deleteSiteImage = async (imageUrl: string): Promise<void> => {
     }
     const app = getFirebaseApp();
     const storage = getStorage(app);
-    const imageRef = ref(storage, imageUrl);
-    
     try {
+        const imageRef = ref(storage, imageUrl);
         await deleteObject(imageRef);
     } catch (error: any) {
         // It's okay if the file doesn't exist.
@@ -67,7 +73,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
         if (data && data.hasOwnProperty('packages')) return data.packages as T;
         if (data && data.hasOwnProperty('members')) return data.members as T;
         if (data && data.hasOwnProperty('promos')) return data.promos as T;
-        if (data && data.hasOwnProperty('locations')) return data.locations as T;
+        if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
         if (data && data.hasOwnProperty('images')) return data.images as T;
         if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
         return data as T; // Fallback for flat config docs
@@ -84,7 +90,7 @@ async function setConfigDocument(docId: string, data: any): Promise<void> {
     if(docId === 'teamMembers') dataToSet = { members: data };
     else if (docId === 'masterServices') dataToSet = { packages: data };
     else if (docId === 'promotions') dataToSet = { promos: data };
-    else if (docId === 'availableLocations') dataToSet = data; // Locations are now stored at the root of the doc
+    else if (docId === 'availableLocations') dataToSet = data; // Locations are stored at the root of the doc
     else if (docId === 'placeholderImages') dataToSet = { images: data };
     else if (docId === 'benefitImages') dataToSet = { benefitImages: data };
     
@@ -250,18 +256,18 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
-    const config = await getConfigDocument<any>('placeholderImages');
-    return (config as any)?.images || [];
+    const config = await getConfigDocument<ImagePlaceholder[]>('placeholderImages');
+    return config || [];
 };
 export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', images);
 
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
     const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
-    // If the config exists and has images, return them.
-    if (config && Array.isArray(config.benefitImages) && config.benefitImages.length > 0) {
-        return config.benefitImages;
+    if (config && Array.isArray(config) && config.length > 0) {
+        return config;
     }
+    
     // If not, create and save the default set, then return it.
     const defaultBenefits: BenefitImage[] = [
         { id: 'set-your-own-price', title: "Set Your Own Price", description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.", imageUrl: 'https://picsum.photos/seed/artist-price/800/600' },
@@ -274,7 +280,7 @@ export const getBenefitImages = async (): Promise<BenefitImage[]> => {
     await saveBenefitImages(defaultBenefits);
     return defaultBenefits;
 };
-export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', { benefitImages: images });
+export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', images );
 
 export const getPromotionalImage = async (): Promise<{ imageUrl: string } | null> => {
     return getConfigDocument<{ imageUrl: string }>('promotionalImage');
