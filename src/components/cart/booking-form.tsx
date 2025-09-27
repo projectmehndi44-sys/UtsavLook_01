@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
@@ -13,6 +14,9 @@ import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import type { Artist } from "@/lib/types";
+import { Badge } from "../ui/badge";
+import React from "react";
 
 export const bookingFormSchema = z.object({
     name: z.string().min(2, { message: "Name is required."}),
@@ -26,6 +30,7 @@ export const bookingFormSchema = z.object({
     mapLink: z.string().url({ message: "Please enter a valid Google Maps URL."}).optional().or(z.literal('')),
     contact: z.string().regex(/^\d{10}$/, { message: "Must be a 10-digit phone number." }),
     alternateContact: z.string().optional(),
+    travelCharges: z.coerce.number().min(0).optional(),
     guestMehndi: z.object({
         included: z.boolean().default(false),
         expectedCount: z.coerce.number().min(0).default(0),
@@ -46,14 +51,40 @@ interface BookingFormProps {
         mehndi: boolean;
         makeup: boolean;
     }
+    artists: Artist[];
 }
 
 
-export const BookingForm = ({ form, availableLocations, showGuestFields }: BookingFormProps) => {
+export const BookingForm = ({ form, availableLocations, showGuestFields, artists }: BookingFormProps) => {
     
     const availableStates = Object.keys(availableLocations);
     const watchedState = form.watch('state');
+    const watchedDistrict = form.watch('district');
     const districtsForState = watchedState ? availableLocations[watchedState] : [];
+
+    const suggestedLocalities = React.useMemo(() => {
+        if (!watchedDistrict || artists.length === 0) return [];
+        
+        const localities = new Set<string>();
+        artists.forEach(artist => {
+            artist.serviceAreas?.forEach(area => {
+                if (area.district === watchedDistrict) {
+                    area.localities.split(',').forEach(loc => {
+                        const trimmedLoc = loc.trim();
+                        if (trimmedLoc) localities.add(trimmedLoc);
+                    });
+                }
+            });
+        });
+        return Array.from(localities);
+    }, [artists, watchedDistrict]);
+
+    const handleSuggestionClick = (locality: string) => {
+        const currentLocalities = form.getValues('locality') || '';
+        const newLocalities = currentLocalities ? `${currentLocalities}, ${locality}` : locality;
+        form.setValue('locality', newLocalities, { shouldValidate: true });
+    };
+
 
     const GuestServiceToggle = ({ serviceType }: { serviceType: 'mehndi' | 'makeup' }) => {
         const fieldName = `guest${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}` as 'guestMehndi' | 'guestMakeup';
@@ -126,14 +157,31 @@ export const BookingForm = ({ form, availableLocations, showGuestFields }: Booki
                              <FormField control={form.control} name="serviceDates" render={({ field }) => ( <FormItem className="flex flex-col"><FormLabel>Service Delivery Date(s)</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal",!field.value?.length && "text-muted-foreground" )}>{field.value?.length ? (field.value.map(d => format(d, "PPP")).join(', ')) : (<span>Select service dates</span>)}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="multiple" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date()}/></PopoverContent></Popover><FormMessage /></FormItem>)}/>
                         </div>
                         
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                             <FormField control={form.control} name="state" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><Select onValueChange={(v) => {field.onChange(v); form.setValue('district', '');}} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/>
-                             <FormField control={form.control} name="district" render={({ field }) => ( <FormItem><FormLabel>District</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={!watchedState}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{districtsForState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/>
-                             <FormField control={form.control} name="locality" render={({ field }) => ( <FormItem><FormLabel>Locality</FormLabel><FormControl><Input placeholder="e.g. Koregaon Park" {...field}/></FormControl><FormMessage /></FormItem> )}/>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <FormField control={form.control} name="state" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><Select onValueChange={(v) => {field.onChange(v); form.setValue('district', ''); form.setValue('locality', '');}} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select state"/></SelectTrigger></FormControl><SelectContent>{availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/>
+                             <FormField control={form.control} name="district" render={({ field }) => ( <FormItem><FormLabel>District</FormLabel><Select onValueChange={(v) => {field.onChange(v); form.setValue('locality', '');}} value={field.value} disabled={!watchedState}><FormControl><SelectTrigger><SelectValue placeholder="Select district"/></SelectTrigger></FormControl><SelectContent>{districtsForState.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)}/>
                         </div>
 
+                         <FormField control={form.control} name="locality" render={({ field }) => ( 
+                             <FormItem>
+                                <FormLabel>Locality / Area</FormLabel>
+                                <FormControl><Input placeholder="e.g. Koregaon Park" {...field}/></FormControl>
+                                {suggestedLocalities.length > 0 && (
+                                    <div className="pt-2">
+                                        <p className="text-xs text-muted-foreground mb-2">Suggestions:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {suggestedLocalities.map(loc => (
+                                                <Badge key={loc} variant="outline" className="cursor-pointer" onClick={() => handleSuggestionClick(loc)}>{loc}</Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                <FormMessage />
+                            </FormItem> 
+                        )}/>
+
                         <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Full Service Address</FormLabel><FormControl><Textarea placeholder="Building name, street, landmark..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                        <FormField control={form.control} name="mapLink" render={({ field }) => ( <FormItem><FormLabel>Google Maps Link</FormLabel><FormControl><Input placeholder="Paste precise location link from Google Maps" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="mapLink" render={({ field }) => ( <FormItem><FormLabel>Google Maps Link (Optional)</FormLabel><FormControl><Input placeholder="Paste precise location link from Google Maps" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField control={form.control} name="contact" render={({ field }) => ( <FormItem><FormLabel>Contact Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem> )}/>

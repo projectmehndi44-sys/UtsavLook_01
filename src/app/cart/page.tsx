@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,9 +12,9 @@ import { CartItemsList } from "@/components/cart/cart-items-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { CartItem, Customer } from '@/lib/types';
+import type { CartItem, Customer, Artist } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCustomer, createBooking, getAvailableLocations } from '@/lib/services';
+import { getCustomer, createBooking, getAvailableLocations, listenToCollection } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { IndianRupee, ShieldCheck } from 'lucide-react';
@@ -40,7 +41,7 @@ const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any
                     <span>₹{gstAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                    Note: A travel charge (if applicable) will be communicated by the artist and is payable directly to them at the venue.
+                    Note: A travel charge may be applicable and is payable directly to the artist at the venue. This will be communicated by the artist after booking.
                 </div>
                  <Separator />
                 <div className="flex justify-between font-bold text-lg text-primary">
@@ -74,6 +75,7 @@ export default function CartPage() {
     const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
+    const [artists, setArtists] = React.useState<Artist[]>([]);
 
 
     const form = useForm<BookingFormValues>({
@@ -104,6 +106,9 @@ export default function CartPage() {
         }
         
         getAvailableLocations().then(setAvailableLocations);
+
+        const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
+        return () => unsubscribeArtists();
 
     }, [router, form]);
 
@@ -168,6 +173,7 @@ export default function CartPage() {
                 note: bookingDetails.notes,
                 paymentMethod: paymentMethod,
                 paidOut: false,
+                travelCharges: bookingDetails.travelCharges,
             });
 
             toast({
@@ -208,7 +214,7 @@ export default function CartPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                         <div className="lg:col-span-2 space-y-8">
                             <CartItemsList items={cartItems} onRemoveItem={handleRemoveItem} />
-                            <BookingForm form={form} availableLocations={availableLocations} showGuestFields={showGuestFields}/>
+                            <BookingForm form={form} availableLocations={availableLocations} showGuestFields={showGuestFields} artists={artists} />
                         </div>
                         <div className="lg:col-span-1">
                            <OrderSummary items={cartItems} form={form} onConfirm={handleConfirmAndBook} />
