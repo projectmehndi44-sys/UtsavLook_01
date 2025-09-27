@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,6 +19,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+import { Carousel, CarouselContent, CarouselItem } from '../ui/carousel';
 
 interface ServiceSelectionModalProps {
   service: MasterServicePackage;
@@ -43,14 +43,12 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      // Delay reset to allow animation to finish
       setTimeout(resetModal, 300);
     }
     onOpenChange(open);
   }
 
   React.useEffect(() => {
-    // Reset selection when modal is reopened for a new service
     if (isOpen) {
       resetModal();
     }
@@ -88,6 +86,16 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
         });
     }
   };
+  
+  const getInspirationImages = () => {
+      return artists
+          .filter(a => a.services.includes(service.service) && a.workImages.length > 0)
+          .flatMap(a => a.workImages)
+          .sort(() => 0.5 - Math.random()) // Shuffle
+          .slice(0, 15);
+  };
+  const inspirationImages = getInspirationImages();
+
 
   const SuccessView = () => (
     <div className="text-center p-6 flex flex-col items-center gap-4">
@@ -120,7 +128,7 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
             offering.masterPackageId === service.id &&
             offering.categoryName === category.name
         )
-    );
+    ).sort((a,b) => b.rating - a.rating);
 
     return (
         <div className="space-y-4">
@@ -142,28 +150,41 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                         const offering = artist.serviceOfferings?.find(o => o.masterPackageId === service.id && o.categoryName === category.name);
                         if (!offering) return null;
                         return (
-                             <div key={artist.id} className="flex items-center justify-between p-2 border rounded-lg hover:bg-muted/50">
-                                <div className="flex items-center gap-3">
-                                    <Avatar>
-                                        <AvatarImage src={artist.profilePicture} alt={artist.name}/>
-                                        <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-semibold">{artist.name}</p>
-                                        <div className="flex items-center text-xs text-amber-600">
-                                            <Star className="w-3 h-3 mr-1 fill-current"/>
-                                            <span>{artist.rating}</span>
+                            <Card key={artist.id} className="overflow-hidden">
+                                <div className="flex items-center justify-between p-2">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar>
+                                            <AvatarImage src={artist.profilePicture} alt={artist.name}/>
+                                            <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{artist.name}</p>
+                                            <div className="flex items-center text-xs text-amber-600">
+                                                <Star className="w-3 h-3 mr-1 fill-current"/>
+                                                <span>{artist.rating}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="text-right">
-                                        <p className="font-bold flex items-center"><IndianRupee className="w-3.5 h-3.5 mr-0.5"/>{offering.artistPrice.toLocaleString()}</p>
-                                        <p className="text-xs text-muted-foreground">Total Price</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-right">
+                                            <p className="font-bold flex items-center"><IndianRupee className="w-3.5 h-3.5 mr-0.5"/>{offering.artistPrice.toLocaleString()}</p>
+                                            <p className="text-xs text-muted-foreground">Total Price</p>
+                                        </div>
+                                        <Button size="sm" onClick={() => handleArtistBooking(artist, offering.artistPrice)}>Select</Button>
                                     </div>
-                                    <Button size="sm" onClick={() => handleArtistBooking(artist, offering.artistPrice)}>Select</Button>
                                 </div>
-                            </div>
+                                 <Carousel opts={{ align: "start", loop: false }} className="w-full bg-black/5 p-2">
+                                    <CarouselContent className="-ml-2">
+                                        {artist.workImages.slice(0, 5).map((img, i) => (
+                                            <CarouselItem key={i} className="pl-2 basis-1/3">
+                                                <div className="aspect-square relative rounded-md overflow-hidden">
+                                                    <Image src={img} alt={`${artist.name} work ${i+1}`} fill className="object-cover"/>
+                                                </div>
+                                            </CarouselItem>
+                                        ))}
+                                    </CarouselContent>
+                                </Carousel>
+                            </Card>
                         )
                     })
                  ) : (
@@ -185,11 +206,27 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
     switch (view) {
         case 'tier':
              return (
-                 <div className="py-4">
-                    <h3 className="text-lg font-semibold text-center mb-4">Select a Tier</h3>
+                 <div className="py-4 space-y-6">
+                    <div>
+                         <h3 className="text-lg font-semibold text-center mb-2">Inspiration Gallery</h3>
+                         <Carousel opts={{ align: "start", loop: true }} className="w-full">
+                            <CarouselContent>
+                                {inspirationImages.map((src, i) => (
+                                    <CarouselItem key={i} className="md:basis-1/3 lg:basis-1/4">
+                                        <div className="p-1">
+                                            <div className="aspect-square relative rounded-lg overflow-hidden">
+                                                 <Image src={src} alt={`Inspiration ${i}`} fill className="object-cover" />
+                                            </div>
+                                        </div>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                         </Carousel>
+                    </div>
+                    <h3 className="text-lg font-semibold text-center">Select a Tier</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {service.categories.map(category => (
-                            <Card key={category.name} className="flex flex-col overflow-hidden">
+                            <Card key={category.name} className="flex flex-col overflow-hidden hover:border-primary transition-all cursor-pointer" onClick={() => handleSelectCategory(category)}>
                                 {category.image && (
                                     <div className="relative w-full aspect-video">
                                         <Image src={category.image} alt={category.name} fill className="object-cover"/>
@@ -200,10 +237,9 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                                     <CardDescription>{category.description}</CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex-grow"></CardContent>
-                                <CardFooter className="flex flex-col items-start gap-2 mt-auto p-4">
+                                <CardFooter className="flex-col items-start gap-2 p-4">
                                     <p className="text-xs text-muted-foreground">Starts from</p>
                                     <p className="font-bold text-xl flex items-center"><IndianRupee className="w-4 h-4 mr-1"/>{category.basePrice.toLocaleString()}</p>
-                                    <Button className="w-full" onClick={() => handleSelectCategory(category)}>Select {category.name}</Button>
                                 </CardFooter>
                             </Card>
                         ))}
@@ -211,7 +247,7 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                 </div>
             );
         case 'artist':
-            if (!selectedCategory) return null; // Should not happen
+            if (!selectedCategory) return null;
             return (
                 <div className="py-4">
                     <Tabs defaultValue="express" className="w-full">
@@ -261,4 +297,3 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
     </Dialog>
   );
 }
-

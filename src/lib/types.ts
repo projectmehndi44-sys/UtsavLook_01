@@ -109,6 +109,7 @@ export type Booking = {
   customerId: string; // Link to customer
   customerName: string;
   customerContact?: string;
+  alternateContact?: string;
   serviceAddress: string;
   items: CartItem[];
   amount: number;
@@ -125,10 +126,10 @@ export type Booking = {
   locality: string;
   mapLink?: string;
   note?: string;
-  travelCharges?: number; // New field for artist travel costs
+  travelCharges?: number; // This is a NOTE, not added to total.
   instagramId?: string;
   referencePhoto?: string;
-  paymentMethod?: 'online' | 'offline';
+  paymentMethod: 'online' | 'offline';
   guestMehndi?: {
     included: boolean;
     expectedCount: number;
@@ -243,4 +244,3 @@ export interface RawArtistRecommendation {
     
 
     
-

@@ -6,58 +6,59 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { BookingForm } from "@/components/cart/booking-form";
+import { BookingForm, bookingFormSchema, BookingFormValues } from "@/components/cart/booking-form";
 import { CartItemsList } from "@/components/cart/cart-items-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { CartItem, Customer } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCustomer, createBooking } from '@/lib/services';
+import { getCustomer, createBooking, getAvailableLocations } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { IndianRupee, ShieldCheck } from 'lucide-react';
 
-
-const bookingFormSchema = z.object({
-    eventType: z.string().min(2, { message: "Event type is required." }),
-    eventDate: z.date({ required_error: "Event date is required." }),
-    serviceDates: z.array(z.date()).min(1, { message: "At least one service date is required." }),
-    address: z.string().min(10, { message: "Please enter a valid address." }),
-    notes: z.string().optional(),
-    travelCharges: z.coerce.number().min(0, "Travel charges must be a positive number.").optional(),
-});
-
-type BookingFormValues = z.infer<typeof bookingFormSchema>;
-
-
-const OrderSummary = ({ items, onConfirm }: { items: CartItem[], onConfirm: () => void }) => {
+const OrderSummary = ({ items, form, onConfirm }: { items: CartItem[], form: any, onConfirm: (paymentMethod: 'online' | 'offline') => void }) => {
     const subtotal = items.reduce((sum, item) => sum + item.price, 0);
     const taxes = subtotal * 0.18;
-    const total = subtotal + taxes;
+    const total = subtotal; // Total is now pre-tax as per new flow
+    const advanceAmount = total * 0.6;
+
 
     return (
         <Card className="shadow-lg rounded-lg sticky top-24">
             <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-                <CardDescription>Review your order before proceeding.</CardDescription>
+                <CardTitle>Booking Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal.toLocaleString()}</span>
+                 <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal (incl. 18% GST)</span>
+                    <span>₹{total.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                    <span>Taxes & Fees</span>
-                    <span>₹{taxes.toLocaleString()}</span>
+                <div className="text-xs text-muted-foreground">
+                    Note: A travel charge (if applicable) will be communicated by the artist and is payable directly to them at the venue.
                 </div>
-                <Separator />
+                 <Separator />
                 <div className="flex justify-between font-bold text-lg text-primary">
-                    <span>Total</span>
-                    <span>₹{total.toLocaleString()}</span>
+                    <span>Total Amount</span>
+                    <span>₹{total.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                </div>
+                <Separator/>
+                <div className="space-y-4">
+                    <Card className="bg-primary/5 p-4">
+                        <h4 className="font-semibold text-primary flex items-center gap-2"><ShieldCheck/> Policies</h4>
+                        <p className="text-xs text-muted-foreground mt-2"><b>Confirmation:</b> Bookings are on a first-come, first-served basis. Pay an advance to confirm your slot instantly.</p>
+                        <p className="text-xs text-muted-foreground mt-1"><b>Refund:</b> Advance payment is only refunded if cancelled 72 hours before the event (cancellation charges apply).</p>
+                    </Card>
+
+                    <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online')}>
+                       Pay 60% Advance & Confirm (₹{advanceAmount.toLocaleString(undefined, {maximumFractionDigits: 0})})
+                    </Button>
+                    <Button size="lg" variant="outline" className="w-full" onClick={() => onConfirm('offline')}>
+                       Pay at Venue (Requires Phone Confirmation)
+                    </Button>
                 </div>
             </CardContent>
-            <CardFooter>
-                <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={onConfirm}>Confirm & Proceed</Button>
-            </CardFooter>
         </Card>
     );
 };
@@ -68,29 +69,36 @@ export default function CartPage() {
     const { toast } = useToast();
     const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
     const [customer, setCustomer] = React.useState<Customer | null>(null);
+    const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
+
 
     const form = useForm<BookingFormValues>({
         resolver: zodResolver(bookingFormSchema),
-        defaultValues: {
-            eventType: "",
-            serviceDates: [],
-            address: "",
-            notes: "",
-            travelCharges: 0,
-        }
     });
 
     React.useEffect(() => {
         const customerId = localStorage.getItem('currentCustomerId');
         if (customerId) {
-            getCustomer(customerId).then(setCustomer);
-            const storedCart = localStorage.getItem(`cart_${customerId}`);
-            setCartItems(storedCart ? JSON.parse(storedCart) : []);
+            getCustomer(customerId).then(customerData => {
+                if (customerData) {
+                    setCustomer(customerData);
+                    const storedCart = localStorage.getItem(`cart_${customerId}`);
+                    setCartItems(storedCart ? JSON.parse(storedCart) : []);
+                    // Pre-fill form with customer data
+                    form.reset({
+                        name: customerData.name,
+                        contact: customerData.phone,
+                        ...form.getValues(),
+                    });
+                }
+            });
         } else {
-            // Redirect to login if not logged in
             router.push('/');
         }
-    }, [router]);
+        
+        getAvailableLocations().then(setAvailableLocations);
+
+    }, [router, form]);
 
     const handleRemoveItem = (itemId: string) => {
         const newCart = cartItems.filter(item => item.id !== itemId);
@@ -105,7 +113,7 @@ export default function CartPage() {
         });
     };
 
-    const handleConfirmAndBook = async () => {
+    const handleConfirmAndBook = async (paymentMethod: 'online' | 'offline') => {
         const bookingDetails = form.getValues();
         const isValid = await form.trigger();
 
@@ -128,32 +136,36 @@ export default function CartPage() {
         }
 
         const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
+        const bookingStatus = paymentMethod === 'online' ? 'Pending Approval' : 'Pending Confirmation';
 
         try {
             await createBooking({
                 customerId: customer.id,
-                customerName: customer.name,
-                customerContact: customer.phone,
+                customerName: bookingDetails.name,
+                customerContact: bookingDetails.contact,
+                alternateContact: bookingDetails.alternateContact,
                 artistIds: Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean))),
                 items: cartItems,
                 amount: totalAmount,
-                status: 'Pending Approval',
+                status: bookingStatus,
                 eventType: bookingDetails.eventType,
                 eventDate: Timestamp.fromDate(bookingDetails.eventDate),
                 serviceDates: bookingDetails.serviceDates.map(d => Timestamp.fromDate(d)),
                 serviceAddress: bookingDetails.address,
-                location: '', // Extract from address if possible
-                district: '', // Extract from address if possible
-                state: '', // Extract from address if possible
+                state: bookingDetails.state,
+                district: bookingDetails.district,
+                locality: bookingDetails.locality,
+                mapLink: bookingDetails.mapLink,
+                guestMehndi: bookingDetails.guestMehndi,
+                guestMakeup: bookingDetails.guestMakeup,
                 note: bookingDetails.notes,
-                travelCharges: bookingDetails.travelCharges,
-                paymentMethod: 'online', // Or determined by UI
+                paymentMethod: paymentMethod,
                 paidOut: false,
             });
 
             toast({
-                title: "Booking Successful!",
-                description: "Your booking has been placed and is pending approval. You can view it in your dashboard.",
+                title: "Booking Request Sent!",
+                description: "Your booking is being processed. You can view its status in your dashboard.",
             });
             
             // Clear cart and redirect
@@ -169,6 +181,11 @@ export default function CartPage() {
             });
         }
     };
+    
+    const showGuestFields = {
+        mehndi: cartItems.some(item => item.servicePackage.service === 'mehndi'),
+        makeup: cartItems.some(item => item.servicePackage.service === 'makeup'),
+    }
 
     return (
         <div className="bg-background">
@@ -184,10 +201,10 @@ export default function CartPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                         <div className="lg:col-span-2 space-y-8">
                             <CartItemsList items={cartItems} onRemoveItem={handleRemoveItem} />
-                            <BookingForm form={form} />
+                            <BookingForm form={form} availableLocations={availableLocations} showGuestFields={showGuestFields}/>
                         </div>
                         <div className="lg:col-span-1">
-                           <OrderSummary items={cartItems} onConfirm={handleConfirmAndBook} />
+                           <OrderSummary items={cartItems} form={form} onConfirm={handleConfirmAndBook} />
                         </div>
                     </div>
                 ) : (
