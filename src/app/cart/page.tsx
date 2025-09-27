@@ -102,7 +102,7 @@ const OrderSummary = ({
     return (
         <Card className="shadow-lg rounded-lg sticky top-24">
             <CardHeader>
-                <CardTitle>Booking Summary</CardTitle>
+                <CardTitle className="text-2xl">Booking Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                  <div className="space-y-2">
@@ -147,7 +147,7 @@ const OrderSummary = ({
                     </div>
                  )}
                  <Separator />
-                <div className="flex justify-between font-bold text-lg text-primary">
+                <div className="flex justify-between font-bold text-xl text-primary">
                     <span>Final Amount</span>
                     <span>₹{discountedTotal.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                 </div>
@@ -309,33 +309,34 @@ export default function CartPage() {
             bookingStatus = 'Pending Approval';
         }
 
+        const bookingData: Omit<Booking, 'id'> = {
+            customerId: customer.id,
+            customerName: bookingDetails.name,
+            customerContact: bookingDetails.contact,
+            alternateContact: bookingDetails.alternateContact,
+            artistIds: finalArtistIds,
+            items: cartItems,
+            amount: finalAmount,
+            status: bookingStatus,
+            eventType: bookingDetails.eventType,
+            eventDate: Timestamp.fromDate(bookingDetails.eventDate),
+            serviceDates: bookingDetails.serviceDates.map(d => Timestamp.fromDate(d)),
+            serviceAddress: bookingDetails.address,
+            state: bookingDetails.state,
+            district: bookingDetails.district,
+            locality: bookingDetails.locality,
+            mapLink: bookingDetails.mapLink,
+            guestMehndi: bookingDetails.guestMehndi,
+            guestMakeup: bookingDetails.guestMakeup,
+            note: bookingDetails.notes,
+            paymentMethod: paymentMethod,
+            paidOut: false,
+            travelCharges: bookingDetails.travelCharges,
+            ...(appliedCode && { appliedReferralCode: appliedCode }),
+        };
 
         try {
-            await createBooking({
-                customerId: customer.id,
-                customerName: bookingDetails.name,
-                customerContact: bookingDetails.contact,
-                alternateContact: bookingDetails.alternateContact,
-                artistIds: finalArtistIds,
-                items: cartItems,
-                amount: finalAmount,
-                status: bookingStatus,
-                eventType: bookingDetails.eventType,
-                eventDate: Timestamp.fromDate(bookingDetails.eventDate),
-                serviceDates: bookingDetails.serviceDates.map(d => Timestamp.fromDate(d)),
-                serviceAddress: bookingDetails.address,
-                state: bookingDetails.state,
-                district: bookingDetails.district,
-                locality: bookingDetails.locality,
-                mapLink: bookingDetails.mapLink,
-                guestMehndi: bookingDetails.guestMehndi,
-                guestMakeup: bookingDetails.guestMakeup,
-                note: bookingDetails.notes,
-                paymentMethod: paymentMethod,
-                paidOut: false,
-                travelCharges: bookingDetails.travelCharges,
-                appliedReferralCode: appliedCode,
-            });
+            await createBooking(bookingData);
 
             toast({
                 title: "Booking Request Sent!",
@@ -396,5 +397,3 @@ export default function CartPage() {
         </div>
     );
 }
-
-    
