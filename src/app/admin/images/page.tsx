@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -12,7 +13,7 @@ import NextImage from 'next/image';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { ImagePlaceholder, BenefitImage } from '@/lib/types';
-import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage, uploadSiteImage } from '@/lib/services';
+import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage, uploadSiteImage, deleteSiteImage } from '@/lib/services';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -50,13 +51,18 @@ const benefitFormSchema = z.object({
     benefitImages: z.array(benefitImageSchema)
 });
 
+type DeleteDialogState = {
+    index: number;
+    imageUrl: string;
+} | null;
+
 
 export default function ImageManagementPage() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
     const [isLoading, setIsLoading] = React.useState(true);
     const [isUploading, setIsUploading] = React.useState<Record<string, boolean>>({});
-    const [imageToDelete, setImageToDelete] = React.useState<number | null>(null);
+    const [imageToDelete, setImageToDelete] = React.useState<DeleteDialogState>(null);
     const [promoImage, setPromoImage] = React.useState<string | null>(null);
     const [isSavingPromo, setIsSavingPromo] = React.useState(false);
 
@@ -165,11 +171,23 @@ export default function ImageManagementPage() {
         }
     };
 
-    const confirmDelete = () => {
-        if (imageToDelete !== null) {
-            remove(imageToDelete);
+    const confirmDelete = async () => {
+        if (!imageToDelete) return;
+        const { index, imageUrl } = imageToDelete;
+
+        try {
+            // Delete from storage first
+            await deleteSiteImage(imageUrl);
+            
+            // Then remove from the form state
+            remove(index);
+            
+            toast({ title: "Image Deleted", description: "The image has been permanently deleted. Save changes to update the list." });
+        } catch (error) {
+            console.error("Deletion failed:", error);
+            toast({ title: "Deletion Failed", description: "Could not delete the image from storage.", variant: 'destructive' });
+        } finally {
             setImageToDelete(null);
-            toast({ title: "Image Removed", description: "Click 'Save Changes' to finalize the deletion." });
         }
     };
 
@@ -322,7 +340,7 @@ export default function ImageManagementPage() {
                                         <FormField control={placeholderForm.control} name={`images.${index}.description`} render={({ field }) => (
                                             <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
                                         )} />
-                                         <Button type="button" variant="destructive" size="sm" onClick={() => setImageToDelete(index)} disabled={!hasPermission('settings', 'edit')}>
+                                         <Button type="button" variant="destructive" size="sm" onClick={() => setImageToDelete({index, imageUrl: placeholderForm.getValues(`images.${index}.imageUrl`)})} disabled={!hasPermission('settings', 'edit')}>
                                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                                         </Button>
                                     </div>
@@ -341,18 +359,18 @@ export default function ImageManagementPage() {
                     </div>
                 </form>
             </Form>
-            <AlertDialog open={imageToDelete !== null} onOpenChange={() => setImageToDelete(null)}>
+            <AlertDialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will remove the image entry from the form. You must click "Save Changes" to make it permanent.
+                            This action will permanently delete the image file from the server. This cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
-                            Yes, Remove
+                            Yes, Delete Permanently
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -362,3 +380,4 @@ export default function ImageManagementPage() {
 }
 
     
+

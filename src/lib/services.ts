@@ -4,7 +4,7 @@ import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getFirebaseApp } from './firebase';
 
 // New function to upload images to Firebase Storage
@@ -21,6 +21,30 @@ export const uploadSiteImage = async (file: File, path: string): Promise<string>
     
     return downloadURL;
 };
+
+// New function to delete images from Firebase Storage
+export const deleteSiteImage = async (imageUrl: string): Promise<void> => {
+    if (!imageUrl.includes('firebasestorage.googleapis.com')) {
+        // Don't try to delete non-firebase images (like picsum)
+        console.log("Skipping deletion for non-Firebase image.");
+        return;
+    }
+    const app = getFirebaseApp();
+    const storage = getStorage(app);
+    const imageRef = ref(storage, imageUrl);
+    
+    try {
+        await deleteObject(imageRef);
+    } catch (error: any) {
+        // It's okay if the file doesn't exist.
+        if (error.code === 'storage/object-not-found') {
+            console.warn(`Image not found in storage, but proceeding with DB removal: ${imageUrl}`);
+        } else {
+            // For other errors, we should probably throw
+            throw error;
+        }
+    }
+}
 
 
 // Generic function to get a single document
@@ -234,10 +258,11 @@ export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDo
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
     const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
+    // If the config exists and has images, return them.
     if (config && Array.isArray(config.benefitImages) && config.benefitImages.length > 0) {
         return config.benefitImages;
     }
-    // Return a default structure if it doesn't exist, and save it for future edits.
+    // If not, create and save the default set, then return it.
     const defaultBenefits: BenefitImage[] = [
         { id: 'set-your-own-price', title: "Set Your Own Price", description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.", imageUrl: 'https://picsum.photos/seed/artist-price/800/600' },
         { id: 'verified-badge', title: "'UtsavLook Verified' Badge", description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.", imageUrl: 'https://picsum.photos/seed/artist-verified/800/600' },
