@@ -125,6 +125,7 @@ export type Booking = {
   locality: string;
   mapLink?: string;
   note?: string;
+  travelCharges?: number; // New field for artist travel costs
   instagramId?: string;
   referencePhoto?: string;
   paymentMethod?: 'online' | 'offline';
@@ -242,3 +243,4 @@ export interface RawArtistRecommendation {
     
 
     
+

@@ -1,13 +1,13 @@
 'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm, UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, IndianRupee } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
@@ -18,6 +18,7 @@ const bookingFormSchema = z.object({
     serviceDates: z.array(z.date()).min(1, { message: "At least one service date is required." }),
     address: z.string().min(10, { message: "Please enter a valid address." }),
     notes: z.string().optional(),
+    travelCharges: z.coerce.number().min(0).optional(),
 });
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
@@ -143,6 +144,25 @@ export const BookingForm = ({ form }: BookingFormProps) => {
                                     <FormControl>
                                         <Textarea placeholder="Enter the full address for the service" {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="travelCharges"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Travel Charges (Optional)</FormLabel>
+                                     <div className="relative">
+                                        <IndianRupee className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <FormControl>
+                                            <Input type="number" placeholder="Enter amount if discussed with artist" {...field} className="pl-8"/>
+                                        </FormControl>
+                                    </div>
+                                    <FormDescription>
+                                        This amount is to be paid directly to the artist. It will not be included in the online payment.
+                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}

@@ -23,6 +23,7 @@ const bookingFormSchema = z.object({
     serviceDates: z.array(z.date()).min(1, { message: "At least one service date is required." }),
     address: z.string().min(10, { message: "Please enter a valid address." }),
     notes: z.string().optional(),
+    travelCharges: z.coerce.number().min(0, "Travel charges must be a positive number.").optional(),
 });
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
@@ -75,6 +76,7 @@ export default function CartPage() {
             serviceDates: [],
             address: "",
             notes: "",
+            travelCharges: 0,
         }
     });
 
@@ -144,6 +146,7 @@ export default function CartPage() {
                 district: '', // Extract from address if possible
                 state: '', // Extract from address if possible
                 note: bookingDetails.notes,
+                travelCharges: bookingDetails.travelCharges,
                 paymentMethod: 'online', // Or determined by UI
                 paidOut: false,
             });

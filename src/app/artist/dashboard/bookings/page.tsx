@@ -46,6 +46,7 @@ const BookingDetailsModal = ({ booking, isOpen, onOpenChange, platformFeePercent
     const gstOnService = booking.amount - taxableAmount;
     const platformFee = taxableAmount * platformFeePercentage;
     const netPayout = taxableAmount - platformFee;
+    const travelCharges = booking.travelCharges || 0;
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -114,9 +115,15 @@ const BookingDetailsModal = ({ booking, isOpen, onOpenChange, platformFeePercent
                             <div className="flex justify-between text-muted-foreground"><span>Less: {platformFeePercentage*100}% Platform Fee</span> <span>- ₹{platformFee.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
                             <Separator/>
                             <div className="flex justify-between font-bold text-lg text-green-600"><span>Net Payout to You</span> <span>₹{netPayout.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
+                             {travelCharges > 0 && (
+                                <div className="flex justify-between font-semibold text-blue-600 pt-2 border-t mt-2">
+                                    <span>+ Travel Charges (Payable by customer)</span>
+                                    <span>₹{travelCharges.toLocaleString()}</span>
+                                </div>
+                            )}
                         </CardContent>
                         <CardFooter>
-                            <p className="text-xs text-muted-foreground">This is an estimate. Final payout will be processed by admin after job completion.</p>
+                            <p className="text-xs text-muted-foreground">This is an estimate. Final payout will be processed by admin after job completion. Travel charges are to be collected directly from the customer.</p>
                         </CardFooter>
                     </Card>
                 </div>
