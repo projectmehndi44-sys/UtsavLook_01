@@ -176,8 +176,8 @@ export default function Home() {
             <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
                 Utsav<span className="text-primary">Look</span>
             </h1>
-            <p className="mt-2 font-dancing-script text-2xl text-foreground/90">Your Perfect Look for Every Utsav.</p>
-            <div className="mt-4 font-body text-lg text-foreground/80 max-w-3xl mx-auto">
+            <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
+            <div className="mt-4 font-body text-base text-foreground/80 max-w-3xl mx-auto md:text-lg">
               <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists,</p>
               <p>all verified professionals dedicated to making your special day unforgettable.</p>
             </div>

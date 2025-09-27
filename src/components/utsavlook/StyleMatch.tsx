@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -94,7 +93,7 @@ export function StyleMatch() {
           <CardTitle className="text-3xl font-bold font-headline text-primary mt-2">
             AI Style Match
           </CardTitle>
-          <CardDescription className="text-lg">
+          <CardDescription className="text-lg text-muted-foreground">
             Unsure what style to go for? Upload a photo of your outfit and let our AI stylist create the perfect complementary look for your event!
           </CardDescription>
         </CardHeader>
@@ -107,7 +106,7 @@ export function StyleMatch() {
                     name="outfitPhoto"
                     render={() => (
                         <FormItem>
-                            <FormLabel className="text-lg font-semibold">1. Upload Your Outfit Photo</FormLabel>
+                            <FormLabel className="font-semibold">1. Upload Your Outfit Photo</FormLabel>
                              <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer aspect-square flex items-center justify-center">
                                {imagePreview ? (
                                     <Image src={imagePreview} alt="Outfit preview" fill className="object-contain rounded-md p-2"/>
@@ -136,7 +135,7 @@ export function StyleMatch() {
                     name="eventDescription"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-lg font-semibold">2. Describe Your Event</FormLabel>
+                        <FormLabel className="font-semibold">2. Describe Your Event</FormLabel>
                         <FormControl>
                         <Textarea
                             placeholder="e.g., 'Attending my best friend's Sangeet at a palace hotel. The theme is royal and glamorous. I want my mehndi to be traditional but not too heavy.'"
@@ -158,7 +157,7 @@ export function StyleMatch() {
               </div>
 
              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-center text-primary">Your Personalized Style Recommendations</h3>
+                <h3 className="font-semibold text-center text-primary">Your Personalized Style Recommendations</h3>
                  {isLoading ? (
                     <div className="flex justify-center items-center py-16 flex-col gap-4 h-full">
                         <Loader2 className="h-12 w-12 animate-spin text-primary"/>
@@ -169,19 +168,19 @@ export function StyleMatch() {
                         <Card className="bg-primary/5">
                             <CardHeader className="flex flex-row items-center gap-3">
                                 <MehndiIcon className="w-8 h-8 text-primary"/>
-                                <CardTitle className="text-primary">Mehndi Style</CardTitle>
+                                <CardTitle className="text-xl text-primary">Mehndi Style</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-foreground/90">{recommendations.mehndiRecommendation}</p>
+                                <p className="text-base text-foreground/90">{recommendations.mehndiRecommendation}</p>
                             </CardContent>
                         </Card>
                         <Card className="bg-secondary/20">
                             <CardHeader className="flex flex-row items-center gap-3">
                                 <MakeupIcon className="w-8 h-8 text-accent"/>
-                                <CardTitle className="text-accent">Makeup Look</CardTitle>
+                                <CardTitle className="text-xl text-accent">Makeup Look</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-foreground/90">{recommendations.makeupRecommendation}</p>
+                                <p className="text-base text-foreground/90">{recommendations.makeupRecommendation}</p>
                             </CardContent>
                         </Card>
                      </div>
@@ -199,5 +198,3 @@ export function StyleMatch() {
     </div>
   );
 }
-
-    
