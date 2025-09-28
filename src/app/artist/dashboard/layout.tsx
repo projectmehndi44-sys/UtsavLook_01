@@ -5,7 +5,7 @@ import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { LayoutDashboard, Briefcase, Bell, User, LogOut, Palette, CalendarOff, IndianRupee, Package, Star, PanelLeft, Megaphone } from 'lucide-react';
 import type { Artist, Booking, Notification } from '@/lib/types';
 import { getArtist, listenToCollection, getDb } from '@/lib/services';
@@ -299,6 +299,10 @@ export default function ArtistDashboardLayout({
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="left" className="flex flex-col p-0">
+                                    <SheetHeader className="sr-only">
+                                      <SheetTitle>Navigation Menu</SheetTitle>
+                                      <SheetDescription>Main navigation links for the artist portal.</SheetDescription>
+                                    </SheetHeader>
                                     <NavContent />
                                 </SheetContent>
                             </Sheet>
