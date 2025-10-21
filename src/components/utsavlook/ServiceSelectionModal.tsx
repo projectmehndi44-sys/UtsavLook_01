@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -233,7 +234,7 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                                     </div>
                                 )}
                                 <CardHeader>
-                                    <CardTitle className="text-accent">{category.name}</CardTitle>
+                                    <CardTitle className="text-primary font-headline text-2xl">{category.name}</CardTitle>
                                     <CardDescription>{category.description}</CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex-grow"></CardContent>
@@ -297,3 +298,5 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
     </Dialog>
   );
 }
+
+    
