@@ -199,28 +199,28 @@ export const deleteArtist = async (id: string): Promise<void> => {
 export const createBooking = async (data: Omit<Booking, 'id'>) => {
     const db = await getDb();
     const bookingsCollection = collection(db, "bookings");
-    
+
     // The addDoc promise will be handled in the calling component.
     // We catch here to emit a detailed error for security rule violations.
     addDoc(bookingsCollection, data)
-        .then(docRef => {
-            // Also update the ID in the doc
-            updateDoc(docRef, {id: docRef.id});
-            return docRef.id;
-        })
-        .catch(async (serverError) => {
-            if (serverError.code === 'permission-denied') {
-                const permissionError = new FirestorePermissionError({
-                    path: bookingsCollection.path,
-                    operation: 'create',
-                    requestResourceData: data,
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            } else {
-                // For other errors, we can just re-throw them.
-                throw serverError;
-            }
-        });
+      .then(docRef => {
+          // Also update the ID in the doc
+          updateDoc(docRef, {id: docRef.id});
+          return docRef.id;
+      })
+      .catch(async (serverError) => {
+        if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: bookingsCollection.path,
+                operation: 'create',
+                requestResourceData: data,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            // For other errors, we can just re-throw them.
+            throw serverError;
+        }
+    });
 };
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
     const db = await getDb();
