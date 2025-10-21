@@ -8,7 +8,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "fire
 import { getFirebaseApp } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 // New function to upload images to Firebase Storage
 export const uploadSiteImage = async (file: File, path: string, compress: boolean = true): Promise<string> => {
@@ -197,33 +197,31 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 // Bookings
 export const createBooking = async (data: Omit<Booking, 'id'>) => {
-  const db = await getDb();
-  const bookingsCollection = collection(db, 'bookings');
-
-  // Use .then() and .catch() to handle the promise from addDoc
-  addDoc(bookingsCollection, data)
-    .then((docRef) => {
-      // On success, update the document with its own ID
-      updateDoc(docRef, { id: docRef.id });
-      return docRef.id;
-    })
-    .catch(async (serverError) => {
-      // Check if it's a permission error
-      if (serverError.code === 'permission-denied') {
-        const permissionError = new FirestorePermissionError({
-          path: bookingsCollection.path,
-          operation: 'create',
-          requestResourceData: data,
+    const db = await getDb();
+    const bookingsCollection = collection(db, 'bookings');
+    
+    // Do not await here. Chain a .catch() block to handle errors.
+    addDoc(bookingsCollection, data)
+        .then(docRef => {
+            // Success: Now update the document with its own ID for easy reference.
+            updateDoc(docRef, { id: docRef.id });
+        })
+        .catch(async (serverError) => {
+            // Check if it's a permission error, then create and emit a rich error.
+            if (serverError.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: bookingsCollection.path,
+                    operation: 'create',
+                    requestResourceData: data,
+                } satisfies SecurityRuleContext);
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                // For other errors, log them to the console.
+                console.error("Booking creation failed with a non-permission error:", serverError);
+            }
         });
-        // Emit the rich, contextual error
-        errorEmitter.emit('permission-error', permissionError);
-      } else {
-        // For any other type of error, re-throw it so it can be handled normally.
-        console.error("Booking creation failed with a non-permission error:", serverError);
-        throw serverError;
-      }
-    });
 };
+
 
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
     const db = await getDb();
