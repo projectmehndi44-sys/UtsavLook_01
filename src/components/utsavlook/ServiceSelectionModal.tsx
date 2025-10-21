@@ -234,7 +234,7 @@ export function ServiceSelectionModal({ service, artists, isOpen, onOpenChange, 
                                     </div>
                                 )}
                                 <CardHeader>
-                                    <CardTitle className="text-primary font-headline text-2xl">{category.name}</CardTitle>
+                                    <CardTitle className="font-headline text-2xl text-primary">{category.name}</CardTitle>
                                     <CardDescription>{category.description}</CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex-grow"></CardContent>
