@@ -3,6 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { Playfair_Display, Roboto, Dancing_Script } from 'next/font/google';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
@@ -45,6 +47,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#8B4513" />
        </head>
       <body className={cn('min-h-screen bg-background font-body antialiased', playfairDisplay.variable, roboto.variable, dancingScript.variable)}>
+        <FirebaseErrorListener />
         {children}
         <Toaster />
       </body>

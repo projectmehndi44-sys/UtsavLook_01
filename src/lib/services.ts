@@ -7,6 +7,8 @@ import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getFirebaseApp } from './firebase';
 import { compressImage } from './utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 // New function to upload images to Firebase Storage
 export const uploadSiteImage = async (file: File, path: string, compress: boolean = true): Promise<string> => {
@@ -194,13 +196,31 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 
 // Bookings
-export const createBooking = async (data: Omit<Booking, 'id'>): Promise<string> => {
+export const createBooking = async (data: Omit<Booking, 'id'>) => {
     const db = await getDb();
     const bookingsCollection = collection(db, "bookings");
-    const docRef = await addDoc(bookingsCollection, data);
-    // Also update the ID in the doc
-    await updateDoc(docRef, {id: docRef.id});
-    return docRef.id;
+    
+    // The addDoc promise will be handled in the calling component.
+    // We catch here to emit a detailed error for security rule violations.
+    addDoc(bookingsCollection, data)
+        .then(docRef => {
+            // Also update the ID in the doc
+            updateDoc(docRef, {id: docRef.id});
+            return docRef.id;
+        })
+        .catch(async (serverError) => {
+            if (serverError.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: bookingsCollection.path,
+                    operation: 'create',
+                    requestResourceData: data,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                // For other errors, we can just re-throw them.
+                throw serverError;
+            }
+        });
 };
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
     const db = await getDb();
