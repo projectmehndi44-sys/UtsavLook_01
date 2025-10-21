@@ -168,7 +168,8 @@ export default function LoginPage() {
                 }
 
             } else {
-                 throw new Error("Confirmation result not found.");
+                 setError("Your session has expired. Please resend the OTP.");
+                 return;
             }
 
         } catch (err: any) {
@@ -325,5 +326,3 @@ export default function LoginPage() {
     </>
   );
 }
-
-    
