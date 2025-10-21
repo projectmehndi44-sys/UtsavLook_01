@@ -280,7 +280,6 @@ export default function LoginPage() {
     <>
     <div className="w-full min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <div className="max-w-md w-full space-y-6">
-             <div id="recaptcha-container" style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}></div>
              <div className="bg-background p-8 rounded-lg shadow-lg">
                 <div className="text-center mb-6">
                     <KeyRound className="mx-auto w-12 h-12 text-primary mb-2"/>

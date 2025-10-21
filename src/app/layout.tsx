@@ -50,6 +50,7 @@ export default function RootLayout({
         <FirebaseErrorListener />
         {children}
         <Toaster />
+        <div id="recaptcha-container" style={{ position: 'absolute', zIndex: -1, opacity: 0, bottom: 0, right: 0 }}></div>
       </body>
     </html>
   );
