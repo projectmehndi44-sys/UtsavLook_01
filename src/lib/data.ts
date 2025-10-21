@@ -11,7 +11,7 @@ export const masterServicePackages: MasterServicePackage[] = [
     categories: [
       { name: 'Normal', description: 'Classic bridal designs.', basePrice: 3000, image: 'https://picsum.photos/seed/smb-normal/200/200' },
       { name: 'Premium', description: 'More detailed designs with premium henna.', basePrice: 5000, image: 'https://picsum.photos/seed/smb-premium/200/200' },
-      { name: 'ULTRA PREMIUM', description: 'Full custom designs with our top artists.', basePrice: 8000, image: 'https://picsum.photos/seed/smb-ultra/200/200' },
+      { name: 'Ultra Premium', description: 'Full custom designs with our top artists.', basePrice: 8000, image: 'https://picsum.photos/seed/smb-ultra/200/200' },
     ],
   },
   {
@@ -24,7 +24,7 @@ export const masterServicePackages: MasterServicePackage[] = [
     categories: [
       { name: 'Normal', description: 'Simple patterns for guests.', basePrice: 500, image: 'https://picsum.photos/seed/smg-normal/200/200' },
       { name: 'Premium', description: 'More intricate options for guests.', basePrice: 800, image: 'https://picsum.photos/seed/smg-premium/200/200' },
-      { name: 'ULTRA PREMIUM', description: 'Customized guest packages.', basePrice: 1200, image: 'https://picsum.photos/seed/smg-ultra/200/200' },
+      { name: 'Ultra Premium', description: 'Customized guest packages.', basePrice: 1200, image: 'https://picsum.photos/seed/smg-ultra/200/200' },
     ],
   },
   {
@@ -37,7 +37,7 @@ export const masterServicePackages: MasterServicePackage[] = [
     categories: [
       { name: 'Normal', description: 'Standard HD makeup.', basePrice: 7000, image: 'https://picsum.photos/seed/sumb-normal/200/200' },
       { name: 'Premium', description: 'Airbrush makeup for a flawless finish.', basePrice: 12000, image: 'https://picsum.photos/seed/sumb-premium/200/200' },
-      { name: 'ULTRA PREMIUM', description: 'Complete bridal package with celebrity artist.', basePrice: 20000, image: 'https://picsum.photos/seed/sumb-ultra/200/200' },
+      { name: 'Ultra Premium', description: 'Complete bridal package with celebrity artist.', basePrice: 20000, image: 'https://picsum.photos/seed/sumb-ultra/200/200' },
     ],
   },
     {
@@ -50,7 +50,7 @@ export const masterServicePackages: MasterServicePackage[] = [
     categories: [
       { name: 'Normal', description: 'Classic party look.', basePrice: 2500, image: 'https://picsum.photos/seed/sump-normal/200/200' },
       { name: 'Premium', description: 'Advanced techniques and products.', basePrice: 4000, image: 'https://picsum.photos/seed/sump-premium/200/200' },
-      { name: 'ULTRA PREMIUM', description: 'Full glam with our top makeup artists.', basePrice: 6000, image: 'https://picsum.photos/seed/sump-ultra/200/200' },
+      { name: 'Ultra Premium', description: 'Full glam with our top makeup artists.', basePrice: 6000, image: 'https://picsum.photos/seed/sump-ultra/200/200' },
     ],
   },
   {
@@ -63,7 +63,7 @@ export const masterServicePackages: MasterServicePackage[] = [
     categories: [
       { name: 'Normal', description: '4-hour shoot, 1 location.', basePrice: 15000, image: 'https://picsum.photos/seed/spp-normal/200/200' },
       { name: 'Premium', description: '8-hour shoot, 2 locations, drone shots.', basePrice: 25000, image: 'https://picsum.photos/seed/spp-premium/200/200' },
-      { name: 'ULTRA PREMIUM', description: 'Full day shoot, multiple locations, cinematic video.', basePrice: 40000, image: 'https://picsum.photos/seed/spp-ultra/200/200' },
+      { name: 'Ultra Premium', description: 'Full day shoot, multiple locations, cinematic video.', basePrice: 40000, image: 'https://picsum.photos/seed/spp-ultra/200/200' },
     ],
   },
   {
@@ -76,7 +76,7 @@ export const masterServicePackages: MasterServicePackage[] = [
     categories: [
       { name: 'Normal', description: 'One day coverage, 2 photographers.', basePrice: 50000, image: 'https://picsum.photos/seed/spw-normal/200/200' },
       { name: 'Premium', description: 'Two day coverage, 3 photographers, album.', basePrice: 80000, image: 'https://picsum.photos/seed/spw-premium/200/200' },
-      { name: 'ULTRA PREMIUM', description: 'Full event coverage, cinematic video, luxury album.', basePrice: 150000, image: 'https://picsum.photos/seed/spw-ultra/200/200' },
+      { name: 'Ultra Premium', description: 'Full event coverage, cinematic video, luxury album.', basePrice: 150000, image: 'https://picsum.photos/seed/spw-ultra/200/200' },
     ],
   },
 ];

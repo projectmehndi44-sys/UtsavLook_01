@@ -20,7 +20,7 @@ export type PromotionalImage = {
 }
 
 export type PackageCategory = {
-  name: 'Normal' | 'Premium' | 'ULTRA PREMIUM';
+  name: 'Normal' | 'Premium' | 'Ultra Premium';
   description: string;
   basePrice: number;
   image?: string;
@@ -38,7 +38,7 @@ export type MasterServicePackage = {
 
 export type ArtistServiceOffering = {
     masterPackageId: string;
-    categoryName: 'Normal' | 'Premium' | 'ULTRA PREMIUM';
+    categoryName: 'Normal' | 'Premium' | 'Ultra Premium';
     artistPrice: number;
     isEnabled: boolean;
 };

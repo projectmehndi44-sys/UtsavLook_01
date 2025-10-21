@@ -22,7 +22,7 @@ import { getDb } from '@/lib/firebase';
 import { listenToCollection } from '@/lib/services';
 
 const categorySchema = z.object({
-  name: z.enum(['Normal', 'Premium', 'ULTRA PREMIUM']),
+  name: z.enum(['Normal', 'Premium', 'Ultra Premium']),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   basePrice: z.coerce.number().min(0, 'Base price must be a positive number.'),
   image: z.any().optional(),
@@ -55,7 +55,7 @@ export default function PackageManagementPage() {
         defaultValues: { name: '', description: '', tags: '', image: null, service: 'mehndi', categories: [
              { name: 'Normal', description: '', basePrice: 0, image: null },
              { name: 'Premium', description: '', basePrice: 0, image: null },
-             { name: 'ULTRA PREMIUM', description: '', basePrice: 0, image: null },
+             { name: 'Ultra Premium', description: '', basePrice: 0, image: null },
         ]},
     });
     
@@ -147,7 +147,7 @@ export default function PackageManagementPage() {
         form.reset({ name: '', description: '', tags: '', image: null, service: 'mehndi', categories: [
             { name: 'Normal', description: '', basePrice: 0 },
             { name: 'Premium', description: '', basePrice: 0 },
-            { name: 'ULTRA PREMIUM', description: '', basePrice: 0 },
+            { name: 'Ultra Premium', description: '', basePrice: 0 },
         ]});
         if(fileInputRef.current) fileInputRef.current.value = "";
     }
