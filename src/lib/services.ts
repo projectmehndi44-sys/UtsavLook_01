@@ -197,31 +197,34 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 // Bookings
 export const createBooking = async (data: Omit<Booking, 'id'>) => {
-    const db = await getDb();
-    const bookingsCollection = collection(db, "bookings");
+  const db = await getDb();
+  const bookingsCollection = collection(db, 'bookings');
 
-    // The addDoc promise will be handled in the calling component.
-    // We catch here to emit a detailed error for security rule violations.
-    addDoc(bookingsCollection, data)
-      .then(docRef => {
-          // Also update the ID in the doc
-          updateDoc(docRef, {id: docRef.id});
-          return docRef.id;
-      })
-      .catch(async (serverError) => {
-        if (serverError.code === 'permission-denied') {
-            const permissionError = new FirestorePermissionError({
-                path: bookingsCollection.path,
-                operation: 'create',
-                requestResourceData: data,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        } else {
-            // For other errors, we can just re-throw them.
-            throw serverError;
-        }
+  // Use .then() and .catch() to handle the promise from addDoc
+  addDoc(bookingsCollection, data)
+    .then((docRef) => {
+      // On success, update the document with its own ID
+      updateDoc(docRef, { id: docRef.id });
+      return docRef.id;
+    })
+    .catch(async (serverError) => {
+      // Check if it's a permission error
+      if (serverError.code === 'permission-denied') {
+        const permissionError = new FirestorePermissionError({
+          path: bookingsCollection.path,
+          operation: 'create',
+          requestResourceData: data,
+        });
+        // Emit the rich, contextual error
+        errorEmitter.emit('permission-error', permissionError);
+      } else {
+        // For any other type of error, re-throw it so it can be handled normally.
+        console.error("Booking creation failed with a non-permission error:", serverError);
+        throw serverError;
+      }
     });
 };
+
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
     const db = await getDb();
     const bookingRef = doc(db, "bookings", id);
@@ -419,3 +422,5 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
 };
 
 export { getDb };
+
+    
