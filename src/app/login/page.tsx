@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -73,6 +72,9 @@ export default function LoginPage() {
             });
 
             recaptchaVerifierRef.current = verifier;
+            
+            // This line is crucial for the verifier to initialize correctly.
+            await verifier.render();
 
             const confirmationResult = await sendOtp(data.phone, verifier);
 
@@ -323,3 +325,5 @@ export default function LoginPage() {
     </>
   );
 }
+
+    
