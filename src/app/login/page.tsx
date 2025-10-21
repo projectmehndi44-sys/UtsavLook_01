@@ -55,6 +55,15 @@ export default function LoginPage() {
         resolver: zodResolver(NameSchema),
         defaultValues: { name: '' },
     });
+    
+    // Initialize RecaptchaVerifier only once.
+    React.useEffect(() => {
+        if (!recaptchaVerifierRef.current) {
+            recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                'size': 'invisible'
+            });
+        }
+    }, [auth]);
 
     const handleSendOtp: SubmitHandler<OTPFormValues> = async (data) => {
         setError('');
@@ -63,18 +72,10 @@ export default function LoginPage() {
         setIsResendDisabled(true);
 
         try {
-            if (recaptchaVerifierRef.current) {
-              recaptchaVerifierRef.current.clear();
+            const verifier = recaptchaVerifierRef.current;
+            if (!verifier) {
+                throw new Error("RecaptchaVerifier not initialized.");
             }
-            
-            const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'invisible'
-            });
-
-            recaptchaVerifierRef.current = verifier;
-            
-            // This line is crucial for the verifier to initialize correctly.
-            await verifier.render();
 
             const confirmationResult = await sendOtp(data.phone, verifier);
 
@@ -91,6 +92,10 @@ export default function LoginPage() {
                 errorMessage = "You have requested an OTP too many times. Please try again later.";
             }
             setError(errorMessage);
+            // Reset verifier on error
+            if (window.grecaptcha && recaptchaVerifierRef.current) {
+                 window.grecaptcha.reset(recaptchaVerifierRef.current.widgetId);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -213,7 +218,6 @@ export default function LoginPage() {
     const renderPhoneForm = () => (
          <Form {...phoneForm}>
             <form onSubmit={phoneForm.handleSubmit(handleSendOtp)} className="space-y-4">
-                <div id="recaptcha-container" style={{ position: 'absolute', bottom: 0, right: 0, zIndex: -1 }}></div>
                 <FormField
                     control={phoneForm.control}
                     name="phone"
@@ -276,6 +280,7 @@ export default function LoginPage() {
     <>
     <div className="w-full min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <div className="max-w-md w-full space-y-6">
+             <div id="recaptcha-container" style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}></div>
              <div className="bg-background p-8 rounded-lg shadow-lg">
                 <div className="text-center mb-6">
                     <KeyRound className="mx-auto w-12 h-12 text-primary mb-2"/>
