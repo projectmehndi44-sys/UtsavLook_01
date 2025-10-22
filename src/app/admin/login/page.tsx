@@ -17,7 +17,6 @@ import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUser
 import { getFirebaseApp } from '@/lib/firebase';
 import { getTeamMembers, addOrUpdateTeamMember, getDocument } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { initialTeamMembers } from '@/lib/team-data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import type { TeamMember } from '@/lib/types';
@@ -73,13 +72,12 @@ export default function AdminLoginPage() {
     
     const setupForm = useForm<SetupFormValues>({
         resolver: zodResolver(setupSchema),
-        defaultValues: { name: '', email: '', password: '' },
+        defaultValues: { name: 'Super Admin', email: 'utsavlook01@gmail.com', password: '' },
     });
 
     const handleLogin = async (data: LoginFormValues) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-            // Directly fetch the user profile from Firestore using the UID
             const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
             
             if (memberProfile) {
@@ -121,11 +119,9 @@ export default function AdminLoginPage() {
 
     const handleSetup = async (data: SetupFormValues) => {
         try {
-            // First, try to create the user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const authUser = userCredential.user;
 
-            // If successful, create the Super Admin in the database with the correct UID
             const superAdminMember: TeamMember = {
                 id: authUser.uid,
                 name: data.name,
@@ -154,7 +150,7 @@ export default function AdminLoginPage() {
             if (error.code === 'auth/email-already-in-use') {
                 toast({ 
                     title: "Account Exists", 
-                    description: "An auth account with this email already exists. Please log in.",
+                    description: "An auth account with this email already exists. Please log in or reset your password.",
                     variant: "default"
                 });
                 setPageState('login');
@@ -259,7 +255,3 @@ export default function AdminLoginPage() {
         </>
     );
 }
-
-    
-
-    

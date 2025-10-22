@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -27,21 +26,22 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
-            // Bypass auth logic on the login page itself to allow setup/login
+            // If we are on the login page, we don't need to check for auth,
+            // as this would create a loop. Let the login page handle its own logic.
             if (pathname === '/admin/login') {
                 setIsLoading(false);
+                setUser(null); // Ensure user is null on login page
                 return;
             }
 
             if (firebaseUser) {
                 try {
-                    // This now fetches the specific team member document by UID.
-                    const memberProfile = await getDocument<TeamMember>('teamMembers', firebaseUser.uid); 
+                    const memberProfile = await getDocument<TeamMember>('teamMembers', firebaseUser.uid);
                     
                     if (memberProfile) {
                         setUser(memberProfile);
                     } else {
-                        // If a Firebase user exists but has no profile in teamMembers, they are not an admin.
+                        // Firebase user exists but has no team member profile, deny access.
                         await auth.signOut();
                         setUser(null);
                         router.push('/admin/login');
@@ -53,8 +53,9 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     router.push('/admin/login');
                 }
             } else {
+                // No firebase user, not authenticated.
                 setUser(null);
-                 router.push('/admin/login');
+                router.push('/admin/login');
             }
             setIsLoading(false);
         });
