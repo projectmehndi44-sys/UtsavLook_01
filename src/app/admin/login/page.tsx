@@ -28,7 +28,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const setupSchema = z.object({
-    name: z.string().min(3, "Name is required."),
     email: z.string().email("A valid email is required."),
     password: z.string().min(6, "Password must be at least 6 characters."),
 });
@@ -53,13 +52,11 @@ export default function AdminLoginPage() {
 
         const checkSuperAdmin = async () => {
             try {
-                // Directly fetch from the database on component mount
                 const members = await getTeamMembers();
                 const superAdminExists = members.some(m => m.role === 'Super Admin');
                 setPageState(superAdminExists ? 'login' : 'setup');
             } catch (error) {
                 console.error("Error checking for super admin:", error);
-                // Default to login on error to avoid getting stuck in a setup loop
                 setPageState('login');
             }
         };
@@ -74,7 +71,7 @@ export default function AdminLoginPage() {
     
     const setupForm = useForm<SetupFormValues>({
         resolver: zodResolver(setupSchema),
-        defaultValues: { name: 'Super Admin', email: 'utsavlook01@gmail.com', password: '' },
+        defaultValues: { email: 'utsavlook01@gmail.com', password: '' },
     });
 
     const handleLogin = async (data: LoginFormValues) => {
@@ -87,36 +84,8 @@ export default function AdminLoginPage() {
                 toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
                 router.push('/admin'); 
             } else {
-                // If user has an auth account but no profile, and it's the target email, create it.
-                if(userCredential.user.email === 'utsavlook01@gmail.com') {
-                     toast({ title: 'Setting up Super Admin...', description: 'Please wait a moment.' });
-                     const superAdminMember: TeamMember = {
-                        id: userCredential.user.uid,
-                        name: "Super Admin",
-                        username: userCredential.user.email,
-                        role: 'Super Admin',
-                        permissions: {
-                            dashboard: 'edit',
-                            bookings: 'edit',
-                            artists: 'edit',
-                            customers: 'edit',
-                            artistDirectory: 'edit',
-                            payouts: 'edit',
-                            transactions: 'edit',
-                            packages: 'edit',
-                            settings: 'edit',
-                            notifications: 'edit',
-                        }
-                    };
-                    await addOrUpdateTeamMember(superAdminMember);
-                    toast({ title: 'Admin Account Created!', description: 'Redirecting to your dashboard.' });
-                    router.push('/admin');
-
-                } else {
-                    // All other users without a profile are denied.
-                    await auth.signOut();
-                    toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
-                }
+                await auth.signOut();
+                toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
             }
         } catch (error: any) {
             let description = 'An error occurred during login. Please try again.';
@@ -150,17 +119,15 @@ export default function AdminLoginPage() {
 
     const handleSetup = async (data: SetupFormValues) => {
         try {
-            // Step 1: Create the user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const authUser = userCredential.user;
 
-            // Step 2: Create the corresponding team member profile in Firestore using the new UID
             const superAdminMember: TeamMember = {
-                id: authUser.uid, // Use the real UID from Auth
-                name: data.name,
+                id: authUser.uid,
+                name: "Super Admin",
                 username: data.email,
                 role: 'Super Admin',
-                permissions: { // Grant all permissions
+                permissions: {
                     dashboard: 'edit',
                     bookings: 'edit',
                     artists: 'edit',
@@ -177,7 +144,6 @@ export default function AdminLoginPage() {
             await addOrUpdateTeamMember(superAdminMember);
 
             toast({ title: 'Super Admin Created!', description: 'You can now log in with your new credentials.' });
-            // Switch to login view after successful setup
             setPageState('login');
 
         } catch (error: any) {
@@ -210,9 +176,6 @@ export default function AdminLoginPage() {
             </div>
             <Form {...setupForm}>
                 <form onSubmit={setupForm.handleSubmit(handleSetup)} className="grid gap-4">
-                    <FormField control={setupForm.control} name="name" render={({ field }) => (
-                        <FormItem><FormLabel>Your Name</FormLabel><FormControl><Input placeholder="e.g., Admin User" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
                     <FormField control={setupForm.control} name="email" render={({ field }) => (
                         <FormItem><FormLabel>Login Email</FormLabel><FormControl><Input type="email" placeholder="admin@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
@@ -289,5 +252,3 @@ export default function AdminLoginPage() {
         </>
     );
 }
-
-    
