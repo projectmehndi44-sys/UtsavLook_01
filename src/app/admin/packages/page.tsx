@@ -19,7 +19,7 @@ import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Separator } from '@/components/ui/separator';
 import { doc, setDoc, addDoc, collection, deleteDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import { listenToCollection } from '@/lib/services';
+import { getMasterServices, setConfigDocument } from '@/lib/services';
 
 const categorySchema = z.object({
   name: z.enum(['Normal', 'Premium', 'Ultra Premium']),
@@ -64,12 +64,14 @@ export default function PackageManagementPage() {
         name: "categories"
     });
 
-    React.useEffect(() => {
-        const unsubscribe = listenToCollection<MasterServicePackage>('masterServices', (data) => {
-            setMasterServices(data);
-        });
-        return () => unsubscribe();
+    const fetchPackages = React.useCallback(async () => {
+        const packages = await getMasterServices();
+        setMasterServices(packages);
     }, []);
+
+    React.useEffect(() => {
+        fetchPackages();
+    }, [fetchPackages]);
     
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -88,28 +90,30 @@ export default function PackageManagementPage() {
     }
 
     const onSubmit: SubmitHandler<PackageFormValues> = async (data) => {
-        const db = await getDb();
-        const newPackageData: Omit<MasterServicePackage, 'id'> = {
+        let updatedServices;
+        const newPackageData: MasterServicePackage = {
+            id: editingPackage ? editingPackage.id : `ms-${Date.now()}`,
             name: data.name,
             service: data.service,
             description: data.description,
             tags: data.tags?.split(',').map(tag => tag.trim()).filter(Boolean) || [],
-            image: imagePreview || editingPackage?.image || 'https://picsum.photos/600/400?random=' + Date.now(),
+            image: imagePreview || (editingPackage?.image) || 'https://picsum.photos/600/400?random=' + Date.now(),
             categories: data.categories.map((cat, index) => ({
                 ...cat,
-                image: categoryImagePreviews[index] || editingPackage?.categories[index]?.image || 'https://picsum.photos/200/200?random=' + (Date.now() + index),
+                image: categoryImagePreviews[index] || (editingPackage?.categories[index]?.image) || 'https://picsum.photos/200/200?random=' + (Date.now() + index),
             }))
         };
 
         if (editingPackage) {
-            const docRef = doc(db, "masterServices", editingPackage.id);
-            await setDoc(docRef, newPackageData);
+            updatedServices = masterServices.map(p => p.id === editingPackage.id ? newPackageData : p);
             toast({ title: 'Master Service Updated', description: `Service "${data.name}" has been updated.` });
         } else {
-            await addDoc(collection(db, "masterServices"), newPackageData);
+            updatedServices = [...masterServices, newPackageData];
             toast({ title: 'Master Service Created', description: `Service "${data.name}" has been added.` });
         }
         
+        await setConfigDocument('masterServices', updatedServices);
+        setMasterServices(updatedServices);
         handleCancelEdit();
     };
 
@@ -135,8 +139,10 @@ export default function PackageManagementPage() {
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Are you sure you want to delete this service package? This action cannot be undone.")) return;
-        const db = await getDb();
-        await deleteDoc(doc(db, "masterServices", id));
+        
+        const updatedServices = masterServices.filter(p => p.id !== id);
+        await setConfigDocument('masterServices', updatedServices);
+        setMasterServices(updatedServices);
         toast({ title: 'Master Service Deleted', variant: 'destructive' });
     };
 

@@ -79,17 +79,26 @@ export async function getDocument<T>(collectionName: string, id: string): Promis
 async function getConfigDocument<T>(docId: string): Promise<T | null> {
     const db = await getDb();
     const docRef = doc(db, 'config', docId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data && data.hasOwnProperty('packages')) return data.packages as T;
-        if (data && data.hasOwnProperty('promos')) return data.promos as T;
-        if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
-        if (data && data.hasOwnProperty('images')) return data.images as T;
-        if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
-        return data as T; // Fallback for flat config docs
+    try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data && data.hasOwnProperty('packages')) return data.packages as T;
+            if (data && data.hasOwnProperty('promos')) return data.promos as T;
+            if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
+            if (data && data.hasOwnProperty('images')) return data.images as T;
+            if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
+            return data as T; // Fallback for flat config docs
+        }
+        return null;
+    } catch (serverError) {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'get',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        return null;
     }
-    return null;
 }
 
 // Generic function to set a config document
@@ -518,7 +527,7 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
-    const config = await getConfigDocument<any>('masterServices');
+    const config = await getConfigDocument<MasterServicePackage[]>('masterServices');
     return config || [];
 };
 

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder } from '@/lib/types';
-import { getCustomer, getPlaceholderImages, listenToCollection } from '@/lib/services';
+import { getCustomer, getPlaceholderImages, listenToCollection, getMasterServices } from '@/lib/services';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -88,8 +88,8 @@ export default function Home() {
     checkLoggedInCustomer();
 
     const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
-    const unsubscribePackages = listenToCollection<MasterServicePackage>('masterServices', (services) => {
-        // Replace placeholder images with actual images from data
+    
+    getMasterServices().then((services) => {
         const updatedServices = services.map(service => ({
             ...service,
             image: service.image || `https://picsum.photos/seed/${service.id}/400/300`,
@@ -115,7 +115,6 @@ export default function Home() {
     return () => {
         clearInterval(intervalId);
         unsubscribeArtists();
-        unsubscribePackages();
     };
   }, [checkLoggedInCustomer, backgroundImages.length]);
   
