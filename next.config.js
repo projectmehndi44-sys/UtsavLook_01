@@ -9,6 +9,7 @@ const nextConfig = {
       maxDuration: 120, // Increase timeout to 2 minutes for AI operations
       bodySizeLimit: '4mb', // Allow larger image uploads
     },
+    allowedDevOrigins: ["*.cloudworkstations.dev"],
   },
   typescript: {
     ignoreBuildErrors: true,
