@@ -5,72 +5,77 @@ service cloud.firestore {
 
     // Helper Functions
     
-    // Returns true if the requesting user is the owner of the document.
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    // Returns true if the requesting user's UID is in the list of team member IDs.
-    function isTeamMember() {
-      // Correct syntax: Use 'get()' to read the document and 'in' to check for presence in the list of IDs.
-      return request.auth.uid in get(/databases/$(database)/documents/config/teamMembers).data.members.map(m => m.id);
+    function getTeamMemberRoles() {
+      // Correctly retrieves the list of roles for the current user from the members array.
+      // The syntax 'let var = ...' and 'list.filter(var, predicate)' is correct here.
+      let members = get(/databases/$(database)/documents/config/teamMembers).data.members;
+      let matchingMembers = members.filter(member, member.id == request.auth.uid);
+      if (matchingMembers.size() > 0) {
+        // Assuming one user has one role entry.
+        return [matchingMembers[0].role];
+      }
+      return [];
     }
     
-    // Returns true if the requesting user has a specific role (e.g., 'Super Admin').
     function isRole(role) {
-      // Correct syntax: Use 'get()' to read the document and a comprehension with 'in' to check for a matching member.
-      let members = get(/databases/$(database)/documents/config/teamMembers).data.members;
-      return members.filter(m => m.id == request.auth.uid && m.role == role).size() > 0;
+      // Correctly checks if the specified role is in the user's list of roles.
+      return role in getTeamMemberRoles();
+    }
+    
+    function isTeamMember() {
+      // Correctly checks if the user has any role assigned, meaning they are a team member.
+      return getTeamMemberRoles().size() > 0;
     }
 
     // --- Collection Rules ---
 
-    // PUBLIC: Artists and master services can be read by anyone.
     match /artists/{artistId} {
       allow read: if true;
       allow write: if isTeamMember();
     }
-
-    // CUSTOMERS: Can only read/write their own data.
+    
     match /customers/{userId} {
       allow read, write: if isOwner(userId);
     }
 
-    // BOOKINGS: Customers can create. Admins/Assigned Artists can read/update.
     match /bookings/{bookingId} {
       allow read: if isTeamMember() || isOwner(resource.data.customerId) || request.auth.uid in resource.data.artistIds;
       allow create: if isOwner(request.resource.data.customerId);
       allow update: if isTeamMember() || (request.auth.uid in resource.data.artistIds && request.resource.data.status == 'Completed');
     }
 
-    // PENDING ARTISTS: Anyone can create, only Super Admin can manage.
     match /pendingArtists/{pendingId} {
       allow create: if true;
       allow read, delete: if isRole('Super Admin');
     }
 
-    // --- CONFIGURATION COLLECTION ---
-    // Default deny for direct access to config collection.
+    // --- Configuration Rules ---
+
+    // Default deny access to the config collection itself
     match /config/{document} {
       allow read, write: if false;
     }
-
-    // Specific rules for documents within the 'config' collection.
+    
+    // Specific rules for documents within the config collection
     match /config/teamMembers {
-      allow read: if request.auth != null; // Any signed-in user can read to verify role.
+      allow read: if request.auth != null; // Any signed-in user can read to have their role verified.
       allow write: if isRole('Super Admin');
     }
-    
+
     match /config/availableLocations {
       allow read: if true;
       allow write: if isRole('Super Admin');
     }
-
+    
     match /config/companyProfile {
       allow read: if true;
       allow write: if isRole('Super Admin');
     }
-    
+
     match /config/financialSettings {
       allow read: if isTeamMember();
       allow write: if isRole('Super Admin');
@@ -80,7 +85,7 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isRole('Super Admin');
     }
-
+    
     match /config/placeholderImages {
       allow read: if true;
       allow write: if isRole('Super Admin');
