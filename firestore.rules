@@ -10,22 +10,22 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function getTeamMemberRoles() {
-      // Correctly retrieves the list of roles for the current user from the members array.
-      // This syntax uses ternary operators, which ARE supported, to safely access data.
+    function getMatchingMember() {
+      // Returns a list containing the member object that matches the current user's ID.
+      // This is a single expression using a filter, which is the correct syntax.
       return get(/databases/$(database)/documents/config/teamMembers).data.members
-             .filter(member, member.id == request.auth.uid)
-             .map(member, member.role);
+        .filter(member, member.id == request.auth.uid);
     }
     
     function isRole(role) {
-      // Correctly checks if the specified role is in the user's list of roles.
-      return getTeamMemberRoles().size() > 0 && getTeamMemberRoles()[0] == role;
+      // Checks if a matching member exists and if their role matches the provided role.
+      // This is now a single expression using the ternary operator.
+      return getMatchingMember().size() > 0 && getMatchingMember()[0].role == role;
     }
     
     function isTeamMember() {
-      // Correctly checks if the user has any role assigned, meaning they are a team member.
-      return getTeamMemberRoles().size() > 0;
+      // Checks if a user exists in the team members list.
+      return getMatchingMember().size() > 0;
     }
 
     // --- Collection Rules ---
@@ -45,21 +45,22 @@ service cloud.firestore {
       allow update: if isTeamMember() || (request.auth.uid in resource.data.artistIds && request.resource.data.status == 'Completed');
     }
 
+    match /payoutHistory/{payoutId} {
+      allow read, create: if isTeamMember();
+    }
+
     match /pendingArtists/{pendingId} {
       allow create: if true;
       allow read, delete: if isRole('Super Admin');
     }
 
     // --- Configuration Rules ---
+    // This section is critical. It secures your config while allowing necessary access.
 
-    // Default deny access to the config collection itself
-    match /config/{document} {
-      allow read, write: if false;
-    }
-    
-    // Specific rules for documents within the config collection
     match /config/teamMembers {
-      allow read: if request.auth != null; // Any signed-in user can read to have their role verified.
+      // THE LOGIN FIX: Any signed-in user can read this document to verify their role.
+      allow read: if request.auth != null; 
+      // Only a Super Admin can change the team list.
       allow write: if isRole('Super Admin');
     }
 
