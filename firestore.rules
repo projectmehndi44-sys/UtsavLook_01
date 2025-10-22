@@ -4,18 +4,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow public read access to artists
+    // Allow public read access for artists and master services for browsing.
     match /artists/{artistId} {
-      allow read;
-      allow write: if false; // Explicitly deny writes for now
+      allow read: if true;
+      allow write: if request.auth != null; // Simplistic rule, to be refined.
     }
-
-    // Allow public read access to master services/packages
     match /masterServices/{serviceId} {
-      allow read;
-      allow write: if false;
+      allow read: if true;
+      allow write: if false; // Should only be updated from admin console/tooling
     }
 
+    // Secure customer data
+    match /customers/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Secure booking data
+    match /bookings/{bookingId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.customerId;
+    }
+
+    // Default deny all other collections
     match /{document=**} {
       allow read, write: if false;
     }
