@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -28,15 +29,13 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
             if (firebaseUser) {
                 try {
-                    const teamMembers = await getTeamMembers();
-                    // Find the user profile in the database by their unique Firebase UID.
+                    // This now fetches from the new 'teamMembers' collection.
+                    const teamMembers = await getTeamMembers(); 
                     const memberProfile = teamMembers.find(m => m.id === firebaseUser.uid);
                     
                     if (memberProfile) {
-                        // If found, they are a valid admin.
                         setUser(memberProfile);
                     } else {
-                        // If not found, they are not an authorized admin. Log them out.
                         await auth.signOut();
                         setUser(null);
                         if (pathname !== '/admin/login') {
@@ -49,7 +48,6 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     setUser(null);
                 }
             } else {
-                // No Firebase user is logged in.
                 setUser(null);
             }
             setIsLoading(false);

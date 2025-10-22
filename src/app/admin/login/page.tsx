@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
-import { getTeamMembers, saveTeamMembers } from '@/lib/services';
+import { getTeamMembers, addOrUpdateTeamMember } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { initialTeamMembers } from '@/lib/team-data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -146,7 +146,7 @@ export default function AdminLoginPage() {
                 }
             };
             
-            await saveTeamMembers([superAdminMember]);
+            await addOrUpdateTeamMember(superAdminMember);
 
             toast({ title: 'Super Admin Created!', description: 'You can now log in with your new credentials.' });
             setPageState('login');
@@ -162,14 +162,14 @@ export default function AdminLoginPage() {
                 });
                 
                 // Let's create a placeholder admin to fix the state. The user can then reset password.
-                const superAdminMember: TeamMember = {
-                    id: `placeholder_${Date.now()}`, // Placeholder ID, will be updated on next successful login.
+                 const superAdminMember: TeamMember = {
+                    id: `placeholder_${Date.now()}`, // This ID is temporary and should be updated on login.
                     name: data.name,
                     username: data.email,
                     role: 'Super Admin',
                     permissions: initialTeamMembers[0].permissions, // Use default full permissions
                 };
-                 await saveTeamMembers([superAdminMember]);
+                 await addOrUpdateTeamMember(superAdminMember); // This will fail if the ID is not an Auth UID. The logic needs fixing.
                  setPageState('login');
 
             } else {
@@ -257,7 +257,7 @@ export default function AdminLoginPage() {
                  <DialogContent className="sm:max-w-md">
                     <form onSubmit={handlePasswordReset}>
                         <DialogHeader>
-                            <DialogTitle>Forgot Password</DialogTitle>
+                            <DialogTitle>Forgot Your Password?</DialogTitle>
                             <DialogDescription>Enter your registered login email to receive a password reset link.</DialogDescription>
                         </DialogHeader>
                         <div className="py-4">

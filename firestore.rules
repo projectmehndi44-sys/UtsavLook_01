@@ -1,31 +1,21 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // Helper Functions
-    
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    function getMatchingMember() {
-      // Returns a list containing the member object that matches the current user's ID.
-      // This is a single expression using a filter, which is the correct syntax.
-      return get(/databases/$(database)/documents/config/teamMembers).data.members
-        .filter(member, member.id == request.auth.uid);
+    function isTeamMember() {
+      // Correctly checks if a document for the user exists in the teamMembers collection.
+      return exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid));
     }
     
     function isRole(role) {
-      // Checks if a matching member exists and if their role matches the provided role.
-      // This is now a single expression using the ternary operator.
-      return getMatchingMember().size() > 0 && getMatchingMember()[0].role == role;
-    }
-    
-    function isTeamMember() {
-      // Checks if a user exists in the team members list.
-      return getMatchingMember().size() > 0;
+      // Correctly gets the user's document and checks their role property.
+      return isTeamMember() && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == role;
     }
 
     // --- Collection Rules ---
@@ -50,58 +40,23 @@ service cloud.firestore {
     }
 
     match /pendingArtists/{pendingId} {
-      allow create: if true;
+      allow create: if true; // Anyone can submit an application
       allow read, delete: if isRole('Super Admin');
     }
 
-    // --- Configuration Rules ---
-    // This section is critical. It secures your config while allowing necessary access.
-
-    match /config/teamMembers {
-      // THE LOGIN FIX: Any signed-in user can read this document to verify their role.
-      allow read: if request.auth != null; 
-      // Only a Super Admin can change the team list.
-      allow write: if isRole('Super Admin');
-    }
-
-    match /config/availableLocations {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
-    }
-    
-    match /config/companyProfile {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
-    }
-
-    match /config/financialSettings {
+    // New Team Members Collection Rule
+    match /teamMembers/{userId} {
+      // Any team member can read other member details.
       allow read: if isTeamMember();
+      // Only a Super Admin can create, update, or delete team members.
       allow write: if isRole('Super Admin');
     }
 
-    match /config/masterServices {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
-    }
-    
-    match /config/placeholderImages {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
-    }
-    
-    match /config/benefitImages {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
-    }
-    
-    match /config/promotionalImage {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
-    }
-
-    match /config/promotions {
-      allow read: if true;
-      allow write: if isRole('Super Admin');
+    // --- Configuration Rules ---
+    // All config documents are now publicly readable but only writable by Super Admins.
+    match /config/{document} {
+        allow read: if true;
+        allow write: if isRole('Super Admin');
     }
   }
 }

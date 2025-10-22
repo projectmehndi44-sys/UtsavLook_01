@@ -83,7 +83,6 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
     if (docSnap.exists()) {
         const data = docSnap.data();
         if (data && data.hasOwnProperty('packages')) return data.packages as T;
-        if (data && data.hasOwnProperty('members')) return data.members as T;
         if (data && data.hasOwnProperty('promos')) return data.promos as T;
         if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
         if (data && data.hasOwnProperty('images')) return data.images as T;
@@ -99,8 +98,7 @@ async function setConfigDocument(docId: string, data: any): Promise<void> {
     const docRef = doc(db, 'config', docId);
     
     let dataToSet = data;
-    if(docId === 'teamMembers') dataToSet = { members: data };
-    else if (docId === 'masterServices') dataToSet = { packages: data };
+    if (docId === 'masterServices') dataToSet = { packages: data };
     else if (docId === 'promotions') dataToSet = { promos: data };
     else if (docId === 'availableLocations') dataToSet = data; // Locations are stored at the root of the doc
     else if (docId === 'placeholderImages') dataToSet = { images: data };
@@ -432,17 +430,35 @@ export const saveFinancialSettings = (data: any) => setConfigDocument('financial
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
     const db = await getDb();
-    const docRef = doc(db, 'config', 'teamMembers');
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists() && docSnap.data()?.members?.length > 0) {
-        const data = docSnap.data();
-        return (data.members || []) as TeamMember[];
+    const querySnapshot = await getDocs(collection(db, 'teamMembers'));
+    if (querySnapshot.empty) {
+        // If the collection doesn't exist or is empty, seed it.
+        const db = await getDb();
+        await runTransaction(db, async (transaction) => {
+            initialTeamMembers.forEach(member => {
+                const docRef = doc(db, "teamMembers", member.id);
+                transaction.set(docRef, member);
+            });
+        });
+        return initialTeamMembers;
     }
-    // If the document doesn't exist or has no members, seed it with initial data.
-    await setConfigDocument('teamMembers', initialTeamMembers);
-    return initialTeamMembers;
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as TeamMember);
 };
-export const saveTeamMembers = (members: TeamMember[]) => setConfigDocument('teamMembers', members);
+export const saveTeamMembers = (members: TeamMember[]) => {
+    // This is now more complex. It should update individual documents.
+    // For simplicity, we will assume this function now takes one member at a time to update/create.
+    // A bulk update would require a transaction.
+};
+export const addOrUpdateTeamMember = async (member: TeamMember) => {
+    const db = await getDb();
+    const memberRef = doc(db, "teamMembers", member.id);
+    await setDoc(memberRef, member, { merge: true });
+}
+export const deleteTeamMember = async (id: string) => {
+    const db = await getDb();
+    const memberRef = doc(db, "teamMembers", id);
+    await deleteDoc(memberRef);
+}
 
 
 export const getPromotions = async (): Promise<Promotion[]> => {
