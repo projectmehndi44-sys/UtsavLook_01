@@ -53,12 +53,14 @@ export default function AdminLoginPage() {
 
         const checkSuperAdmin = async () => {
             try {
+                // Directly fetch from the database on component mount
                 const members = await getTeamMembers();
                 const superAdminExists = members.some(m => m.role === 'Super Admin');
                 setPageState(superAdminExists ? 'login' : 'setup');
             } catch (error) {
                 console.error("Error checking for super admin:", error);
-                setPageState('login'); // Default to login on error
+                // Default to login on error to avoid getting stuck in a setup loop
+                setPageState('login');
             }
         };
 
@@ -78,12 +80,14 @@ export default function AdminLoginPage() {
     const handleLogin = async (data: LoginFormValues) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+            // Use the direct getDocument fetch to avoid any stale data issues
             const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
             
             if (memberProfile) {
                 toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
                 router.push('/admin'); 
             } else {
+                // Explicitly sign out if they have an auth account but no team member doc
                 await auth.signOut();
                 toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
             }
@@ -119,15 +123,17 @@ export default function AdminLoginPage() {
 
     const handleSetup = async (data: SetupFormValues) => {
         try {
+            // Step 1: Create the user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const authUser = userCredential.user;
 
+            // Step 2: Create the corresponding team member profile in Firestore using the new UID
             const superAdminMember: TeamMember = {
-                id: authUser.uid,
+                id: authUser.uid, // Use the real UID from Auth
                 name: data.name,
                 username: data.email,
                 role: 'Super Admin',
-                permissions: {
+                permissions: { // Grant all permissions
                     dashboard: 'edit',
                     bookings: 'edit',
                     artists: 'edit',
@@ -144,6 +150,7 @@ export default function AdminLoginPage() {
             await addOrUpdateTeamMember(superAdminMember);
 
             toast({ title: 'Super Admin Created!', description: 'You can now log in with your new credentials.' });
+            // Switch to login view after successful setup
             setPageState('login');
 
         } catch (error: any) {
