@@ -217,10 +217,6 @@ export const createBooking = async (data: Omit<Booking, 'id'>) => {
 
             // Emit the rich, contextual error through the central emitter.
             errorEmitter.emit('permission-error', permissionError);
-
-            // We don't need to re-throw here because the global listener will handle it.
-            // But we do need to log that the standard path failed for debugging.
-            console.error("Firestore operation failed:", serverError.message);
         });
 };
 
