@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
-import { getTeamMembers, getDocument } from '@/lib/services';
+import { getDocument } from '@/lib/services';
 import type { TeamMember, Permissions } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -27,6 +27,12 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+            // Bypass auth logic on the login page itself to allow setup/login
+            if (pathname === '/admin/login') {
+                setIsLoading(false);
+                return;
+            }
+
             if (firebaseUser) {
                 try {
                     // This now fetches the specific team member document by UID.
@@ -35,19 +41,20 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     if (memberProfile) {
                         setUser(memberProfile);
                     } else {
+                        // If a Firebase user exists but has no profile in teamMembers, they are not an admin.
                         await auth.signOut();
                         setUser(null);
-                        if (pathname !== '/admin/login') {
-                            router.push('/admin/login');
-                        }
+                        router.push('/admin/login');
                     }
                 } catch (error) {
                     console.error("Failed to fetch team member profile:", error);
                     await auth.signOut();
                     setUser(null);
+                    router.push('/admin/login');
                 }
             } else {
                 setUser(null);
+                 router.push('/admin/login');
             }
             setIsLoading(false);
         });
@@ -90,4 +97,3 @@ export const useAdminAuth = () => {
     }
     return context;
 };
-

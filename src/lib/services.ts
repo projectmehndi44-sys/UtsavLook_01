@@ -65,12 +65,12 @@ export async function getDocument<T>(collectionName: string, id: string): Promis
         if (!docSnap.exists()) return null;
         return { id: docSnap.id, ...docSnap.data() } as T;
     } catch (serverError) {
-        const permissionError = new FirestorePermissionError({
+         const permissionError = new FirestorePermissionError({
             path: docRef.path,
             operation: 'get',
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
-        return null;
+        throw permissionError; // Re-throw the error to be caught by the caller
     }
 }
 
