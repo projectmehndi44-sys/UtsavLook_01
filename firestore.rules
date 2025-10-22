@@ -1,32 +1,51 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow public read access for artists and master services for browsing.
+    // Allow public read access for artists, master services, and config documents
     match /artists/{artistId} {
       allow read: if true;
-      allow write: if request.auth != null; // Simplistic rule, to be refined.
+      allow write: if request.auth != null; // Simplistic rule for now, should be refined
     }
+
     match /masterServices/{serviceId} {
-      allow read: if true;
-      allow write: if false; // Should only be updated from admin console/tooling
+        allow read: if true;
+        allow write: if false; // Should be managed by admin only
     }
 
-    // Secure customer data
-    match /customers/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    match /config/{docId} {
+        allow read: if true;
+        allow write: if false; // Should be managed by admin only
     }
 
-    // Secure booking data
+    // Bookings can be read by the customer who made them or an assigned artist
     match /bookings/{bookingId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.customerId;
+      allow read: if request.auth != null && (request.auth.uid == resource.data.customerId || request.auth.uid in resource.data.artistIds);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.customerId;
+      allow update: if request.auth != null; // Allow artists and customers to update status, etc.
+      allow delete: if false;
     }
 
-    // Default deny all other collections
-    match /{document=**} {
-      allow read, write: if false;
+    // Customers can only read/edit their own data
+    match /customers/{userId} {
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
     }
+    
+    // Pending artists can be created by anyone
+    match /pendingArtists/{artistId} {
+        allow create: if true;
+        allow read, update, delete: if request.auth != null; // Admin only
+    }
+    
+    match /payoutHistory/{payoutId} {
+        allow read, write: if request.auth != null; // Admin only
+    }
+    
+    match /notifications/{notificationId} {
+        allow read, write: if request.auth != null; // Artist/Customer specific
+    }
+
   }
 }
