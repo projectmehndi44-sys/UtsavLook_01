@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -16,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
-import { getTeamMembers, addOrUpdateTeamMember } from '@/lib/services';
+import { getTeamMembers, addOrUpdateTeamMember, getDocument } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { initialTeamMembers } from '@/lib/team-data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -80,8 +79,8 @@ export default function AdminLoginPage() {
     const handleLogin = async (data: LoginFormValues) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-            const teamMembers = await getTeamMembers();
-            const memberProfile = teamMembers.find(m => m.id === userCredential.user.uid);
+            // Directly fetch the user profile from Firestore using the UID
+            const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
             
             if (memberProfile) {
                 toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
@@ -126,7 +125,7 @@ export default function AdminLoginPage() {
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const authUser = userCredential.user;
 
-            // If successful, create the Super Admin in the database
+            // If successful, create the Super Admin in the database with the correct UID
             const superAdminMember: TeamMember = {
                 id: authUser.uid,
                 name: data.name,
@@ -153,7 +152,6 @@ export default function AdminLoginPage() {
 
         } catch (error: any) {
             if (error.code === 'auth/email-already-in-use') {
-                // This case is unlikely if the setup screen is shown correctly, but good to handle.
                 toast({ 
                     title: "Account Exists", 
                     description: "An auth account with this email already exists. Please log in.",
@@ -261,3 +259,5 @@ export default function AdminLoginPage() {
         </>
     );
 }
+
+    
