@@ -30,7 +30,7 @@ export const PERMISSION_MODULES: { key: keyof Permissions, label: string }[] = [
 export const initialTeamMembers: TeamMember[] = [
     {
         id: 'user_001', // This temporary ID will be replaced by the Firebase UID on first run.
-        name: 'Abhishek Jaiswal',
+        name: 'Super Admin',
         username: 'utsavlook01@gmail.com',
         role: 'Super Admin',
         permissions: { // Admin has all rights by default, this is illustrative
