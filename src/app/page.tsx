@@ -19,7 +19,6 @@ import Image from 'next/image';
 import { Packages } from '@/components/utsavlook/Packages';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 import { ServiceSelectionModal } from '@/components/utsavlook/ServiceSelectionModal';
 import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
 import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
@@ -62,7 +61,6 @@ export default function Home() {
     });
   }, [toast]);
   
-  useInactivityTimeout(isCustomerLoggedIn ? handleCustomerLogout : () => {});
 
   const checkLoggedInCustomer = React.useCallback(async () => {
     const customerId = localStorage.getItem('currentCustomerId');
