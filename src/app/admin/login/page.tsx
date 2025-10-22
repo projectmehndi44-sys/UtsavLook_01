@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, type User } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
 import { getTeamMembers, addOrUpdateTeamMember, getDocument } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
@@ -80,16 +80,43 @@ export default function AdminLoginPage() {
     const handleLogin = async (data: LoginFormValues) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-            // Use the direct getDocument fetch to avoid any stale data issues
-            const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
+            
+            let memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
             
             if (memberProfile) {
                 toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
                 router.push('/admin'); 
             } else {
-                // Explicitly sign out if they have an auth account but no team member doc
-                await auth.signOut();
-                toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
+                // If user has an auth account but no profile, and it's the target email, create it.
+                if(userCredential.user.email === 'utsavlook01@gmail.com') {
+                     toast({ title: 'Setting up Super Admin...', description: 'Please wait a moment.' });
+                     const superAdminMember: TeamMember = {
+                        id: userCredential.user.uid,
+                        name: "Super Admin",
+                        username: userCredential.user.email,
+                        role: 'Super Admin',
+                        permissions: {
+                            dashboard: 'edit',
+                            bookings: 'edit',
+                            artists: 'edit',
+                            customers: 'edit',
+                            artistDirectory: 'edit',
+                            payouts: 'edit',
+                            transactions: 'edit',
+                            packages: 'edit',
+                            settings: 'edit',
+                            notifications: 'edit',
+                        }
+                    };
+                    await addOrUpdateTeamMember(superAdminMember);
+                    toast({ title: 'Admin Account Created!', description: 'Redirecting to your dashboard.' });
+                    router.push('/admin');
+
+                } else {
+                    // All other users without a profile are denied.
+                    await auth.signOut();
+                    toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
+                }
             }
         } catch (error: any) {
             let description = 'An error occurred during login. Please try again.';
@@ -262,3 +289,5 @@ export default function AdminLoginPage() {
         </>
     );
 }
+
+    
