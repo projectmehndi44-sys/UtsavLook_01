@@ -1,18 +1,18 @@
 
-
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   "projectId": "studio-163529036-f9a8c",
-  "appId": "1:240526745218:web:807f89ba03731495cf9e9b",
-  "storageBucket": "studio-163529036-f9a8c.appspot.com",
+  "appId": "1:240526745218:web:bf45387565e48cb9cf9e9b",
+  "storageBucket": "studio-163529036-f9a8c.firebasestorage.app",
   "apiKey": "AIzaSyBLauxXUk2zR5VBRrl2_9PBpDJLMB9gGOI",
   "authDomain": "studio-163529036-f9a8c.firebaseapp.com",
   "messagingSenderId": "240526745218"
 };
+
 
 // --- Singleton Pattern for Firebase App Initialization ---
 let app: FirebaseApp;
@@ -76,7 +76,11 @@ const signOutUser = () => {
     return signOut(auth);
 }
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore };
+const isSignInWithEmailLink = (auth: any, link: any) => isFbSignInWithEmailLink(auth, link);
+const signInWithEmailLink = (auth: any, email: any, link: any) => fbSignInWithEmailLink(auth, email, link);
+
+
+export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore, isSignInWithEmailLink, signInWithEmailLink };
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
