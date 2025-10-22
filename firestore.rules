@@ -1,0 +1,58 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ADMIN-ONLY: Configuration documents
+    match /config/{docId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+      allow write: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+
+    // PUBLIC: Artists can be read by anyone, but only edited by admins or the artist themselves.
+    match /artists/{artistId} {
+      allow read: if true;
+      allow create: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+      allow update: if request.auth.uid == artistId || (get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin');
+      allow delete: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+    
+    // LOGGED-IN USERS: Customers can be read by admins, and a customer can read their own data.
+    match /customers/{customerId} {
+      allow read: if request.auth.uid == customerId || (get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin');
+      allow create: if request.auth.uid == customerId;
+      allow update: if request.auth.uid == customerId;
+      allow delete: if get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+
+    // PENDING ARTISTS: Can be created by anyone, but only read/deleted by admins.
+    match /pendingArtists/{pendingId} {
+        allow read: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+        allow create: if true;
+        allow delete: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+
+    // BOOKINGS: Can be created by logged-in users. Can only be read/updated by the customer who owns it or an involved artist/admin.
+    match /bookings/{bookingId} {
+      allow read: if request.auth.uid == resource.data.customerId || request.auth.uid in resource.data.artistIds || (get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin');
+      allow create: if request.auth.uid == request.resource.data.customerId;
+      allow update: if request.auth.uid in resource.data.artistIds || (get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin');
+      allow delete: if false; // Bookings should be cancelled/archived, not deleted.
+    }
+    
+    // NOTIFICATIONS & PAYOUTS: Only accessible by admins or the specific artist.
+    match /notifications/{notificationId} {
+        allow read, write: if request.auth.uid == resource.data.artistId || (get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin');
+    }
+    
+    match /payoutHistory/{payoutId} {
+         allow read, write: if request.auth.uid == resource.data.artistId || (get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin');
+    }
+    
+    // MASTER SERVICES: Read-only for all users, writable only by admin.
+    match /masterServices/{serviceId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/artists/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+  }
+}
