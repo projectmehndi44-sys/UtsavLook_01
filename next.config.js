@@ -1,8 +1,8 @@
 
-import type {NextConfig} from 'next';
-import withPWA from 'next-pwa';
 
-const nextConfig: NextConfig = {
+const withPWA = require('next-pwa');
+
+const nextConfig = {
   /* config options here */
   experimental: {
     serverActions: {
@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https' as const,
+        protocol: 'https',
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
@@ -62,4 +62,4 @@ const pwaConfig = {
 // Correctly merge the PWA config with the main Next.js config
 const finalConfig = withPWA(pwaConfig)(nextConfig);
 
-export default finalConfig;
+module.exports = finalConfig;
