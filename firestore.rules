@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
+    // HELPER FUNCTIONS
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
@@ -18,14 +18,17 @@ service cloud.firestore {
       return isTeamMember() && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == role;
     }
 
-    // --- Collection Rules ---
+    // --- DATA COLLECTIONS ---
 
     match /artists/{artistId} {
+      // Public can read artist profiles for the website to work.
+      // An artist can write to their own profile, or a team member can.
       allow read: if true;
-      allow write: if isTeamMember();
+      allow write: if isOwner(artistId) || isTeamMember();
     }
     
     match /customers/{userId} {
+      // A customer can only access their own document.
       allow read, write: if isOwner(userId);
     }
 
@@ -40,20 +43,23 @@ service cloud.firestore {
     }
 
     match /pendingArtists/{pendingId} {
-      allow create: if true; // Anyone can submit an application
+      // Anyone can create (submit an application).
+      // Only Super Admins can manage the pending list.
+      allow create: if true;
       allow read, delete: if isRole('Super Admin');
     }
 
-    // New Team Members Collection Rule
+    // --- TEAM MANAGEMENT COLLECTION ---
     match /teamMembers/{userId} {
-      // Any team member can read other member details.
-      allow read: if isTeamMember();
-      // Only a Super Admin can create, update, or delete team members.
+      // Any signed-in user can read the list to check permissions. THIS IS THE LOGIN FIX.
+      allow read: if request.auth != null;
+      // Only Super Admins can add, edit, or remove team members.
       allow write: if isRole('Super Admin');
     }
-
-    // --- Configuration Rules ---
-    // All config documents are now publicly readable but only writable by Super Admins.
+    
+    // --- CONFIGURATION COLLECTION ---
+    // All config documents are publicly readable for the site to function,
+    // but only a Super Admin can change them.
     match /config/{document} {
         allow read: if true;
         allow write: if isRole('Super Admin');
