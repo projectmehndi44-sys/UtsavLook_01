@@ -3,59 +3,69 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions to check user roles and ownership
+    // Helper function to check if a user ID matches the authenticated user.
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    // This function now correctly checks if the user's ID is in the list of team members.
+    // Helper function to check if the user is in the team members list, regardless of role.
+    // This is required for general admin access checks.
     function isTeamMember() {
-      return request.auth.uid in get(/databases/$(database)/documents/config/teamMembers).data.members.map(m => m.id);
-    }
-    
-    // This function now correctly filters members to check for a specific role.
-    function isRole(role) {
       return exists(/databases/$(database)/documents/config/teamMembers) &&
-             get(/databases/$(database)/documents/config/teamMembers).data.members
-               .filter(m => m.id == request.auth.uid && m.role == role)
-               .size() > 0;
+             request.auth.uid in get(/databases/$(database)/documents/config/teamMembers).data.members.keys();
     }
 
-    // Publicly readable collections for the website to function
+    // Helper function to check if a user has a specific role (e.g., 'Super Admin').
+    function isRole(role) {
+      return isTeamMember() &&
+             get(/databases/$(database)/documents/config/teamMembers).data.members[request.auth.uid].role == role;
+    }
+
+    // --- PUBLIC-READABLE COLLECTIONS ---
+    // Anyone can read artist and master service data. This is required for the public website to function.
     match /artists/{artistId} {
       allow read: if true;
-      allow write: if isTeamMember(); // Only team members can edit artists
+      // Only authenticated team members can modify artist data.
+      allow write: if isTeamMember();
     }
-    
-    // CUSTOMERS: Can only manage their own data.
+
+    // --- USER-SPECIFIC COLLECTIONS ---
+    // Customers can only read and write their own documents.
     match /customers/{userId} {
       allow read, write: if isOwner(userId);
     }
 
-    // BOOKINGS: Multiple roles can interact with bookings.
+    // Bookings can be created by the customer, and read by the customer, assigned artist, or any admin.
     match /bookings/{bookingId} {
-      allow read: if isTeamMember() || isOwner(resource.data.customerId) || request.auth.uid in resource.data.artistIds;
+      allow read: if isOwner(resource.data.customerId) || (request.auth.uid in resource.data.artistIds) || isTeamMember();
       allow create: if isOwner(request.resource.data.customerId);
+      // Only team members or the artist (to mark as complete) can update bookings.
       allow update: if isTeamMember() || (request.auth.uid in resource.data.artistIds && request.resource.data.status == 'Completed');
     }
 
-    // PENDING ARTISTS: Open for creation, restricted for management.
+    // Anyone can submit an application to become an artist.
     match /pendingArtists/{pendingId} {
       allow create: if true;
+      // Only Super Admins can view and delete pending applications.
       allow read, delete: if isRole('Super Admin');
     }
     
-    // CONFIGURATION: Admin-only section with specific exceptions.
-
-    // This is the crucial fix: Any authenticated user can read the team list to verify their role upon login.
-    match /config/teamMembers {
-      allow read: if request.auth != null;
-      allow write: if isRole('Super Admin'); // But only Super Admins can change it
+    // --- CONFIGURATION COLLECTION ---
+    // By default, no one can access documents directly in the 'config' collection.
+    match /config/{document=**} {
+      allow read, write: if false;
     }
 
-    // Other configuration files are publicly readable but only writable by Super Admins.
-    match /config/{document} {
-      allow read: if true;
+    // Any signed-in user can read the team list to allow the login flow to verify their role.
+    match /config/teamMembers {
+      allow read: if request.auth != null;
+      // Only Super Admins can add, remove, or change team members.
+      allow write: if isRole('Super Admin');
+    }
+
+    // All other config documents can be read by anyone, but only written to by a Super Admin.
+    match /config/{configDoc} {
+      allow read: if configDoc != 'teamMembers'; // Exclude teamMembers from this public rule
       allow write: if isRole('Super Admin');
     }
   }
