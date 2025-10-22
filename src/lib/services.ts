@@ -246,7 +246,7 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 
 // Bookings
-export const createBooking = async (data: Omit<Booking, 'id'>, artistIds: string[], adminIds: string[]): Promise<void> => {
+export const createBooking = async (data: Omit<Booking, 'id'>, artistIds: string[], adminIds: string[], allArtists: Artist[]): Promise<void> => {
     const db = await getDb();
     const bookingsCollection = collection(db, 'bookings');
     
@@ -255,39 +255,49 @@ export const createBooking = async (data: Omit<Booking, 'id'>, artistIds: string
             // If the write is successful, update the document with its own ID.
             await updateDoc(docRef, { id: docRef.id });
 
-            // Create a detailed notification message
             const eventDate = (data.eventDate as unknown as Timestamp).toDate();
-            const notificationMessage = `
-                New Booking Details:
-                - Customer: ${data.customerName}
-                - Contact: ${data.customerContact}
-                - Event: ${data.eventType} on ${eventDate.toLocaleDateString()}
-                - Address: ${data.serviceAddress}, ${data.locality}, ${data.district}
-                - Services: ${data.items.map(i => `${i.servicePackage.name} (${i.selectedTier.name})`).join(', ')}
-                - Total Amount: ₹${data.amount.toLocaleString()}
-                - Payment: ${data.paymentMethod}
-                - Notes: ${data.note || 'None'}
-            `;
+            const notificationTitle = `New Booking by ${data.customerName}`;
+            const notificationMessage = `A new booking for ${data.eventType} on ${eventDate.toLocaleDateString()} has been created.`;
 
-            // Notification for assigned artists
+            // Notification for assigned artists (if any)
             artistIds.forEach(artistId => {
                 createNotification({
                     artistId,
                     bookingId: docRef.id,
-                    title: "New Booking Assigned!",
-                    message: notificationMessage,
+                    title: "You have a new booking!",
+                    message: `You've been assigned to a booking for ${data.eventType} on ${eventDate.toLocaleDateString()}.`,
                     timestamp: new Date().toISOString(),
                     isRead: false,
                     type: 'booking',
                 });
             });
 
+            // If no artists were assigned (Express Booking), notify all relevant artists.
+            if (artistIds.length === 0) {
+                 const relevantArtists = allArtists.filter(artist => 
+                    artist.services.some(s => data.items.some(i => i.servicePackage.service === s)) &&
+                    artist.serviceAreas.some(area => area.district === data.district && area.state === data.state)
+                );
+
+                relevantArtists.forEach(artist => {
+                     createNotification({
+                        artistId: artist.id,
+                        bookingId: docRef.id,
+                        title: "New Job Available in Your Area!",
+                        message: `An express booking for ${data.eventType} in ${data.district} is available.`,
+                        timestamp: new Date().toISOString(),
+                        isRead: false,
+                        type: 'booking',
+                    });
+                });
+            }
+
             // Notification for admins
             adminIds.forEach(adminId => {
                  createNotification({
                     artistId: adminId, // Using artistId field to notify an admin user
                     bookingId: docRef.id,
-                    title: `New Booking by ${data.customerName}`,
+                    title: notificationTitle,
                     message: notificationMessage,
                     timestamp: new Date().toISOString(),
                     isRead: false,
