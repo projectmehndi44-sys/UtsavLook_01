@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -12,9 +13,9 @@ import { CartItemsList } from "@/components/cart/cart-items-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { CartItem, Customer, Artist, Promotion } from '@/lib/types';
+import type { CartItem, Customer, Artist, Promotion, TeamMember } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCustomer, createBooking, getAvailableLocations, listenToCollection, getPromotions } from '@/lib/services';
+import { getCustomer, createBooking, getAvailableLocations, listenToCollection, getPromotions, getTeamMembers } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home } from 'lucide-react';
@@ -206,6 +207,7 @@ export default function CartPage() {
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
     const [artists, setArtists] = React.useState<Artist[]>([]);
+    const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([]);
 
 
     const form = useForm<BookingFormValues>({
@@ -253,6 +255,7 @@ export default function CartPage() {
         }
         
         getAvailableLocations().then(setAvailableLocations);
+        getTeamMembers().then(setTeamMembers);
 
         const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
         return () => unsubscribeArtists();
@@ -310,10 +313,12 @@ export default function CartPage() {
         } else {
             const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
             if (preSelectedArtistIds.length > 0) {
-                finalArtistIds = preSelectedArtistIds;
+                finalArtistIds = preSelectedArtistIds as string[];
                 bookingStatus = 'Pending Approval';
             }
         }
+
+        const adminIds = teamMembers.filter(m => m.role === 'Super Admin' || m.permissions?.bookings === 'edit').map(m => m.id);
 
         const bookingData: Partial<Booking> = {
             customerId: customer.id,
@@ -321,6 +326,7 @@ export default function CartPage() {
             customerContact: bookingDetails.contact,
             alternateContact: bookingDetails.alternateContact,
             artistIds: finalArtistIds,
+            adminIds: adminIds,
             items: cartItems,
             amount: finalAmount,
             status: bookingStatus,
@@ -345,7 +351,7 @@ export default function CartPage() {
         }
 
         try {
-            await createBooking(bookingData as Omit<Booking, 'id'>);
+            await createBooking(bookingData as Omit<Booking, 'id'>, finalArtistIds, adminIds);
 
             toast({
                 title: "Booking Request Sent!",

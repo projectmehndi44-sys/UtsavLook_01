@@ -239,16 +239,55 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 
 // Bookings
-export const createBooking = async (data: Omit<Booking, 'id'>) => {
+export const createBooking = async (data: Omit<Booking, 'id'>, artistIds: string[], adminIds: string[]): Promise<void> => {
     const db = await getDb();
     const bookingsCollection = collection(db, 'bookings');
     
-    // This is the correct pattern. The addDoc function returns a promise.
-    // We don't await it here; instead, we chain a .catch() to handle potential errors.
     addDoc(bookingsCollection, data)
         .then(async (docRef) => {
             // If the write is successful, update the document with its own ID.
-            updateDoc(docRef, { id: docRef.id });
+            await updateDoc(docRef, { id: docRef.id });
+
+            // Create a detailed notification message
+            const eventDate = (data.eventDate as unknown as Timestamp).toDate();
+            const notificationMessage = `
+                New Booking Details:
+                - Customer: ${data.customerName}
+                - Contact: ${data.customerContact}
+                - Event: ${data.eventType} on ${eventDate.toLocaleDateString()}
+                - Address: ${data.serviceAddress}, ${data.locality}, ${data.district}
+                - Services: ${data.items.map(i => `${i.servicePackage.name} (${i.selectedTier.name})`).join(', ')}
+                - Total Amount: ₹${data.amount.toLocaleString()}
+                - Payment: ${data.paymentMethod}
+                - Notes: ${data.note || 'None'}
+            `;
+
+            // Notification for assigned artists
+            artistIds.forEach(artistId => {
+                createNotification({
+                    artistId,
+                    bookingId: docRef.id,
+                    title: "New Booking Assigned!",
+                    message: notificationMessage,
+                    timestamp: new Date().toISOString(),
+                    isRead: false,
+                    type: 'booking',
+                });
+            });
+
+            // Notification for admins
+            adminIds.forEach(adminId => {
+                 createNotification({
+                    artistId: adminId, // Using artistId field to notify an admin user
+                    bookingId: docRef.id,
+                    title: `New Booking by ${data.customerName}`,
+                    message: notificationMessage,
+                    timestamp: new Date().toISOString(),
+                    isRead: false,
+                    type: 'booking',
+                });
+            })
+
         })
         .catch((serverError) => {
             // This block specifically handles errors from the Firestore server, like permission denied.

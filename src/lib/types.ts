@@ -1,4 +1,5 @@
 
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type ImagePlaceholder = {
@@ -105,6 +106,7 @@ export type CartItem = {
 export type Booking = {
   id: string;
   artistIds: string[];
+  adminIds?: string[];
   customerId: string; // Link to customer
   customerName: string;
   customerContact?: string;
