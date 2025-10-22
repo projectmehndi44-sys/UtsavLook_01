@@ -9,26 +9,26 @@ service cloud.firestore {
     }
 
     function isTeamMember() {
-      // Correctly checks if a document for the user exists in the teamMembers collection.
+      // Checks if a document for the user exists in the teamMembers collection.
       return exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid));
     }
     
     function isRole(role) {
-      // Correctly gets the user's document and checks their role property.
+      // Gets the user's document and checks their role property.
       return isTeamMember() && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == role;
     }
 
     // --- DATA COLLECTIONS ---
 
     match /artists/{artistId} {
-      // Public can read artist profiles for the website to work.
-      // An artist can write to their own profile, or a team member can.
+      // A user can read their OWN artist profile to log in. Public can read for the website to work.
       allow read: if true;
+      // An artist can write to their own profile, or a team member can.
       allow write: if isOwner(artistId) || isTeamMember();
     }
     
     match /customers/{userId} {
-      // A customer can only access their own document.
+      // A customer can only read and write their own document.
       allow read, write: if isOwner(userId);
     }
 
@@ -44,21 +44,21 @@ service cloud.firestore {
 
     match /pendingArtists/{pendingId} {
       // Anyone can create (submit an application).
-      // Only Super Admins can manage the pending list.
       allow create: if true;
+      // Only Super Admins can manage the pending list.
       allow read, delete: if isRole('Super Admin');
     }
 
     // --- TEAM MANAGEMENT COLLECTION ---
     match /teamMembers/{userId} {
-      // Any signed-in user can read the list to check permissions. THIS IS THE LOGIN FIX.
-      allow read: if request.auth != null;
-      // Only Super Admins can add, edit, or remove team members.
+      // A user can read their OWN team member document to log in.
+      allow read: if isOwner(userId);
+      // Only a Super Admin can create, update, or delete team members.
       allow write: if isRole('Super Admin');
     }
     
     // --- CONFIGURATION COLLECTION ---
-    // All config documents are publicly readable for the site to function,
+    // Config documents are publicly readable for the site to function,
     // but only a Super Admin can change them.
     match /config/{document} {
         allow read: if true;
