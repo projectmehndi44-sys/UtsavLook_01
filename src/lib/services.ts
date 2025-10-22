@@ -200,25 +200,18 @@ export const createBooking = async (data: Omit<Booking, 'id'>) => {
     const db = await getDb();
     const bookingsCollection = collection(db, 'bookings');
     
-    // Do not await here. Chain a .catch() block to handle errors.
     addDoc(bookingsCollection, data)
         .then(docRef => {
             // Success: Now update the document with its own ID for easy reference.
             updateDoc(docRef, { id: docRef.id });
         })
         .catch(async (serverError) => {
-            // Check if it's a permission error, then create and emit a rich error.
-            if (serverError.code === 'permission-denied') {
-                const permissionError = new FirestorePermissionError({
-                    path: bookingsCollection.path,
-                    operation: 'create',
-                    requestResourceData: data,
-                } satisfies SecurityRuleContext);
-                errorEmitter.emit('permission-error', permissionError);
-            } else {
-                // For other errors, log them to the console.
-                console.error("Booking creation failed with a non-permission error:", serverError);
-            }
+            const permissionError = new FirestorePermissionError({
+                path: bookingsCollection.path,
+                operation: 'create',
+                requestResourceData: data,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
         });
 };
 
