@@ -45,6 +45,7 @@ export default function LoginPage() {
 
     const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
     const auth = getAuth(getFirebaseApp());
+    auth.tenantId = null;
 
     const phoneForm = useForm<OTPFormValues>({
         resolver: zodResolver(OTPSchema),
