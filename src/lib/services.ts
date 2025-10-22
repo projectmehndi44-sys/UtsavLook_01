@@ -83,6 +83,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
+            if (docId === 'masterServices' && data && data.hasOwnProperty('packages')) return data.packages as T;
             if (data && data.hasOwnProperty('packages')) return data.packages as T;
             if (data && data.hasOwnProperty('promos')) return data.promos as T;
             if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
