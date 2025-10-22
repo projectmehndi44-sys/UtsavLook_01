@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -11,19 +12,15 @@ service cloud.firestore {
 
     function getTeamMemberRoles() {
       // Correctly retrieves the list of roles for the current user from the members array.
-      // The syntax 'let var = ...' and 'list.filter(var, predicate)' is correct here.
-      let members = get(/databases/$(database)/documents/config/teamMembers).data.members;
-      let matchingMembers = members.filter(member, member.id == request.auth.uid);
-      if (matchingMembers.size() > 0) {
-        // Assuming one user has one role entry.
-        return [matchingMembers[0].role];
-      }
-      return [];
+      // This syntax uses ternary operators, which ARE supported, to safely access data.
+      return get(/databases/$(database)/documents/config/teamMembers).data.members
+             .filter(member, member.id == request.auth.uid)
+             .map(member, member.role);
     }
     
     function isRole(role) {
       // Correctly checks if the specified role is in the user's list of roles.
-      return role in getTeamMemberRoles();
+      return getTeamMemberRoles().size() > 0 && getTeamMemberRoles()[0] == role;
     }
     
     function isTeamMember() {
