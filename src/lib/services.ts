@@ -200,20 +200,34 @@ export const createBooking = async (data: Omit<Booking, 'id'>) => {
     const db = await getDb();
     const bookingsCollection = collection(db, 'bookings');
     
-    addDoc(bookingsCollection, data)
-        .then(docRef => {
-            // Success: Now update the document with its own ID for easy reference.
-            updateDoc(docRef, { id: docRef.id });
-        })
-        .catch(async (serverError) => {
+    // The 'try...catch' block is for unexpected client-side errors during the setup.
+    // The '.catch()' on the promise is specifically for Firestore server errors (like permissions).
+    try {
+        const docRef = await addDoc(bookingsCollection, data).catch((serverError) => {
+            // This is the crucial part for catching permission errors.
             const permissionError = new FirestorePermissionError({
-                path: bookingsCollection.path,
+                path: bookingsCollection.path, // Use collection path for creation
                 operation: 'create',
-                requestResourceData: data,
+                requestResourceData: data, // Include the data that was denied
             } satisfies SecurityRuleContext);
+            
+            // Emit the custom, detailed error.
             errorEmitter.emit('permission-error', permissionError);
+
+            // We throw the original error to stop further execution in this chain.
+            throw serverError;
         });
+
+        // If successful, update the new document with its own ID for easy reference.
+        await updateDoc(docRef, { id: docRef.id });
+
+    } catch (error) {
+        // This will catch the re-thrown serverError or any other issue before the write.
+        console.error("An error occurred during booking creation process: ", error);
+        // We don't toast here because the permission error is handled globally.
+    }
 };
+
 
 
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
