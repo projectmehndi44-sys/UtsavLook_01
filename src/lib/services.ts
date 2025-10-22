@@ -56,7 +56,7 @@ export const deleteSiteImage = async (imageUrl: string): Promise<void> => {
 
 
 // Generic function to get a single document
-async function getDocument<T>(collectionName: string, id: string): Promise<T | null> {
+export async function getDocument<T>(collectionName: string, id: string): Promise<T | null> {
     const db = await getDb();
     const docRef = doc(db, collectionName, id);
     
@@ -430,13 +430,13 @@ export const saveFinancialSettings = (data: any) => setConfigDocument('financial
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
     const db = await getDb();
+    // This now reads from the top-level 'teamMembers' collection
     const querySnapshot = await getDocs(collection(db, 'teamMembers'));
     if (querySnapshot.empty) {
-        // If the collection doesn't exist or is empty, seed it.
-        const db = await getDb();
+        // If the collection doesn't exist or is empty, seed it with initial data.
         await runTransaction(db, async (transaction) => {
             initialTeamMembers.forEach(member => {
-                const docRef = doc(db, "teamMembers", member.id);
+                const docRef = doc(db, "teamMembers", member.id); // Uses the temporary ID from team-data
                 transaction.set(docRef, member);
             });
         });
@@ -445,9 +445,7 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as TeamMember);
 };
 export const saveTeamMembers = (members: TeamMember[]) => {
-    // This is now more complex. It should update individual documents.
-    // For simplicity, we will assume this function now takes one member at a time to update/create.
-    // A bulk update would require a transaction.
+    // This function is now deprecated in favor of addOrUpdateTeamMember for better security.
 };
 export const addOrUpdateTeamMember = async (member: TeamMember) => {
     const db = await getDb();

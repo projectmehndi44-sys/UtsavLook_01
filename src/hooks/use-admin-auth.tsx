@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
-import { getTeamMembers } from '@/lib/services';
+import { getTeamMembers, getDocument } from '@/lib/services';
 import type { TeamMember, Permissions } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -29,9 +29,8 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
             if (firebaseUser) {
                 try {
-                    // This now fetches from the new 'teamMembers' collection.
-                    const teamMembers = await getTeamMembers(); 
-                    const memberProfile = teamMembers.find(m => m.id === firebaseUser.uid);
+                    // This now fetches the specific team member document by UID.
+                    const memberProfile = await getDocument<TeamMember>('teamMembers', firebaseUser.uid); 
                     
                     if (memberProfile) {
                         setUser(memberProfile);
@@ -43,7 +42,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                         }
                     }
                 } catch (error) {
-                    console.error("Failed to fetch team members:", error);
+                    console.error("Failed to fetch team member profile:", error);
                     await auth.signOut();
                     setUser(null);
                 }
@@ -91,3 +90,4 @@ export const useAdminAuth = () => {
     }
     return context;
 };
+
