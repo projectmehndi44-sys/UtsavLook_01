@@ -200,34 +200,29 @@ export const createBooking = async (data: Omit<Booking, 'id'>) => {
     const db = await getDb();
     const bookingsCollection = collection(db, 'bookings');
     
-    // The 'try...catch' block is for unexpected client-side errors during the setup.
-    // The '.catch()' on the promise is specifically for Firestore server errors (like permissions).
-    try {
-        const docRef = await addDoc(bookingsCollection, data).catch((serverError) => {
-            // This is the crucial part for catching permission errors.
+    // This is the correct pattern. The addDoc function returns a promise.
+    // We don't await it here; instead, we chain a .catch() to handle potential errors.
+    addDoc(bookingsCollection, data)
+        .then(async (docRef) => {
+            // If the write is successful, update the document with its own ID.
+            await updateDoc(docRef, { id: docRef.id });
+        })
+        .catch((serverError) => {
+            // This block specifically handles errors from the Firestore server, like permission denied.
             const permissionError = new FirestorePermissionError({
-                path: bookingsCollection.path, // Use collection path for creation
+                path: bookingsCollection.path, // Use collection path for a create operation
                 operation: 'create',
-                requestResourceData: data, // Include the data that was denied
+                requestResourceData: data, // Include the data that failed to be written
             } satisfies SecurityRuleContext);
-            
-            // Emit the custom, detailed error.
+
+            // Emit the rich, contextual error through the central emitter.
             errorEmitter.emit('permission-error', permissionError);
 
-            // We throw the original error to stop further execution in this chain.
-            throw serverError;
+            // We don't need to re-throw here because the global listener will handle it.
+            // But we do need to log that the standard path failed for debugging.
+            console.error("Firestore operation failed:", serverError.message);
         });
-
-        // If successful, update the new document with its own ID for easy reference.
-        await updateDoc(docRef, { id: docRef.id });
-
-    } catch (error) {
-        // This will catch the re-thrown serverError or any other issue before the write.
-        console.error("An error occurred during booking creation process: ", error);
-        // We don't toast here because the permission error is handled globally.
-    }
 };
-
 
 
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
