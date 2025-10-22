@@ -482,14 +482,7 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
     // This now reads from the top-level 'teamMembers' collection
     const querySnapshot = await getDocs(collection(db, 'teamMembers'));
     if (querySnapshot.empty) {
-        // If the collection doesn't exist or is empty, seed it with initial data.
-        await runTransaction(db, async (transaction) => {
-            initialTeamMembers.forEach(member => {
-                const docRef = doc(db, "teamMembers", member.id); // Uses the temporary ID from team-data
-                transaction.set(docRef, member);
-            });
-        });
-        return initialTeamMembers;
+        return [];
     }
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as TeamMember);
 };
@@ -572,5 +565,3 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
 };
 
 export { getDb };
-
-    

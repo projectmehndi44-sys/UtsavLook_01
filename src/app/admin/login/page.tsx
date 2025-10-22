@@ -153,25 +153,13 @@ export default function AdminLoginPage() {
 
         } catch (error: any) {
             if (error.code === 'auth/email-already-in-use') {
-                // If the email exists in Auth, but not as a Super Admin in our DB (which we checked for),
-                // we can assume we need to create the DB record and then let them log in.
+                // This case is unlikely if the setup screen is shown correctly, but good to handle.
                 toast({ 
                     title: "Account Exists", 
-                    description: "An auth account with this email already exists. We'll set it up as admin. Please try logging in.",
+                    description: "An auth account with this email already exists. Please log in.",
                     variant: "default"
                 });
-                
-                // Let's create a placeholder admin to fix the state. The user can then reset password.
-                 const superAdminMember: TeamMember = {
-                    id: `placeholder_${Date.now()}`, // This ID is temporary and should be updated on login.
-                    name: data.name,
-                    username: data.email,
-                    role: 'Super Admin',
-                    permissions: initialTeamMembers[0].permissions, // Use default full permissions
-                };
-                 await addOrUpdateTeamMember(superAdminMember); // This will fail if the ID is not an Auth UID. The logic needs fixing.
-                 setPageState('login');
-
+                setPageState('login');
             } else {
                 toast({ title: 'Setup Failed', description: error.message, variant: 'destructive' });
             }
@@ -273,5 +261,3 @@ export default function AdminLoginPage() {
         </>
     );
 }
-
-    
