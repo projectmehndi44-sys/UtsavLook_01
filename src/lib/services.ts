@@ -114,7 +114,14 @@ export async function setConfigDocument(docId: string, data: any): Promise<void>
     else if (docId === 'placeholderImages') dataToSet = { images: data };
     else if (docId === 'benefitImages') dataToSet = { benefitImages: data };
     
-    await setDoc(docRef, dataToSet);
+    setDoc(docRef, dataToSet).catch((serverError) => {
+         const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'write',
+            requestResourceData: dataToSet,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
 }
 
 
