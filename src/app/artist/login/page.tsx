@@ -30,6 +30,11 @@ export default function ArtistLoginPage() {
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
     React.useEffect(() => {
+        // This effect should ONLY run if we are on the artist login page.
+        if (window.location.pathname !== '/artist/login') {
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const artistProfile = await getArtist(user.uid);
@@ -190,3 +195,5 @@ export default function ArtistLoginPage() {
         </>
     );
 }
+
+    
