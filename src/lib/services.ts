@@ -59,9 +59,19 @@ export const deleteSiteImage = async (imageUrl: string): Promise<void> => {
 async function getDocument<T>(collectionName: string, id: string): Promise<T | null> {
     const db = await getDb();
     const docRef = doc(db, collectionName, id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return null;
-    return { id: docSnap.id, ...docSnap.data() } as T;
+    
+    try {
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) return null;
+        return { id: docSnap.id, ...docSnap.data() } as T;
+    } catch (serverError) {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'get',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        return null;
+    }
 }
 
 
@@ -120,8 +130,13 @@ export const listenToCollection = <T>(collectionName: string, callback: (data: T
                 return { id: doc.id, ...docData } as T;
             });
             callback(data);
-        }, (error) => {
-            console.error(`Error listening to ${collectionName}: `, error);
+        }, (serverError) => {
+             const permissionError = new FirestorePermissionError({
+                path: q ? `query on ${collectionName}` : collectionName,
+                operation: 'list',
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+            console.error(`Error listening to ${collectionName}: `, serverError);
         });
     }).catch(error => {
         console.error("Failed to get DB for listener:", error);
@@ -177,22 +192,42 @@ export const createArtistWithId = async (data: Omit<Artist, 'id'> & {id: string}
     const db = await getDb();
     const docRef = doc(db, "artists", data.id);
     const { id, ...dataToSave } = data; // Exclude id from the data being saved
-    await setDoc(docRef, dataToSave);
+    setDoc(docRef, dataToSave).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'create',
+            requestResourceData: dataToSave,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
 };
 
 
 export const updateArtist = async (id: string, data: Partial<Artist>): Promise<void> => {
     const db = await getDb();
     const artistRef = doc(db, "artists", id);
-    await updateDoc(artistRef, data);
+    updateDoc(artistRef, data).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: artistRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
 };
 export const deleteArtist = async (id: string): Promise<void> => {
     const db = await getDb();
     // This should ideally be a cloud function for security to delete the auth user as well.
     // For now, we will just delete the Firestore document.
     const artistRef = doc(db, "artists", id);
-    await deleteDoc(artistRef);
-}
+     deleteDoc(artistRef).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: artistRef.path,
+            operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
+};
 
 
 // Bookings
@@ -205,7 +240,7 @@ export const createBooking = async (data: Omit<Booking, 'id'>) => {
     addDoc(bookingsCollection, data)
         .then(async (docRef) => {
             // If the write is successful, update the document with its own ID.
-            await updateDoc(docRef, { id: docRef.id });
+            updateDoc(docRef, { id: docRef.id });
         })
         .catch((serverError) => {
             // This block specifically handles errors from the Firestore server, like permission denied.
@@ -224,7 +259,14 @@ export const createBooking = async (data: Omit<Booking, 'id'>) => {
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
     const db = await getDb();
     const bookingRef = doc(db, "bookings", id);
-    await updateDoc(bookingRef, data);
+    updateDoc(bookingRef, data).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: bookingRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
 };
 
 // Customers
@@ -232,44 +274,93 @@ export const getCustomer = async (id: string): Promise<Customer | null> => getDo
 export const getCustomerByPhone = async (phone: string): Promise<Customer | null> => {
     const db = await getDb();
     const q = query(collection(db, "customers"), where("phone", "==", phone));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            return null;
+        }
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Customer;
+    } catch (serverError) {
+        const permissionError = new FirestorePermissionError({
+            path: `customers collection query`,
+            operation: 'list',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
         return null;
     }
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as Customer;
 }
 export const getCustomerByEmail = async (email: string): Promise<Customer | null> => {
     const db = await getDb();
     const q = query(collection(db, "customers"), where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            return null;
+        }
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Customer;
+    } catch (serverError) {
+        const permissionError = new FirestorePermissionError({
+            path: `customers collection query`,
+            operation: 'list',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
         return null;
     }
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as Customer;
 };
-export const createCustomer = async (data: Omit<Customer, 'id'> & {id: string}): Promise<string> => {
-    const db = await getDb();
-    const customerId = data.id; // Use UID from Google or phone auth
-    const customerRef = doc(db, "customers", customerId);
-    const { id, ...dataToSave } = data;
-    await setDoc(customerRef, { ...dataToSave, status: 'Active', createdOn: Timestamp.now() }, { merge: true });
-    return customerId;
+export const createCustomer = (data: Omit<Customer, 'id'> & {id: string}): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        const db = await getDb();
+        const customerId = data.id; // Use UID from Google or phone auth
+        const customerRef = doc(db, "customers", customerId);
+        const { id, ...dataToSave } = data;
+        const finalData = { ...dataToSave, status: 'Active', createdOn: Timestamp.now() };
+
+        setDoc(customerRef, finalData, { merge: true })
+            .then(() => resolve(customerId))
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: customerRef.path,
+                    operation: 'create',
+                    requestResourceData: finalData,
+                } satisfies SecurityRuleContext);
+                errorEmitter.emit('permission-error', permissionError);
+                reject(permissionError); // Reject the promise so the calling function knows it failed
+            });
+    });
 };
 
-export const updateCustomer = async (id: string, data: Partial<Customer>): Promise<void> => {
-    const db = await getDb();
-    const customerRef = doc(db, "customers", id);
-    await updateDoc(customerRef, data);
+
+export const updateCustomer = (id: string, data: Partial<Customer>): Promise<void> => {
+     return new Promise(async (resolve, reject) => {
+        const db = await getDb();
+        const customerRef = doc(db, "customers", id);
+        
+        updateDoc(customerRef, data)
+            .then(() => resolve())
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: customerRef.path,
+                    operation: 'update',
+                    requestResourceData: data,
+                } satisfies SecurityRuleContext);
+                errorEmitter.emit('permission-error', permissionError);
+                reject(permissionError);
+            });
+    });
 };
 
 export const deleteCustomer = async (id: string): Promise<void> => {
     const db = await getDb();
-    // This should ideally be a cloud function for security to delete the auth user as well.
-    // For now, we will just delete the Firestore document.
     const customerRef = doc(db, "customers", id);
-    await deleteDoc(customerRef);
+    deleteDoc(customerRef).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: customerRef.path,
+            operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+    });
 };
 
 
