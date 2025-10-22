@@ -102,7 +102,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
 }
 
 // Generic function to set a config document
-async function setConfigDocument(docId: string, data: any): Promise<void> {
+export async function setConfigDocument(docId: string, data: any): Promise<void> {
     const db = await getDb();
     const docRef = doc(db, 'config', docId);
     
