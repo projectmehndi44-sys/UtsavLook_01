@@ -34,7 +34,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   return (
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
       <CardContent className="p-0 relative">
-        <div className="aspect-[2/2.5] relative">
+        <div className="aspect-square relative">
           <Image
             src={primaryWorkImage}
             alt={`${artist.name}'s work`}
@@ -109,3 +109,4 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
     </Card>
   );
 }
+
