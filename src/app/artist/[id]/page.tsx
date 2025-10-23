@@ -90,8 +90,8 @@ export default function ArtistPublicProfilePage() {
                     <AvatarImage src={artist.profilePicture} alt={artist.name} />
                     <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <div className="flex-grow text-center md:text-left py-4">
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tighter font-headline text-primary">
+                <div className="flex-grow text-center md:text-left py-4 pt-12 md:pt-4">
+                  <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-primary">
                     {artist.name}
                   </h1>
                    <div className="flex items-center gap-4 mt-2 justify-center md:justify-start">
@@ -105,7 +105,7 @@ export default function ArtistPublicProfilePage() {
                       </div>
                   </div>
                    <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
-                      {artist.verified && <Badge className="bg-green-100 text-green-800 border-green-300"><CheckCircle className="w-4 h-4 mr-1"/>Verified</Badge>}
+                      {artist.verified && <Badge className="bg-green-100 text-green-800 border-green-300"><CheckCircle className="w-4 h-4 mr-1"/>UtsavLook Verified</Badge>}
                       {artist.isFoundersClubMember && <Badge className="bg-amber-100 text-amber-800 border-amber-300"><Sparkles className="w-4 h-4 mr-1"/>Founder's Club</Badge>}
                   </div>
                 </div>
