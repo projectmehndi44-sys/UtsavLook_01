@@ -56,7 +56,6 @@ const nextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ["*.cloudworkstations.dev"],
 };
 
 const pwaConfig = {
