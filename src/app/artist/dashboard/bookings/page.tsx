@@ -20,12 +20,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { updateBooking, getFinancialSettings } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
+import { BookingDetailsModal } from '@/components/utsavlook/BookingDetailsModal';
 
 
 function getSafeDate(date: any): Date {
@@ -38,104 +37,6 @@ function getSafeDate(date: any): Date {
     }
     return new Date();
 }
-
-const BookingDetailsModal = ({ booking, isOpen, onOpenChange, platformFeePercentage }: { booking: Booking | null; isOpen: boolean; onOpenChange: (isOpen: boolean) => void; platformFeePercentage: number; }) => {
-    if (!booking) return null;
-
-    const bookingShare = booking.amount / (booking.artistIds.length || 1);
-    const taxableAmount = bookingShare / 1.18;
-    const gstOnService = bookingShare - taxableAmount;
-    const platformFee = taxableAmount * platformFeePercentage;
-    const netPayout = taxableAmount - platformFee;
-    const travelCharges = booking.travelCharges || 0;
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle className="text-primary">Booking Details</DialogTitle>
-                    <DialogDescription>Full details for booking #{booking.id.substring(0,7)}</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-4">
-                    {/* Customer & Event Details */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                            <User className="w-8 h-8 text-primary"/>
-                            <div>
-                                <CardTitle>{booking.customerName}</CardTitle>
-                                <CardDescription>{booking.customerContact}</CardDescription>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="text-sm space-y-2">
-                             <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground" /> <span>Event: {booking.eventType} on {format(getSafeDate(booking.eventDate), 'PPP')}</span></div>
-                             {booking.mapLink ? (
-                                <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground" /> <a href={booking.mapLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{booking.serviceAddress}</a></div>
-                             ) : (
-                                 <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground" /> <span>{booking.serviceAddress}</span></div>
-                             )}
-                        </CardContent>
-                    </Card>
-
-                     {/* Service Dates */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base">Service Dates</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                             {(booking.serviceDates || []).map((date, index) => (
-                                <Badge key={index} variant="secondary">
-                                    {format(getSafeDate(date), "E, PPP")}
-                                </Badge>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    {/* Special Notes */}
-                    {booking.note && (
-                        <Card>
-                             <CardHeader>
-                                <CardTitle className="text-base">Special Notes from Customer</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground italic">"{booking.note}"</p>
-                            </CardContent>
-                        </Card>
-                    )}
-                    
-                     {/* Payout Calculation */}
-                    <Card className="bg-muted/30">
-                        <CardHeader>
-                            <CardTitle className="text-base flex items-center gap-2"><IndianRupee/> Your Estimated Payout</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                            <div className="flex justify-between"><span>Your Share of Booking</span> <span>₹{bookingShare.toLocaleString()}</span></div>
-                            <Separator/>
-                            <div className="flex justify-between text-muted-foreground"><span>Less: 18% GST on service</span> <span>- ₹{gstOnService.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
-                            <div className="flex justify-between"><strong>Taxable Value</strong> <strong>₹{taxableAmount.toLocaleString(undefined, {maximumFractionDigits: 2})}</strong></div>
-                             <Separator/>
-                            <div className="flex justify-between text-muted-foreground"><span>Less: {platformFeePercentage*100}% Platform Fee</span> <span>- ₹{platformFee.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
-                            <Separator/>
-                            <div className="flex justify-between font-bold text-lg text-green-600"><span>Net Payout to You</span> <span>₹{netPayout.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
-                             {travelCharges > 0 && (
-                                <div className="flex justify-between font-semibold text-blue-600 pt-2 border-t mt-2">
-                                    <span>+ Travel Charges (Payable by customer)</span>
-                                    <span>₹{travelCharges.toLocaleString()}</span>
-                                </div>
-                            )}
-                        </CardContent>
-                        <CardFooter>
-                            <p className="text-xs text-muted-foreground">This is an estimate. Final payout will be processed by admin after job completion. Travel charges are to be collected directly from the customer.</p>
-                        </CardFooter>
-                    </Card>
-                </div>
-                 <DialogClose asChild>
-                    <Button type="button" variant="secondary" className="w-full">Close</Button>
-                </DialogClose>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 
 export default function ArtistBookingsPage() {
     const { artistBookings, fetchData } = useArtistPortal();

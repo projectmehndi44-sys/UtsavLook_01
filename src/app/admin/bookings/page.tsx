@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,17 +6,18 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Briefcase, MoreHorizontal, AlertOctagon, CheckSquare } from 'lucide-react';
+import { Briefcase, MoreHorizontal, AlertOctagon, CheckSquare, FileText } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import type { Booking, Artist } from '@/lib/types';
-import { listenToCollection, updateBooking } from '@/lib/services';
+import { listenToCollection, updateBooking, getFinancialSettings } from '@/lib/services';
 import { AssignArtistModal } from '@/components/utsavlook/AssignArtistModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, parseISO, isValid } from 'date-fns';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Timestamp } from 'firebase/firestore';
+import { BookingDetailsModal } from '@/components/utsavlook/BookingDetailsModal';
 
 
 function getSafeDate(date: any): Date {
@@ -38,8 +40,13 @@ export default function BookingManagementPage() {
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
     const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = React.useState(false);
+    const [platformFee, setPlatformFee] = React.useState(0.1);
 
-    React.useEffect(() => {
+     React.useEffect(() => {
+        getFinancialSettings().then(settings => {
+            setPlatformFee(settings.platformFeePercentage / 100);
+        });
         const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
         const unsubscribeBookings = listenToCollection<Booking>('bookings', (data) => {
             setBookings(data.sort((a, b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime()));
@@ -161,6 +168,11 @@ export default function BookingManagementPage() {
         setIsAssignModalOpen(true);
     };
     
+    const handleOpenDetailsModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setIsDetailsModalOpen(true);
+    }
+    
     const handleAssignArtist = async (bookingId: string, assignedArtistIds: string[]) => {
         const booking = bookings.find(b => b.id === bookingId);
         if (!booking) return;
@@ -277,6 +289,9 @@ export default function BookingManagementPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                             <DropdownMenuItem onSelect={() => handleOpenDetailsModal(booking)}>
+                                                <FileText className="mr-2 h-4 w-4"/> View Full Details
+                                            </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             {booking.status === 'Pending Confirmation' && (
                                                 <DropdownMenuItem onSelect={() => handleOfflineConfirm(booking.id)}>
@@ -355,7 +370,7 @@ export default function BookingManagementPage() {
                     </Tabs>
                 </CardContent>
             </Card>
-            {selectedBooking && (
+            {selectedBooking && hasPermission('bookings', 'edit') && (
                 <AssignArtistModal
                     isOpen={isAssignModalOpen}
                     onOpenChange={setIsAssignModalOpen}
@@ -363,6 +378,15 @@ export default function BookingManagementPage() {
                     artists={artists}
                     allBookings={bookings}
                     onAssign={handleAssignArtist}
+                />
+            )}
+             {selectedBooking && (
+                <BookingDetailsModal
+                    booking={selectedBooking}
+                    isOpen={isDetailsModalOpen}
+                    onOpenChange={setIsDetailsModalOpen}
+                    platformFeePercentage={platformFee}
+                    isAdminView={true}
                 />
             )}
         </>
