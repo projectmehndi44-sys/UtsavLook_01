@@ -10,7 +10,6 @@ import Link from 'next/link';
 
 interface ArtistCardProps {
   artist: Artist;
-  onViewProfile?: (artist: Artist) => void;
 }
 
 const getServiceIcon = (service: Artist['services'][number]) => {
@@ -26,13 +25,13 @@ const getServiceIcon = (service: Artist['services'][number]) => {
     }
 }
 
-export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
+export function ArtistCard({ artist }: ArtistCardProps) {
   const primaryService = artist.services?.[0];
   const baseCharge = (primaryService && artist.charges?.[primaryService]) || artist.charge || 0;
   const primaryWorkImage = artist.workImages?.[0] || 'https://picsum.photos/seed/placeholder/800/600';
 
   return (
-    <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-lg hover:shadow-2xl hover:border-accent">
+    <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent">
       <CardContent className="p-0 relative">
         <div className="aspect-[4/3] relative">
           <Image
@@ -60,21 +59,21 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
              <Image
                 src={artist.profilePicture}
                 alt={artist.name}
-                width={100}
-                height={100}
+                width={80}
+                height={80}
                 className="rounded-full border-4 border-white object-cover shadow-lg aspect-square"
             />
           </div>
         </div>
       </CardContent>
 
-      <div className="pt-16 p-4 flex flex-col flex-grow text-center">
+      <div className="pt-12 p-4 flex flex-col flex-grow text-center">
         <h3 className="text-xl font-headline text-primary font-bold">{artist.name}</h3>
         <p className="text-sm text-muted-foreground mt-1">
           {artist.location}
         </p>
 
-        <div className="flex flex-wrap gap-2 justify-center my-4">
+        <div className="flex flex-wrap gap-2 justify-center my-3">
           {(artist.services || []).map((service) => (
             <Badge key={service} variant="secondary" className="gap-1.5 pl-2">
               {getServiceIcon(service)}
@@ -83,7 +82,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
           ))}
         </div>
         
-        <div className="flex justify-around items-center mt-auto pt-4 border-t">
+        <div className="flex justify-around items-center mt-auto pt-3 border-t">
            <div className="flex flex-col items-center">
              <span className="text-xs text-muted-foreground">Rating</span>
              <div className="flex items-center font-bold text-amber-500">

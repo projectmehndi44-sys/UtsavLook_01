@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MakeupIcon, MehndiIcon, PhotographyIcon } from '@/components/icons';
 import type { MasterServicePackage } from '@/lib/types';
-import { PackageSearch } from 'lucide-react';
+import { PackageSearch, IndianRupee } from 'lucide-react';
 import { CarouselItem } from '@/components/ui/carousel';
 
 interface PackagesProps {
@@ -41,9 +41,9 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
             {packages.map((service) => {
                 const lowestPrice = Math.min(...service.categories.map(c => c.basePrice));
                 return (
-                    <CarouselItem key={service.id} className="md:basis-1/3 lg:basis-1/4">
-                        <div className="p-1">
-                            <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-lg hover:shadow-2xl hover:border-accent h-full">
+                    <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                        <div className="p-1 h-full">
+                            <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent h-full">
                                 <CardContent className="p-0 relative">
                                     <div className="aspect-[4/3] relative">
                                     <Image
@@ -57,12 +57,12 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                 </CardContent>
 
                                 <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
+                                    <h3 className="text-lg font-headline text-primary font-bold">{service.name}</h3>
                                     <p className="text-sm text-muted-foreground mt-1 flex-grow">
                                     {service.description}
                                     </p>
 
-                                    <div className="flex flex-wrap gap-1 my-4">
+                                    <div className="flex flex-wrap gap-1 my-3">
                                         {service.tags.map(tag => (
                                             <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
                                                 {getServiceIcon(service.service)}
@@ -71,10 +71,15 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                         ))}
                                     </div>
                                     
-                                    <div className="flex justify-between items-center mt-auto pt-4 border-t">
-                                        <div className="text-lg font-bold text-primary">
-                                            <span className="text-xs font-normal text-muted-foreground">From</span><br/>
-                                            ₹{lowestPrice.toLocaleString()}
+                                </div>
+                                <CardFooter className="p-2 bg-background/50 border-t mt-auto">
+                                   <div className="flex justify-between items-center w-full">
+                                        <div className="text-lg font-bold text-primary flex flex-col items-start">
+                                            <span className="text-xs font-normal text-muted-foreground">From</span>
+                                            <div className="flex items-center">
+                                                <IndianRupee className="w-4 h-4 mr-0.5"/>
+                                                {lowestPrice.toLocaleString()}
+                                            </div>
                                         </div>
                                         <Button 
                                             onClick={() => onServiceSelect(service)} 
@@ -84,7 +89,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                             View Options
                                         </Button>
                                     </div>
-                                </div>
+                                </CardFooter>
                             </Card>
                         </div>
                     </CarouselItem>
