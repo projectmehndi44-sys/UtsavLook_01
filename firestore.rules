@@ -1,62 +1,58 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if the user is the owner of the document
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+    
+    // Helper function to check if the user is a Super Admin
+    function isAdmin() {
+      // Check if the user is authenticated and if their role in the teamMembers collection is 'Super Admin'
+      return request.auth != null && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
     }
 
-    // Helper function to check if the user is an authenticated user
-    function isAuthenticated() {
-      return request.auth != null;
+    // Team members can only be managed by other Super Admins
+    match /teamMembers/{userId} {
+      allow read, write: if isAdmin();
     }
-
-    // Rules for the 'config' collection
+    
+    // Config documents are publicly readable, but only writable by admins
     match /config/{docId} {
-      // Any authenticated user can read configuration.
-      allow read: if isAuthenticated();
-      // Only Super Admins can write to configuration.
-      allow write: if request.auth != null && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
+      allow read: if true;
+      allow write: if isAdmin();
     }
-
-    // Rules for 'artists', 'customers', and 'teamMembers'
-    // Public read for artists, restricted write
+    
+    // Artists can be read by anyone, but only managed by admins
     match /artists/{artistId} {
       allow read: if true;
-      allow write: if isOwner(artistId) || (get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin');
+      allow write: if isAdmin();
     }
     
-    // Customers can only access their own data. Admins can access any.
+    // Customers can be read by anyone, but only managed by admins
     match /customers/{customerId} {
-      allow read, write: if isOwner(customerId) || (get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin');
-    }
-    
-    // Team members can only be managed by Super Admins
-    match /teamMembers/{memberId} {
-        allow read, write: if get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
+      allow read, write: if isAdmin();
     }
 
-    // Rules for 'bookings'
-    // Customers can read their own bookings. Artists can read bookings they are assigned to. Admins can read all.
+    // Pending artists can only be managed by admins
+    match /pendingArtists/{pendingId} {
+        allow read, write: if isAdmin();
+    }
+    
+    // Bookings can be created by any authenticated user.
+    // They can be read/updated by the customer who owns them or an admin.
     match /bookings/{bookingId} {
-      allow read: if (isAuthenticated() && (resource.data.customerId == request.auth.uid || request.auth.uid in resource.data.artistIds)) || (get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin');
-      // Writes are handled by Cloud Functions
-      allow write: if false; 
+      allow create: if request.auth != null;
+      allow read, update: if request.auth.uid == resource.data.customerId || isAdmin();
+      allow delete: if isAdmin();
     }
     
-    // Other collections can be read by authenticated users, but not written to directly by clients.
-    match /{collection}/{doc=**} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Default deny all writes unless specified above
+    // Notifications are specific to a user (artist/customer/admin)
+    match /notifications/{notificationId} {
+        allow read, write: if request.auth != null && request.auth.uid == resource.data.artistId;
     }
-
-    // Allow read access to pending artists for admins
-    match /pendingArtists/{artistId} {
-        allow read: if get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
-        allow create: if true; // Allow public creation
-        allow delete: if get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
+    
+    // Payout history can only be managed by admins
+    match /payoutHistory/{payoutId} {
+        allow read, write: if isAdmin();
     }
   }
 }
