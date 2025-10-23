@@ -2,6 +2,14 @@
 
 const withPWA = require('next-pwa');
 
+const pwaConfig = {
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+};
+
+
 const nextConfig = {
   /* config options here */
   experimental: {
@@ -58,14 +66,4 @@ const nextConfig = {
   },
 };
 
-const pwaConfig = {
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-};
-
-// Correctly merge the PWA config with the main Next.js config
-const finalConfig = withPWA(pwaConfig)(nextConfig);
-
-module.exports = finalConfig;
+module.exports = withPWA(pwaConfig)(nextConfig);
