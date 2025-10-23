@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getCustomer, getAvailableLocations, listenToCollection, getPromotions, getTeamMembers } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home, Loader2 } from 'lucide-react';
+import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home, Loader2, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
@@ -369,15 +369,16 @@ export default function CartPage() {
     return (
         <div className="bg-background">
             <div className="container mx-auto px-4 py-12">
-                 <div className="relative mb-4 text-center">
-                    <h1 className="font-headline text-5xl md:text-7xl text-primary">
+                 <div className="flex justify-between items-center mb-4">
+                    <Button onClick={() => router.back()} variant="outline">
+                        <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                    </Button>
+                    <h1 className="font-headline text-5xl md:text-7xl text-primary text-center">
                         My Cart
                     </h1>
-                     <div className="absolute top-0 right-0">
-                        <Button asChild variant="outline">
-                            <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
-                        </Button>
-                    </div>
+                     <Button asChild variant="outline">
+                        <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
+                    </Button>
                 </div>
                 <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
                     Finalize your service selections and provide booking details to confirm your appointments.

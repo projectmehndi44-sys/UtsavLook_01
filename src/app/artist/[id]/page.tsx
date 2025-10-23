@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { IndianRupee, MapPin, Star, CheckCircle, Sparkles, Mail, Phone, PackageSearch, MessageSquare } from 'lucide-react';
+import { IndianRupee, MapPin, Star, CheckCircle, Sparkles, Mail, Phone, PackageSearch, MessageSquare, ArrowLeft } from 'lucide-react';
 import { Header } from '@/components/utsavlook/Header';
 import { Footer } from '@/components/utsavlook/Footer';
 import { ServiceSelectionModal } from '@/components/utsavlook/ServiceSelectionModal';
@@ -79,6 +79,10 @@ export default function ArtistPublicProfilePage() {
             <div className="relative h-48 md:h-64 w-full">
               <Image src={coverPhoto} alt={`${artist.name}'s cover photo`} fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+               <Button onClick={() => router.back()} variant="outline" className="absolute top-4 left-4 z-10 bg-background/80 hover:bg-background">
+                <ArrowLeft className="w-4 h-4 mr-2"/>
+                Back
+              </Button>
             </div>
             <div className="container mx-auto px-4 -mt-16 md:-mt-24">
               <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
