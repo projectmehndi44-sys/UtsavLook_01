@@ -109,7 +109,7 @@ export default function BookingsPage() {
         }
     };
     
-    const renderBookingRow = (booking: Booking) => {
+    const renderBookingRow = (booking: Booking, isUpcoming: boolean) => {
         const assignedArtists = artists.filter(a => booking.artistIds?.includes(a.id));
         const canCancel = booking.status === 'Confirmed' || booking.status === 'Pending Approval';
 
@@ -161,7 +161,7 @@ export default function BookingsPage() {
         );
     }
 
-    const renderBookingTable = (bookingsToShow: Booking[], isPast: boolean) => (
+    const renderBookingTable = (bookingsToShow: Booking[], isUpcoming: boolean) => (
         <Table>
             <TableHeader>
                 <TableRow>
@@ -176,8 +176,8 @@ export default function BookingsPage() {
             <TableBody>
                 {bookingsToShow.length > 0 ? bookingsToShow.map(booking => (
                    <React.Fragment key={`frag-${booking.id}`}>
-                        {renderBookingRow(booking)}
-                        {!isPast && booking.status === 'Confirmed' && booking.completionCode && (
+                        {renderBookingRow(booking, isUpcoming)}
+                        {isUpcoming && booking.status === 'Confirmed' && booking.completionCode && (
                              <TableRow key={`code-${booking.id}`} className="bg-muted/50">
                                  <TableCell colSpan={6} className="p-0">
                                      <Alert variant="default" className="border-0 border-l-4 border-primary rounded-none">
@@ -214,10 +214,10 @@ export default function BookingsPage() {
                         <TabsTrigger value="past">Past</TabsTrigger>
                     </TabsList>
                     <TabsContent value="upcoming" className="mt-4">
-                        {renderBookingTable(upcomingBookings, false)}
+                        {renderBookingTable(upcomingBookings, true)}
                     </TabsContent>
                     <TabsContent value="past" className="mt-4">
-                        {renderBookingTable(pastBookings, true)}
+                        {renderBookingTable(pastBookings, false)}
                     </TabsContent>
                 </Tabs>
             </CardContent>
@@ -276,3 +276,5 @@ export default function BookingsPage() {
         </>
     );
 }
+
+    
