@@ -11,7 +11,9 @@ import {
   LayoutGrid,
   ShoppingBag,
   Palette,
-  LogIn
+  LogIn,
+  ChevronDown,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,6 +97,19 @@ export function Header({
           </>
         ) : (
            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost">More <ChevronDown className="w-4 h-4 ml-1" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => router.push('/about')}>About Us</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => router.push('/contact')}>Contact Us</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => router.push('/terms')}>Terms & Conditions</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => router.push('/privacy')}>Privacy Policy</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => router.push('/refund')}>Refund Policy</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" onClick={() => router.push('/login')}>
                 <LogIn className="mr-2 h-4 w-4" />
                 Login / Sign Up
