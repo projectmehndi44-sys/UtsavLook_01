@@ -1,58 +1,80 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if the user is a Super Admin
-    function isAdmin() {
-      // Check if the user is authenticated and if their role in the teamMembers collection is 'Super Admin'
-      return request.auth != null && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
+
+    // --- HELPER FUNCTIONS ---
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // Team members can only be managed by other Super Admins
-    match /teamMembers/{userId} {
-      allow read, write: if isAdmin();
+    function isTeamMember() {
+      return request.auth != null && exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid));
     }
     
-    // Config documents are publicly readable, but only writable by admins
-    match /config/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    function getRole() {
+      return get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role;
+    }
+
+    function isRole(role) {
+      return isTeamMember() && getRole() == role;
     }
     
-    // Artists can be read by anyone, but only managed by admins
+    // --- DATA COLLECTIONS ---
+
     match /artists/{artistId} {
+      // Anyone can view an artist's public profile.
       allow read: if true;
-      allow write: if isAdmin();
+      // An artist can write to their own profile, or a Super Admin can.
+      allow write: if isOwner(artistId) || isRole('Super Admin');
     }
     
-    // Customers can be read by anyone, but only managed by admins
-    match /customers/{customerId} {
-      allow read, write: if isAdmin();
+    match /customers/{userId} {
+      // A customer can only read or write their own document. A Super Admin can also manage it.
+      allow read, write: if isOwner(userId) || isRole('Super Admin');
     }
 
-    // Pending artists can only be managed by admins
-    match /pendingArtists/{pendingId} {
-        allow read, write: if isAdmin();
+    match /teamMembers/{userId} {
+        // A user can read their own team member document. Other Super Admins can also read it.
+        allow read: if isOwner(userId) || isRole('Super Admin');
+        // Only a Super Admin can create, update, or delete team members.
+        allow write: if isRole('Super Admin');
     }
-    
-    // Bookings can be created by any authenticated user.
-    // They can be read/updated by the customer who owns them or an admin.
+
     match /bookings/{bookingId} {
-      allow create: if request.auth != null;
-      allow read, update: if request.auth.uid == resource.data.customerId || isAdmin();
-      allow delete: if isAdmin();
+      // A team member, the customer who owns the booking, or an assigned artist can read it.
+      allow read: if isTeamMember() || isOwner(resource.data.customerId) || (request.auth != null && request.auth.uid in resource.data.artistIds);
+      // Only the customer can create a booking for themselves.
+      allow create: if request.auth != null && isOwner(request.resource.data.customerId);
+      // A team member can update it, or an artist can mark it as complete.
+      allow update: if isTeamMember() || (request.auth != null && request.auth.uid in resource.data.artistIds && request.resource.data.status == 'Completed');
+      // Only an admin can delete a booking.
+      allow delete: if isRole('Super Admin');
     }
-    
-    // Notifications are specific to a user (artist/customer/admin)
-    match /notifications/{notificationId} {
-        allow read, write: if request.auth != null && request.auth.uid == resource.data.artistId;
-    }
-    
-    // Payout history can only be managed by admins
+
     match /payoutHistory/{payoutId} {
-        allow read, write: if isAdmin();
+      // Only team members can manage payout history.
+      allow read, create, update, delete: if isTeamMember();
+    }
+
+    match /pendingArtists/{pendingId} {
+      // Anyone can submit an application to become an artist.
+      allow create: if true;
+      // Only a Super Admin can read or delete pending applications.
+      allow read, delete: if isRole('Super Admin');
+    }
+    
+    match /notifications/{notificationId} {
+        // A user can only access their own notifications.
+        allow read, write: if request.auth != null && (isOwner(resource.data.artistId) || isOwner(resource.data.customerId));
+    }
+    
+    // --- CONFIGURATION COLLECTION ---
+    // All configuration documents are publicly readable for the site to function,
+    // but only a Super Admin can change them.
+    match /config/{document} {
+        allow read: if true;
+        allow write: if isRole('Super Admin');
     }
   }
 }
