@@ -5,7 +5,7 @@ import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, whe
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { getFirebaseApp } from './firebase';
+import { getFirebaseApp, callFirebaseFunction } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -83,13 +83,12 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
+            // Handle nested data structures from the original implementation
             if (docId === 'masterServices' && data && data.hasOwnProperty('packages')) return data.packages as T;
-            if (data && data.hasOwnProperty('packages')) return data.packages as T;
             if (data && data.hasOwnProperty('promos')) return data.promos as T;
-            if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
             if (data && data.hasOwnProperty('images')) return data.images as T;
             if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
-            return data as T; // Fallback for flat config docs
+            return data as T; // Fallback for flat or correctly structured config docs
         }
         return null;
     } catch (serverError) {
@@ -102,26 +101,24 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
     }
 }
 
-// Generic function to set a config document
+
+// REFACTORED: This function now calls a Cloud Function for secure writes.
 export async function setConfigDocument(docId: string, data: any): Promise<void> {
-    const db = await getDb();
-    const docRef = doc(db, 'config', docId);
+    let configData = data;
+    // Maintain original data structure for compatibility
+    if (docId === 'masterServices') configData = { packages: data };
+    else if (docId === 'promotions') configData = { promos: data };
+    else if (docId === 'placeholderImages') configData = { images: data };
+    else if (docId === 'benefitImages') configData = { benefitImages: data };
     
-    let dataToSet = data;
-    if (docId === 'masterServices') dataToSet = { packages: data };
-    else if (docId === 'promotions') dataToSet = { promos: data };
-    else if (docId === 'availableLocations') dataToSet = data; // Locations are stored at the root of the doc
-    else if (docId === 'placeholderImages') dataToSet = { images: data };
-    else if (docId === 'benefitImages') dataToSet = { benefitImages: data };
-    
-    setDoc(docRef, dataToSet, { merge: true }).catch((serverError) => {
-         const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'write',
-            requestResourceData: dataToSet,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-    });
+    try {
+        await callFirebaseFunction('updateConfig', { docId, configData });
+    } catch (error) {
+        console.error(`Failed to update config for ${docId}:`, error);
+        // The callable function will throw its own detailed error.
+        // We re-throw it so the component's catch block can handle it.
+        throw error;
+    }
 }
 
 
@@ -501,3 +498,5 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
 };
 
 export { getDb };
+
+    

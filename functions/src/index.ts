@@ -8,6 +8,55 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 const db = admin.firestore();
 
+
+/**
+ * A "Callable Function" that securely updates a document in the 'config' collection.
+ * This is used for admin operations like updating site settings.
+ */
+export const updateConfig = functions.https.onCall(async (data, context) => {
+    // 1. Authentication Check: Ensure the user is a logged-in team member
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            "unauthenticated",
+            "You must be logged in to update configuration."
+        );
+    }
+    const adminId = context.auth.uid;
+    const { docId, configData } = data;
+
+    if (!docId || !configData) {
+        throw new functions.https.HttpsError(
+            "invalid-argument",
+            "The function must be called with 'docId' and 'configData'."
+        );
+    }
+
+    // 2. Authorization Check: Ensure the user is a Super Admin
+    try {
+        const adminDoc = await db.collection("teamMembers").doc(adminId).get();
+        if (!adminDoc.exists || adminDoc.data()?.role !== 'Super Admin') {
+            throw new functions.https.HttpsError(
+                "permission-denied",
+                "You must be a Super Admin to perform this action."
+            );
+        }
+    } catch (error) {
+        console.error("Admin authorization check failed:", error);
+        throw new functions.https.HttpsError("internal", "Could not verify admin permissions.");
+    }
+    
+
+    // 3. Update the document in the 'config' collection
+    try {
+        await db.collection("config").doc(docId).set(configData, { merge: true });
+        return { success: true, message: `Configuration for '${docId}' updated successfully.` };
+    } catch (error) {
+        console.error("Failed to update config document:", error);
+        throw new functions.https.HttpsError("internal", "An error occurred while updating the configuration.");
+    }
+});
+
+
 /**
  * This is a "Callable Function" that allows an artist to claim a job.
  * It uses a transaction to ensure that only one artist can claim a job.
@@ -264,3 +313,5 @@ export const createBooking = functions.https.onCall(async (data, context) => {
 
     return { success: true, bookingId: docRef.id };
 });
+
+    

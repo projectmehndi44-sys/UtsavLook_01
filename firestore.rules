@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -72,9 +73,12 @@ service cloud.firestore {
     // --- CONFIGURATION COLLECTION ---
     // All configuration documents are publicly readable for the site to function,
     // but only a Super Admin can change them.
-    match /config/{document} {
+    match /config/{docId} {
         allow read: if true;
+        // This is the critical fix: writes are allowed if the user is a Super Admin.
         allow write: if isRole('Super Admin');
     }
   }
 }
+
+    
