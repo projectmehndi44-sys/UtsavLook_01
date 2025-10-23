@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { Booking } from '@/lib/types';
 import { useArtistPortal } from '../layout';
-import { MapPin, User, Calendar, IndianRupee, FileText, Check, AlertTriangle, Clock } from 'lucide-react';
+import { MapPin, User, Calendar, IndianRupee, FileText, Check, AlertTriangle, Clock, FilePlus2, Receipt } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import {
   AlertDialog,
@@ -25,6 +25,11 @@ import { Label } from '@/components/ui/label';
 import { updateBooking, getFinancialSettings } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { BookingDetailsModal } from '@/components/utsavlook/BookingDetailsModal';
+import { generateArtistInvoice } from '@/lib/export';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 
 function getSafeDate(date: any): Date {
@@ -38,6 +43,16 @@ function getSafeDate(date: any): Date {
     return new Date();
 }
 
+const finalInvoiceSchema = z.object({
+  additionalCharges: z.array(z.object({
+    description: z.string().min(1, "Description is required"),
+    amount: z.coerce.number().min(0, "Amount must be positive"),
+  })),
+  completionCode: z.string().length(6, "Code must be 6 digits"),
+});
+type FinalInvoiceFormValues = z.infer<typeof finalInvoiceSchema>;
+
+
 export default function ArtistBookingsPage() {
     const { artistBookings, fetchData } = useArtistPortal();
     const { toast } = useToast();
@@ -46,8 +61,13 @@ export default function ArtistBookingsPage() {
     const [isCompletionModalOpen, setIsCompletionModalOpen] = React.useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = React.useState(false);
     const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(null);
-    const [completionCode, setCompletionCode] = React.useState('');
     const [platformFee, setPlatformFee] = React.useState(0.1);
+
+    const form = useForm<FinalInvoiceFormValues>({
+        resolver: zodResolver(finalInvoiceSchema),
+        defaultValues: { additionalCharges: [], completionCode: '' },
+    });
+    const { fields, append, remove } = useFieldArray({ control: form.control, name: "additionalCharges" });
 
     React.useEffect(() => {
         getFinancialSettings().then(settings => {
@@ -55,11 +75,16 @@ export default function ArtistBookingsPage() {
         });
     }, []);
 
+    const openCompletionModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        form.reset({ additionalCharges: [], completionCode: '' });
+        setIsCompletionModalOpen(true);
+    };
 
-    const handleStatusUpdate = async () => {
+    const handleStatusUpdate = async (data: FinalInvoiceFormValues) => {
         if (!selectedBooking) return;
         
-        if (selectedBooking.completionCode !== completionCode) {
+        if (selectedBooking.completionCode !== data.completionCode) {
             toast({
                 title: "Invalid Code",
                 description: "The completion code is incorrect. Please check with the customer.",
@@ -68,23 +93,28 @@ export default function ArtistBookingsPage() {
             return;
         }
 
-        await updateBooking(selectedBooking.id, { status: 'Completed' });
+        const additionalChargesTotal = data.additionalCharges.reduce((sum, charge) => sum + charge.amount, 0);
+        const finalAmount = selectedBooking.amount + additionalChargesTotal;
+
+        await updateBooking(selectedBooking.id, { 
+            status: 'Completed',
+            finalAmount: finalAmount,
+            additionalCharges: data.additionalCharges,
+        });
+
+        generateArtistInvoice(selectedBooking, data.additionalCharges);
+
         await fetchData(); // Refetch data
         
         toast({
             title: "Booking Completed!",
-            description: `Booking #${selectedBooking.id.substring(0,7)} has been marked as completed.`
+            description: `Final invoice for ${selectedBooking.customerName} has been downloaded.`
         });
 
         setIsCompletionModalOpen(false);
         setSelectedBooking(null);
-        setCompletionCode('');
+        form.reset();
     }
-
-    const openCompletionModal = (booking: Booking) => {
-        setSelectedBooking(booking);
-        setIsCompletionModalOpen(true);
-    };
 
     const openDetailsModal = (booking: Booking) => {
         setSelectedBooking(booking);
@@ -144,14 +174,15 @@ export default function ArtistBookingsPage() {
                                             </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="flex gap-2">
+                                    <CardFooter className="flex flex-col sm:flex-row gap-2">
                                         <Button variant="outline" className="w-full" onClick={() => openDetailsModal(booking)}>
                                             <FileText className="w-4 h-4 mr-2"/>
                                             View Details
                                         </Button>
                                         {booking.status === 'Confirmed' && (
                                             <Button className="w-full" onClick={() => openCompletionModal(booking)}>
-                                                Complete Job
+                                                <Receipt className="w-4 h-4 mr-2" />
+                                                Complete & Invoice
                                             </Button>
                                         )}
                                     </CardFooter>
@@ -167,29 +198,48 @@ export default function ArtistBookingsPage() {
             </CardContent>
         </Card>
         
-        {/* Completion Code Modal */}
+        {/* Completion & Final Invoice Modal */}
         <AlertDialog open={isCompletionModalOpen} onOpenChange={setIsCompletionModalOpen}>
-            <AlertDialogContent>
+            <AlertDialogContent className="sm:max-w-md">
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleStatusUpdate)}>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Complete Booking & Request Payout</AlertDialogTitle>
+                    <AlertDialogTitle>Final Invoice & Completion</AlertDialogTitle>
                     <AlertDialogDescription>
-                       To confirm that the service has been successfully delivered, please ask the customer for their unique 6-digit completion code and enter it below.
+                       Add any extra charges (e.g., travel, guest services). This will generate a final invoice for the customer. Then, enter the customer's completion code.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="py-4">
-                    <Label htmlFor="completion-code">Customer's Completion Code</Label>
-                    <Input 
-                        id="completion-code" 
-                        value={completionCode}
-                        onChange={(e) => setCompletionCode(e.target.value)}
-                        placeholder="e.g., 123456"
-                        maxLength={6}
-                    />
+                <div className="py-4 space-y-4">
+                     <div>
+                        <Label>Additional Charges</Label>
+                        <div className="space-y-2 mt-2">
+                            {fields.map((field, index) => (
+                                <div key={field.id} className="flex gap-2 items-center">
+                                    <FormField control={form.control} name={`additionalCharges.${index}.description`} render={({ field }) => <Input placeholder="e.g. Travel" {...field}/>} />
+                                    <FormField control={form.control} name={`additionalCharges.${index}.amount`} render={({ field }) => <Input type="number" placeholder="Amount" className="w-28" {...field}/>} />
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}> <span className="sr-only">Remove</span> <Trash2 className="w-4 h-4 text-destructive"/> </Button>
+                                </div>
+                            ))}
+                        </div>
+                        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ description: '', amount: 0 })}>
+                            <FilePlus2 className="mr-2 h-4 w-4"/> Add Line Item
+                        </Button>
+                     </div>
+                     <Separator />
+                    <div>
+                        <Label htmlFor="completion-code">Customer's Completion Code</Label>
+                        <FormField control={form.control} name="completionCode" render={({ field }) => (
+                           <Input id="completion-code" placeholder="e.g., 123456" maxLength={6} {...field} />
+                        )}/>
+                        <FormMessage>{form.formState.errors.completionCode?.message}</FormMessage>
+                    </div>
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setCompletionCode('')}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleStatusUpdate}>Submit &amp; Mark as Completed</AlertDialogAction>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction type="submit">Complete & Download Invoice</AlertDialogAction>
                 </AlertDialogFooter>
+                </form>
+                </Form>
             </AlertDialogContent>
         </AlertDialog>
 

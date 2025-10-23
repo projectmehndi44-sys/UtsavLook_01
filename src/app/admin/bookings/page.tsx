@@ -18,6 +18,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Timestamp } from 'firebase/firestore';
 import { BookingDetailsModal } from '@/components/utsavlook/BookingDetailsModal';
+import { callFirebaseFunction } from '@/lib/firebase';
 
 
 function getSafeDate(date: any): Date {
@@ -58,11 +59,6 @@ export default function BookingManagementPage() {
         };
     }, []);
     
-    const sendNotification = (artistId: string, booking: Booking, title: string, message: string) => {
-        // In a real app, this would be a server-side function to send a push notification
-        console.log(`Sending notification to ${artistId}: ${title} - ${message}`);
-    };
-
     const handleUpdateBookingStatus = async (bookingId: string, status: Booking['status'], artistIds?: string[]) => {
         const bookingToUpdate = bookings.find(b => b.id === bookingId);
         if (!bookingToUpdate) return;
@@ -94,16 +90,7 @@ export default function BookingManagementPage() {
 
         await handleUpdateBookingStatus(bookingId, 'Confirmed');
         
-        booking.artistIds.forEach(artistId => {
-            if (artistId) {
-                sendNotification(
-                    artistId,
-                    booking,
-                    'Booking Approved!',
-                    `Your booking for ${booking.items.map(i => i.servicePackage.name).join(', ')} with ${booking.customerName} has been approved by the admin.`
-                );
-            }
-        });
+        // This will now be handled by a Cloud Function Trigger
         
         toast({
             title: "Booking Approved",
@@ -118,16 +105,7 @@ export default function BookingManagementPage() {
         await handleUpdateBookingStatus(bookingId, 'Cancelled');
 
         if(booking.artistIds && booking.artistIds.length > 0) {
-            booking.artistIds.forEach(artistId => {
-                if (artistId) {
-                     sendNotification(
-                        artistId,
-                        booking,
-                        'Booking Cancelled',
-                        `Your booking for ${booking.items.map(i => i.servicePackage.name).join(', ')} with ${booking.customerName} has been cancelled by the admin.`
-                    );
-                }
-            });
+           // Cloud function will handle this notification
         }
         
         toast({
@@ -144,16 +122,7 @@ export default function BookingManagementPage() {
         await handleUpdateBookingStatus(bookingId, 'Disputed');
         
         if (booking.artistIds && booking.artistIds.length > 0) {
-             booking.artistIds.forEach(artistId => {
-                if (artistId) {
-                     sendNotification(
-                        artistId,
-                        booking,
-                        'Booking Disputed',
-                        `A dispute has been raised for your booking with ${booking.customerName}. Please contact admin.`
-                    );
-                }
-            });
+            // Cloud function will handle this notification
         }
 
         toast({
@@ -177,22 +146,10 @@ export default function BookingManagementPage() {
         const booking = bookings.find(b => b.id === bookingId);
         if (!booking) return;
         
-        const originalArtistIds = booking.artistIds || [];
         const newStatus = booking.paymentMethod === 'offline' ? 'Pending Approval' : 'Confirmed';
         await handleUpdateBookingStatus(bookingId, newStatus, assignedArtistIds);
         
-        assignedArtistIds.forEach(artistId => {
-            const artist = artists.find(a => a.id === artistId);
-            if (!artist) return;
-
-            const isNewAssignment = !originalArtistIds.includes(artistId);
-            const title = isNewAssignment ? 'New Booking Assigned!' : 'Booking Updated';
-            const message = isNewAssignment
-                ? `You have been assigned a new booking for ${booking.items.map(i => i.servicePackage.name).join(', ')} with ${booking.customerName}.`
-                : `The details for booking #${bookingId} have been updated.`;
-
-            sendNotification(artistId, booking, title, message);
-        });
+        // This will be handled by a cloud function now
 
         toast({
             title: `Artists Assigned`,
