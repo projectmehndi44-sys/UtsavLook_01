@@ -114,7 +114,7 @@ export async function setConfigDocument(docId: string, data: any): Promise<void>
     else if (docId === 'placeholderImages') dataToSet = { images: data };
     else if (docId === 'benefitImages') dataToSet = { benefitImages: data };
     
-    setDoc(docRef, dataToSet).catch((serverError) => {
+    setDoc(docRef, dataToSet, { merge: true }).catch((serverError) => {
          const permissionError = new FirestorePermissionError({
             path: docRef.path,
             operation: 'write',
@@ -378,7 +378,7 @@ export const getBenefitImages = async (): Promise<BenefitImage[]> => {
         { id: 'transparent-payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
         { id: 'zero-commission-welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
     ];
-    await saveBenefitImages(defaultBenefits);
+    await setConfigDocument('benefitImages', defaultBenefits);
     return defaultBenefits;
 };
 export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', images );
@@ -464,14 +464,6 @@ export const deletePendingArtist = async (id: string): Promise<void> => {
     await deleteDoc(artistRef);
 };
 
-// Notifications
-export const createNotification = async (data: Omit<Notification, 'id'>): Promise<string> => {
-    const db = await getDb();
-    const notificationsCollection = collection(db, "notifications");
-    const docRef = await addDoc(notificationsCollection, data);
-    // This is a fire-and-forget operation, but we could add error handling if needed.
-    return docRef.id;
-};
 
 // To be DEPRECATED. Use listeners instead for performance.
 async function getCollection<T>(collectionName: string): Promise<T[]> {

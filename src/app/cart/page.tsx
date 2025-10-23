@@ -306,52 +306,18 @@ export default function CartPage() {
             return;
         }
 
-        let finalArtistIds: string[] = [];
-        let bookingStatus: Booking['status'] = 'Needs Assignment';
-        let completionCode: string | undefined = undefined;
-
-        if (paymentMethod === 'online') {
-            bookingStatus = 'Pending Approval';
-             // Generate 6-digit code only for online payments which lead to quicker confirmation
-            completionCode = Math.floor(100000 + Math.random() * 900000).toString();
-        } else {
-            bookingStatus = 'Pending Confirmation';
-        }
-
-        if (appliedCode) {
-            const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === appliedCode.toUpperCase());
-            if (matchedArtist) {
-                finalArtistIds = [matchedArtist.id];
-                // if artist is assigned, it goes to pending approval directly
-                if (bookingStatus !== 'Pending Confirmation') {
-                    bookingStatus = 'Pending Approval';
-                }
-            }
-        } else {
-            const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
-            if (preSelectedArtistIds.length > 0) {
-                finalArtistIds = preSelectedArtistIds as string[];
-                 if (bookingStatus !== 'Pending Confirmation') {
-                    bookingStatus = 'Pending Approval';
-                }
-            }
-        }
-
-        const adminIds = teamMembers.filter(m => m.role === 'Super Admin' || m.permissions?.bookings === 'edit').map(m => m.id);
-
-        const bookingData: Partial<Booking> = {
+        // The logic to create the booking object is complex,
+        // so it's better to delegate this to a Cloud Function.
+        const bookingData = {
             customerId: customer.id,
             customerName: bookingDetails.name,
             customerContact: bookingDetails.contact,
             alternateContact: bookingDetails.alternateContact,
-            artistIds: finalArtistIds,
-            adminIds: adminIds,
             items: cartItems,
             amount: finalAmount,
-            status: bookingStatus,
             eventType: bookingDetails.eventType,
-            eventDate: Timestamp.fromDate(bookingDetails.eventDate),
-            serviceDates: bookingDetails.serviceDates.map(d => Timestamp.fromDate(d)),
+            eventDate: bookingDetails.eventDate, // Will be converted to Timestamp in the function
+            serviceDates: bookingDetails.serviceDates,
             serviceAddress: bookingDetails.address,
             state: bookingDetails.state,
             district: bookingDetails.district,
@@ -359,14 +325,10 @@ export default function CartPage() {
             mapLink: bookingDetails.mapLink,
             note: bookingDetails.notes,
             paymentMethod: paymentMethod,
-            paidOut: false,
-            travelCharges: bookingDetails.travelCharges,
-            completionCode: completionCode,
+            appliedReferralCode: appliedCode,
+            guestMehndi: bookingDetails.guestMehndi,
+            guestMakeup: bookingDetails.guestMakeup,
         };
-
-        if (appliedCode) {
-            bookingData.appliedReferralCode = appliedCode;
-        }
 
         try {
             const result: any = await callFirebaseFunction('createBooking', { bookingData });

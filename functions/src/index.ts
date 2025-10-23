@@ -1,4 +1,5 @@
 
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -147,22 +148,72 @@ export const createBooking = functions.https.onCall(async (data, context) => {
     if (bookingData.customerId !== context.auth.uid) {
          throw new functions.https.HttpsError("permission-denied", "You can only create bookings for yourself.");
     }
+    
+    const { items, paymentMethod, appliedReferralCode, ...restOfBookingData } = bookingData;
 
+    // Determine initial booking status and artist assignment
+    let finalArtistIds: string[] = [];
+    let bookingStatus: 'Pending Approval' | 'Needs Assignment' | 'Pending Confirmation' = 'Needs Assignment';
+    let completionCode: string | undefined = undefined;
+    
+    if (paymentMethod === 'online') {
+        bookingStatus = 'Pending Approval';
+        completionCode = Math.floor(100000 + Math.random() * 900000).toString();
+    } else {
+        bookingStatus = 'Pending Confirmation';
+    }
+
+    if (appliedReferralCode) {
+        const artistsCollection = db.collection("artists");
+        const artistQuery = await artistsCollection.where('referralCode', '==', appliedReferralCode).limit(1).get();
+        if (!artistQuery.empty) {
+            const matchedArtist = artistQuery.docs[0];
+            finalArtistIds = [matchedArtist.id];
+            if (bookingStatus !== 'Pending Confirmation') {
+                bookingStatus = 'Pending Approval';
+            }
+        }
+    } else {
+        const preSelectedArtistIds = Array.from(new Set(items.map((item: any) => item.artist?.id).filter(Boolean)));
+         if (preSelectedArtistIds.length > 0) {
+            finalArtistIds = preSelectedArtistIds as string[];
+             if (bookingStatus !== 'Pending Confirmation') {
+                bookingStatus = 'Pending Approval';
+            }
+        }
+    }
+
+    // Get Admin IDs for notifications
+    const adminSnapshot = await db.collection('teamMembers').where('role', '==', 'Super Admin').get();
+    const adminIds = adminSnapshot.docs.map(doc => doc.id);
+
+
+    const finalBookingData = {
+        ...restOfBookingData,
+        items,
+        status: bookingStatus,
+        artistIds: finalArtistIds,
+        completionCode: completionCode,
+        adminIds: adminIds,
+        paidOut: false,
+    };
+    
+    // Create the booking document
     const bookingsCollection = db.collection("bookings");
-    const docRef = await bookingsCollection.add(bookingData);
-    await docRef.update({ id: docRef.id });
+    const docRef = await bookingsCollection.add(finalBookingData);
+    await docRef.update({ id: docRef.id }); // Add the document ID to the booking itself
     
     // --- Notification Logic ---
-    const { artistIds, adminIds, items, eventType, customerName, district, state } = bookingData;
-    const eventDate = (bookingData.eventDate as admin.firestore.Timestamp).toDate();
+    const { customerName, district, state, eventType } = finalBookingData;
+    const eventDate = (finalBookingData.eventDate as admin.firestore.Timestamp).toDate();
 
     const createNotification = async (notificationData: any) => {
         await db.collection("notifications").add(notificationData);
     };
 
     // 1. Notify assigned artists
-    if (artistIds && artistIds.length > 0) {
-        for (const artistId of artistIds) {
+    if (finalArtistIds && finalArtistIds.length > 0) {
+        for (const artistId of finalArtistIds) {
             await createNotification({
                 artistId,
                 bookingId: docRef.id,
