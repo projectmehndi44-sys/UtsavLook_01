@@ -129,7 +129,7 @@ export default function BookingsPage() {
                 </TableCell>
                 <TableCell>
                     <div className="flex flex-col gap-1">
-                        {booking.serviceDates.map((date, index) => (
+                        {(booking.serviceDates || []).map((date, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                                 {format(getSafeDate(date), "PPP")}
                             </Badge>
@@ -276,5 +276,3 @@ export default function BookingsPage() {
         </>
     );
 }
-
-    
