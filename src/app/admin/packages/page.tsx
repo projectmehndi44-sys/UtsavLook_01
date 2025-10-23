@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -19,7 +20,7 @@ import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Separator } from '@/components/ui/separator';
 import { doc, setDoc, addDoc, collection, deleteDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import { getMasterServices, setConfigDocument } from '@/lib/services';
+import { getMasterServices, saveMasterServices } from '@/lib/services';
 
 const categorySchema = z.object({
   name: z.enum(['Normal', 'Premium', 'Ultra Premium']),
@@ -112,7 +113,7 @@ export default function PackageManagementPage() {
             toast({ title: 'Master Service Created', description: `Service "${data.name}" has been added.` });
         }
         
-        await setConfigDocument('masterServices', updatedServices);
+        await saveMasterServices(updatedServices);
         setMasterServices(updatedServices);
         handleCancelEdit();
     };
@@ -141,7 +142,7 @@ export default function PackageManagementPage() {
         if (!window.confirm("Are you sure you want to delete this service package? This action cannot be undone.")) return;
         
         const updatedServices = masterServices.filter(p => p.id !== id);
-        await setConfigDocument('masterServices', updatedServices);
+        await saveMasterServices(updatedServices);
         setMasterServices(updatedServices);
         toast({ title: 'Master Service Deleted', variant: 'destructive' });
     };

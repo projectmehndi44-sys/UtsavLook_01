@@ -103,15 +103,10 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
 
 
 // REFACTORED: This function now calls a Cloud Function for secure writes.
-export async function setConfigDocument(docId: string, data: any): Promise<void> {
-    let configData = data;
-    // Maintain original data structure for compatibility
-    if (docId === 'masterServices') configData = { packages: data };
-    else if (docId === 'promotions') configData = { promos: data };
-    else if (docId === 'placeholderImages') configData = { images: data };
-    else if (docId === 'benefitImages') configData = { benefitImages: data };
-    
+export async function setConfigDocument(docId: string, configData: any): Promise<void> {
     try {
+        // Directly pass the docId and the data to the Cloud Function.
+        // The Cloud Function is responsible for handling the data structure.
         await callFirebaseFunction('updateConfig', { docId, configData });
     } catch (error) {
         console.error(`Failed to update config for ${docId}:`, error);
@@ -353,14 +348,14 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
-    const config = await getConfigDocument<{ images: ImagePlaceholder[] }>('placeholderImages');
+    const config = await getConfigDocument<any>('placeholderImages');
     return config?.images || [];
 };
-export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', images);
+export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', { images });
 
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
-    const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
+    const config = await getConfigDocument<any>('benefitImages');
     
     if (config && Array.isArray(config.benefitImages) && config.benefitImages.length > 0) {
         return config.benefitImages;
@@ -375,13 +370,13 @@ export const getBenefitImages = async (): Promise<BenefitImage[]> => {
         { id: 'transparent-payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
         { id: 'zero-commission-welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
     ];
-    await setConfigDocument('benefitImages', defaultBenefits);
+    await setConfigDocument('benefitImages', { benefitImages: defaultBenefits });
     return defaultBenefits;
 };
-export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', images );
+export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', { benefitImages: images } );
 
 export const getPromotionalImage = async (): Promise<{ imageUrl: string } | null> => {
-    return getConfigDocument<{ imageUrl: string }>('promotionalImage');
+    return await getConfigDocument<{ imageUrl: string }>('promotionalImage');
 };
 
 export const savePromotionalImage = async (data: { imageUrl: string }): Promise<void> => {
@@ -445,7 +440,7 @@ export const getPromotions = async (): Promise<Promotion[]> => {
     const promos = await getConfigDocument<any>('promotions');
     return promos?.promos || [];
 };
-export const savePromotions = (promos: Promotion[]) => setConfigDocument('promotions', promos);
+export const savePromotions = (promos: Promotion[]) => setConfigDocument('promotions', { promos });
 
 
 // Pending Artists
@@ -493,9 +488,10 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
-    const config = await getConfigDocument<MasterServicePackage[]>('masterServices');
-    return config || [];
+    const config = await getConfigDocument<any>('masterServices');
+    return config?.packages || [];
 };
+export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
 
 export { getDb };
 
