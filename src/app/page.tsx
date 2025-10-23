@@ -24,9 +24,9 @@ import { ServiceSelectionModal } from '@/components/utsavlook/ServiceSelectionMo
 import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
 import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
-import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Footer } from '@/components/utsavlook/Footer';
+import { ArtistCard } from '@/components/utsavlook/ArtistCard';
 
 export default function Home() {
   const router = useRouter();
@@ -146,6 +146,10 @@ export default function Home() {
       </div>
     );
   }
+  
+  const topArtists = React.useMemo(() => {
+      return [...artists].sort((a,b) => b.rating - a.rating).slice(0, 4);
+  }, [artists]);
 
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
@@ -227,6 +231,20 @@ export default function Home() {
         
         <Separator className="my-8"/>
 
+         {topArtists.length > 0 && (
+          <div className="py-8 md:py-12">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-8">Meet Our Top Artists</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+              {topArtists.map((artist) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
+            </div>
+          </div>
+        )}
+
+
+        <Separator className="my-8"/>
+
         <div className="py-8 md:py-12">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
             <Carousel
@@ -273,13 +291,6 @@ export default function Home() {
                 service={selectedService}
                 artists={artists}
                 onAddToCart={handleAddToCart}
-            />
-        )}
-        {selectedArtist && (
-            <ArtistProfileModal 
-                artist={selectedArtist}
-                isOpen={isArtistModalOpen}
-                onOpenChange={setIsArtistModalOpen}
             />
         )}
       </main>

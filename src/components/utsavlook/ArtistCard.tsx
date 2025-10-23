@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { IndianRupee, MapPin, Star, CheckCircle } from 'lucide-react';
 import { MakeupIcon, MehndiIcon, PhotographyIcon } from '@/components/icons';
+import Link from 'next/link';
 
 interface ArtistCardProps {
   artist: Artist;
-  onViewProfile: (artist: Artist) => void;
 }
 
 const getServiceIcon = (service: Artist['services'][number]) => {
@@ -25,7 +25,7 @@ const getServiceIcon = (service: Artist['services'][number]) => {
     }
 }
 
-export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
+export function ArtistCard({ artist }: ArtistCardProps) {
   const primaryService = artist.services?.[0];
   const baseCharge = (primaryService && artist.charges?.[primaryService]) || artist.charge || 0;
 
@@ -94,7 +94,9 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
                 <span className="font-bold text-sm">{artist.rating}</span>
             </div>
         </div>
-        <Button onClick={() => onViewProfile(artist)} className="bg-accent hover:bg-accent/90">View Profile</Button>
+        <Button asChild className="bg-accent hover:bg-accent/90">
+            <Link href={`/artist/${artist.id}`}>View Profile</Link>
+        </Button>
       </CardFooter>
     </Card>
   );
