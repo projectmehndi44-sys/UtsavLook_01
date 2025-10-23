@@ -171,12 +171,12 @@ export default function ArtistDashboardLayout({
         if (!artist?.id) return;
         
         const db = getFirestore(getFirebaseApp());
+        
         const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
         const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
             const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
             setArtistBookings(sortedBookings);
         }, bookingsQuery);
-
 
         const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
         const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
