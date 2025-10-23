@@ -1,73 +1,69 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if a user is an authenticated admin
-    function isAdmin(userId) {
-      return exists(/databases/$(database)/documents/teamMembers/$(userId)) &&
-             get(/databases/$(database)/documents/teamMembers/$(userId)).data.role == 'Super Admin';
-    }
-    
-    // Helper function to check if the user is the owner of the document
+    // --- Helper Functions ---
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // Customers can only read/write their own data
-    match /customers/{userId} {
-      allow read, update, delete: if isOwner(userId);
-      allow create: if request.auth.uid != null;
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == 'Super Admin';
     }
 
-    // Artists can be read by anyone, but only written by themselves or an admin
+    // --- Collection Rules ---
+
+    // Artists, Master Services, and Config should be publicly readable
     match /artists/{artistId} {
       allow read: if true;
-      allow write: if isOwner(artistId) || isAdmin(request.auth.uid);
+      allow write: if isAdmin();
     }
     
-    // Pending artists can be created by anyone, but only read/deleted by an admin
+    match /config/{docId} {
+        allow read: if true;
+        allow write: if isAdmin();
+    }
+    
     match /pendingArtists/{docId} {
-        allow create: if true;
-        allow read, delete: if isAdmin(request.auth.uid);
+        allow read, write: if isAdmin(); // Only admins can see/manage pending
+        allow create: if true; // Anyone can submit an application
     }
 
-    // Bookings can be read by the customer or an admin.
-    // They can only be created by an authenticated user.
-    // Updates can be done by customer, assigned artist, or admin.
+    // Customers can only access their own document
+    match /customers/{userId} {
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow create, delete: if isAdmin(); // Only admins can create/delete customer docs directly
+    }
+
+    // Bookings are private to the customer or assigned artist, but admins have full access.
     match /bookings/{bookingId} {
-      allow read: if resource.data.customerId == request.auth.uid || 
-                     request.auth.uid in resource.data.artistIds ||
-                     isAdmin(request.auth.uid);
-      allow create: if request.auth.uid != null && request.resource.data.customerId == request.auth.uid;
-      allow update: if resource.data.customerId == request.auth.uid || 
-                       request.auth.uid in resource.data.artistIds ||
-                       isAdmin(request.auth.uid);
-      allow delete: if isAdmin(request.auth.uid);
+      allow read: if isAdmin() || 
+                   (request.auth != null && resource.data.customerId == request.auth.uid) ||
+                   (request.auth != null && request.auth.uid in resource.data.artistIds);
+      allow create, update, delete: if isAdmin();
+      // NOTE: Client-side booking creation is now disabled. It must go through the 'createBooking' Cloud Function.
     }
     
-    // Notifications are private to the assigned artist/admin
+    // Notifications are private to the recipient
     match /notifications/{notificationId} {
-        allow read, write: if resource.data.artistId == request.auth.uid;
-    }
-
-    // Team members can only be managed by Super Admins
-    match /teamMembers/{memberId} {
-        allow read: if isAdmin(request.auth.uid);
-        allow write: if isAdmin(request.auth.uid);
+        allow read, update: if request.auth != null && (
+                                resource.data.artistId == request.auth.uid ||
+                                resource.data.customerId == request.auth.uid
+                            ) || isAdmin();
+        allow create: if isAdmin(); // Notifications created by server/admin
     }
     
     // Payout history is admin-only
     match /payoutHistory/{payoutId} {
-        allow read: if isAdmin(request.auth.uid);
-        allow create: if isAdmin(request.auth.uid);
+        allow read, write: if isAdmin();
     }
 
-    // Configuration documents can only be read by anyone, but only written by admins.
-    match /config/{configId} {
-      allow read: if true;
-      allow write: if isAdmin(request.auth.uid);
+    // Team members can only be managed by admins
+    match /teamMembers/{memberId} {
+      allow read, write: if isAdmin();
     }
   }
 }
