@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Artist, ServiceArea } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getAvailableLocations, updateArtist, uploadSiteImage } from '@/lib/services';
+import { getAvailableLocations, updateArtist, uploadSiteImage, deleteSiteImage } from '@/lib/services';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -170,7 +170,6 @@ export default function ArtistProfilePage() {
         
         try {
             await updateArtist(artist.id, dataToUpdate);
-            // After successful update, fetch the latest artist data to update the context
             await fetchData();
             form.reset({ ...data, password: '', confirmPassword: '' });
             toast({
@@ -183,18 +182,19 @@ export default function ArtistProfilePage() {
         }
     };
 
-    const handleFileUpload = async (file: File, uploadKey: string, onComplete: (url: string) => void) => {
-        if (!artist) return;
+    const handleFileUpload = async (file: File, uploadKey: string): Promise<string> => {
+        if (!artist) throw new Error("Artist not found");
 
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
             const uploadPath = uploadKey === 'profilePicture' ? `artists/${artist.id}/profile` : `artists/${artist.id}/gallery`;
-            const downloadURL = await uploadSiteImage(file, uploadPath, true); // Always compress user uploads
-            onComplete(downloadURL);
+            const downloadURL = await uploadSiteImage(file, uploadPath, true);
             toast({ title: "Upload successful!", description: "Image has been saved." });
+            return downloadURL;
         } catch (error) {
             console.error("Upload failed", error);
             toast({ title: "Upload failed", description: "Could not upload the image.", variant: "destructive" });
+            throw error;
         } finally {
             setIsUploading(prev => ({...prev, [uploadKey]: false}));
         }
@@ -203,10 +203,13 @@ export default function ArtistProfilePage() {
     const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file && artist) {
-            await handleFileUpload(file, 'profilePicture', async (url) => {
+            try {
+                const url = await handleFileUpload(file, 'profilePicture');
                 await updateArtist(artist.id, { profilePicture: url });
-                await fetchData(); // Refetch data to ensure UI is in sync
-            });
+                await fetchData();
+            } catch (error) {
+                // Error is already toasted in handleFileUpload
+            }
         }
     };
     
@@ -217,20 +220,20 @@ export default function ArtistProfilePage() {
         setIsUploading(prev => ({ ...prev, gallery: true }));
         try {
             const currentImages = artist.workImages || [];
-            const newUrls: string[] = [];
-
-            for (const file of Array.from(files)) {
-                await handleFileUpload(file, `gallery-${Date.now()}`, (url) => {
-                    newUrls.push(url);
-                });
-            }
+            const uploadPromises = Array.from(files).map((file, index) => 
+                handleFileUpload(file, `gallery-${Date.now()}-${index}`)
+            );
+            
+            const newUrls = await Promise.all(uploadPromises);
 
             if (newUrls.length > 0) {
                 const updatedImages = [...currentImages, ...newUrls];
                 await updateArtist(artist.id, { workImages: updatedImages });
-                await fetchData(); // Refetch data to ensure UI is in sync with DB
+                await fetchData();
                 toast({ title: `${newUrls.length} image(s) added to your gallery.` });
             }
+        } catch (error) {
+            // Errors are handled in handleFileUpload
         } finally {
             setIsUploading(prev => ({ ...prev, gallery: false }));
         }
@@ -254,12 +257,20 @@ export default function ArtistProfilePage() {
 
     const handleImageDelete = async (imageSrc: string) => {
         if (!artist || !artist.workImages) return;
-    
-        const updatedWorkImages = artist.workImages.filter(src => src !== imageSrc);
-        await updateArtist(artist.id, { workImages: updatedWorkImages });
-        await fetchData(); // Refetch to update UI from source of truth
-        toast({ title: "Image deleted", variant: "destructive" });
+        
+        if (!window.confirm("Are you sure you want to delete this image?")) return;
+
+        try {
+            await deleteSiteImage(imageSrc);
+            const updatedWorkImages = artist.workImages.filter(src => src !== imageSrc);
+            await updateArtist(artist.id, { workImages: updatedWorkImages });
+            await fetchData();
+            toast({ title: "Image deleted", variant: "destructive" });
+        } catch(error) {
+            toast({ title: "Deletion failed", description: "Could not delete image.", variant: "destructive" });
+        }
     };
+
 
     if (!artist) {
         return <div className="flex items-center justify-center min-h-full">Loading Profile...</div>;
