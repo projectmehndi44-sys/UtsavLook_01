@@ -84,7 +84,7 @@ export default function ArtistPublicProfilePage() {
                 Back
               </Button>
             </div>
-            <div className="container mx-auto px-4 -mt-16 md:-mt-24">
+            <div className="container mx-auto px-4 -mt-16 md:-mt-24 relative z-10">
               <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
                 <Avatar className="w-32 h-32 md:w-48 md:h-48 border-4 border-white shadow-lg shrink-0">
                     <AvatarImage src={artist.profilePicture} alt={artist.name} />
