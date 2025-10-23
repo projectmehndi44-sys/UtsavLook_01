@@ -40,7 +40,12 @@ export const updateConfig = functions.https.onCall(async (data, context) => {
                 "You must be a Super Admin to perform this action."
             );
         }
-    } catch (error) {
+    } catch (error: any) {
+        // If the error is one we threw ourselves, re-throw it.
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        // Otherwise, log it and throw a generic error.
         console.error("Admin authorization check failed:", error);
         throw new functions.https.HttpsError("internal", "Could not verify admin permissions.");
     }
