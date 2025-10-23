@@ -405,7 +405,7 @@ export default function CartPage() {
         <div className="bg-background">
             <div className="container mx-auto px-4 py-12">
                  <div className="relative mb-4 text-center">
-                    <h1 className="font-headline text-6xl md:text-8xl text-primary">
+                    <h1 className="font-headline text-5xl md:text-7xl text-primary">
                         My Cart
                     </h1>
                      <div className="absolute top-0 right-0">

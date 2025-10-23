@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -42,7 +43,7 @@ function NotificationCard({ notification, allBookings, onMarkAsRead }: Notificat
         <div 
             onClick={handleClick}
             className={`p-4 rounded-lg border-l-4 transition-colors ${notification.isRead ? 'bg-muted/50 border-transparent' : 'bg-primary/10 border-primary cursor-pointer hover:bg-primary/20'}`}>
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start gap-4">
                 <div>
                     <h4 className="font-bold">{notification.title}</h4>
                     <p className="text-sm">{notification.message}</p>
