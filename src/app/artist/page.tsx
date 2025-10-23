@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { ClientOnly } from '@/components/ClientOnly';
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
     "set-your-own-price": <IndianRupee className="w-8 h-8 text-primary" />,
@@ -130,12 +131,14 @@ export default function ArtistHomePage() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-secondary">
-             <Header
-                isCustomerLoggedIn={isCustomerLoggedIn}
-                onCustomerLogout={() => {}}
-                customer={customer}
-                cartCount={cartCount}
-            />
+             <ClientOnly>
+                <Header
+                    isCustomerLoggedIn={isCustomerLoggedIn}
+                    onCustomerLogout={() => {}}
+                    customer={customer}
+                    cartCount={cartCount}
+                />
+             </ClientOnly>
             <main className="flex-1">
                 {/* Hero Section */}
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10 text-center">

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/utsavlook/Header';
 import { Award, Handshake, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { ClientOnly } from '@/components/ClientOnly';
 
 export default function AboutUsPage() {
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -51,12 +52,14 @@ export default function AboutUsPage() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
-            <Header
-                isCustomerLoggedIn={isCustomerLoggedIn}
-                onCustomerLogout={handleLogout}
-                customer={customer}
-                cartCount={cartCount}
-            />
+            <ClientOnly>
+                <Header
+                    isCustomerLoggedIn={isCustomerLoggedIn}
+                    onCustomerLogout={handleLogout}
+                    customer={customer}
+                    cartCount={cartCount}
+                />
+            </ClientOnly>
             <main className="flex-1">
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
                     <div className="container px-4 md:px-6 text-center">

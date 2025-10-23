@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Header } from '@/components/utsavlook/Header';
 import { AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ClientOnly } from '@/components/ClientOnly';
 
 export default function RefundPolicyPage() {
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -29,12 +30,14 @@ export default function RefundPolicyPage() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
-            <Header
-                isCustomerLoggedIn={isCustomerLoggedIn}
-                onCustomerLogout={handleLogout}
-                customer={customer}
-                cartCount={cartCount}
-            />
+            <ClientOnly>
+                <Header
+                    isCustomerLoggedIn={isCustomerLoggedIn}
+                    onCustomerLogout={handleLogout}
+                    customer={customer}
+                    cartCount={cartCount}
+                />
+            </ClientOnly>
             <main className="flex-1">
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
                     <div className="container px-4 md:px-6 text-center">
