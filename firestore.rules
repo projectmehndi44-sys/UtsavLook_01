@@ -4,75 +4,70 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- HELPER FUNCTIONS ---
+    // Helper function to check if a user is an authenticated admin
+    function isAdmin(userId) {
+      return exists(/databases/$(database)/documents/teamMembers/$(userId)) &&
+             get(/databases/$(database)/documents/teamMembers/$(userId)).data.role == 'Super Admin';
+    }
+    
+    // Helper function to check if the user is the owner of the document
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    function isTeamMember() {
-      // Checks if a user document exists in the teamMembers collection.
-      return exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid));
-    }
-    
-    function getRole() {
-        // Safely gets the role of the current user.
-        return get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role;
-    }
-
-    function isRole(role) {
-      // Checks if the user has a specific role.
-      return isTeamMember() && getRole() == role;
-    }
-    
-    // --- DATA COLLECTIONS ---
-
-    match /artists/{artistId} {
-      // Anyone can view an artist's public profile.
-      allow read: if true;
-      // An artist can write to their own profile, or any team member can.
-      allow write: if isOwner(artistId) || isTeamMember();
-    }
-    
+    // Customers can only read/write their own data
     match /customers/{userId} {
-      // A customer can only read or write their own document.
-      allow read, write: if isOwner(userId);
+      allow read, update, delete: if isOwner(userId);
+      allow create: if request.auth.uid != null;
     }
 
-    match /teamMembers/{userId} {
-        // A user can read their own team member document to log in.
-        // Other team members can read it to see the team list.
-        allow read: if isOwner(userId) || isTeamMember();
-        // Only a Super Admin can create, update, or delete team members.
-        allow write: if isRole('Super Admin');
-    }
-
-    match /bookings/{bookingId} {
-      // A team member, the customer who owns the booking, or an assigned artist can read it.
-      allow read: if isTeamMember() || isOwner(resource.data.customerId) || request.auth.uid in resource.data.artistIds;
-      // Only the customer can create a booking for themselves.
-      allow create: if isOwner(request.resource.data.customerId);
-      // A team member can update it, or an artist can mark it as complete.
-      allow update: if isTeamMember() || (request.auth.uid in resource.data.artistIds && request.resource.data.status == 'Completed');
-    }
-
-    match /payoutHistory/{payoutId} {
-      // Only team members can manage payout history.
-      allow read, create: if isTeamMember();
-    }
-
-    match /pendingArtists/{pendingId} {
-      // Anyone can submit an application to become an artist.
-      allow create: if true;
-      // Only a Super Admin can read or delete pending applications.
-      allow read, delete: if isRole('Super Admin');
+    // Artists can be read by anyone, but only written by themselves or an admin
+    match /artists/{artistId} {
+      allow read: if true;
+      allow write: if isOwner(artistId) || isAdmin(request.auth.uid);
     }
     
-    // --- CONFIGURATION COLLECTION ---
-    // All configuration documents are publicly readable for the site to function,
-    // but only a Super Admin can change them.
-    match /config/{document} {
-        allow read: if true;
-        allow write: if isRole('Super Admin');
+    // Pending artists can be created by anyone, but only read/deleted by an admin
+    match /pendingArtists/{docId} {
+        allow create: if true;
+        allow read, delete: if isAdmin(request.auth.uid);
+    }
+
+    // Bookings can be read by the customer or an admin.
+    // They can only be created by an authenticated user.
+    // Updates can be done by customer, assigned artist, or admin.
+    match /bookings/{bookingId} {
+      allow read: if resource.data.customerId == request.auth.uid || 
+                     request.auth.uid in resource.data.artistIds ||
+                     isAdmin(request.auth.uid);
+      allow create: if request.auth.uid != null && request.resource.data.customerId == request.auth.uid;
+      allow update: if resource.data.customerId == request.auth.uid || 
+                       request.auth.uid in resource.data.artistIds ||
+                       isAdmin(request.auth.uid);
+      allow delete: if isAdmin(request.auth.uid);
+    }
+    
+    // Notifications are private to the assigned artist/admin
+    match /notifications/{notificationId} {
+        allow read, write: if resource.data.artistId == request.auth.uid;
+    }
+
+    // Team members can only be managed by Super Admins
+    match /teamMembers/{memberId} {
+        allow read: if isAdmin(request.auth.uid);
+        allow write: if isAdmin(request.auth.uid);
+    }
+    
+    // Payout history is admin-only
+    match /payoutHistory/{payoutId} {
+        allow read: if isAdmin(request.auth.uid);
+        allow create: if isAdmin(request.auth.uid);
+    }
+
+    // Configuration documents can only be read by anyone, but only written by admins.
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin(request.auth.uid);
     }
   }
 }
