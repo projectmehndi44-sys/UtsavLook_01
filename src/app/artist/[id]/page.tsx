@@ -76,7 +76,7 @@ export default function ArtistPublicProfilePage() {
         {/* --- Profile Header --- */}
         <Card className="rounded-none shadow-none border-0">
           <CardContent className="p-0">
-            <div className="relative h-48 md:h-64 w-full">
+            <div className="relative h-40 md:h-56 w-full">
               <Image src={coverPhoto} alt={`${artist.name}'s cover photo`} fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                <Button onClick={() => router.back()} variant="outline" className="absolute top-4 left-4 z-10 bg-background/80 hover:bg-background">
@@ -84,32 +84,32 @@ export default function ArtistPublicProfilePage() {
                 Back
               </Button>
             </div>
-            <div className="container mx-auto px-4 -mt-16 md:-mt-24 relative z-10">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
-                <Avatar className="w-32 h-32 md:w-48 md:h-48 border-4 border-white shadow-lg shrink-0">
-                    <AvatarImage src={artist.profilePicture} alt={artist.name} />
-                    <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow text-center md:text-left py-4 pt-12 md:pt-4">
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-primary font-headline">
-                    {artist.name}
-                  </h1>
-                   <div className="flex items-center gap-4 mt-2 justify-center md:justify-start">
-                      <div className="flex items-center text-amber-500">
-                          <Star className="w-5 h-5 mr-1 fill-current" />
-                          <span className="font-bold text-lg">{artist.rating.toFixed(1)}</span>
-                      </div>
-                      <div className="flex items-center text-muted-foreground">
-                          <MapPin className="w-5 h-5 mr-1" />
-                          <span>{artist.location}</span>
-                      </div>
-                  </div>
-                   <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
-                      {artist.verified && <Badge className="bg-green-100 text-green-800 border-green-300"><CheckCircle className="w-4 h-4 mr-1"/>UtsavLook Verified</Badge>}
-                      {artist.isFoundersClubMember && <Badge className="bg-amber-100 text-amber-800 border-amber-300"><Sparkles className="w-4 h-4 mr-1"/>Founder's Club</Badge>}
-                  </div>
+            <div className="container mx-auto px-4 -mt-16 md:-mt-20 relative z-10">
+                <div className="relative">
+                     <Avatar className="w-32 h-32 md:w-40 md:h-40 border-4 border-white shadow-lg shrink-0">
+                        <AvatarImage src={artist.profilePicture} alt={artist.name} />
+                        <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="pt-4 pl-0 md:pl-48 md:absolute md:bottom-2">
+                        <h1 className="text-3xl md:text-4xl font-bold font-headline text-primary">
+                            {artist.name}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
+                            <div className="flex items-center text-amber-500">
+                                <Star className="w-5 h-5 mr-1 fill-current" />
+                                <span className="font-bold text-lg">{artist.rating.toFixed(1)}</span>
+                            </div>
+                            <div className="flex items-center text-muted-foreground">
+                                <MapPin className="w-5 h-5 mr-1" />
+                                <span>{artist.location}</span>
+                            </div>
+                        </div>
+                         <div className="flex flex-wrap gap-2 mt-3">
+                            {artist.verified && <Badge className="bg-green-100 text-green-800 border-green-300 text-xs px-2 py-0.5"><CheckCircle className="w-3 h-3 mr-1"/>UtsavLook Verified</Badge>}
+                            {artist.isFoundersClubMember && <Badge className="bg-amber-100 text-amber-800 border-amber-300"><Sparkles className="w-4 h-4 mr-1"/>Founder's Club</Badge>}
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
           </CardContent>
         </Card>
