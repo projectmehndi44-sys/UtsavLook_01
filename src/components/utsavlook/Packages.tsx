@@ -41,9 +41,9 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
             {packages.map((service) => {
                 const lowestPrice = Math.min(...service.categories.map(c => c.basePrice));
                 return (
-                    <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/2 lg:basis-1/3">
+                    <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                         <div className="p-1 h-full">
-                            <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent h-full">
+                            <Card className="overflow-hidden flex flex-col group h-full">
                                 <CardContent className="p-0 relative">
                                     <div className="aspect-[4/3] relative">
                                     <Image
@@ -53,19 +53,23 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                         className="object-cover"
                                         data-ai-hint="mehndi makeup"
                                     />
+                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-[-50%] z-20">
+                                        <div className="w-16 h-16 bg-background rounded-full border-4 border-white object-cover shadow-lg aspect-square flex items-center justify-center">
+                                             {getServiceIcon(service.service)}
+                                        </div>
+                                    </div>
                                     </div>
                                 </CardContent>
 
-                                <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-lg font-headline text-primary font-bold">{service.name}</h3>
+                                <div className="pt-10 p-4 flex flex-col flex-grow text-center">
+                                    <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
                                     <p className="text-sm text-muted-foreground mt-1 flex-grow">
                                     {service.description}
                                     </p>
 
-                                    <div className="flex flex-wrap gap-1 my-3">
+                                    <div className="flex flex-wrap gap-1 justify-center my-3">
                                         {service.tags.map(tag => (
                                             <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
-                                                {getServiceIcon(service.service)}
                                                 <span className="capitalize">{tag}</span>
                                             </Badge>
                                         ))}
