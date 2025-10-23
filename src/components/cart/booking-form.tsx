@@ -8,7 +8,7 @@ import * as z from "zod";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Minus, Plus } from "lucide-react";
+import { CalendarIcon, Minus, Plus, MapPin } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { Textarea } from "../ui/textarea";
@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import type { Artist } from "@/lib/types";
 import { Badge } from "../ui/badge";
 import React from "react";
+import { MapPicker } from "../utsavlook/MapPicker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 
 export const bookingFormSchema = z.object({
     name: z.string().min(2, { message: "Name is required."}),
@@ -57,6 +59,7 @@ interface BookingFormProps {
 
 export const BookingForm = ({ form, availableLocations, showGuestFields, artists }: BookingFormProps) => {
     
+    const [isMapOpen, setIsMapOpen] = React.useState(false);
     const availableStates = Object.keys(availableLocations);
     const watchedState = form.watch('state');
     const watchedDistrict = form.watch('district');
@@ -83,6 +86,12 @@ export const BookingForm = ({ form, availableLocations, showGuestFields, artists
         const currentLocalities = form.getValues('locality') || '';
         const newLocalities = currentLocalities ? `${currentLocalities}, ${locality}` : locality;
         form.setValue('locality', newLocalities, { shouldValidate: true });
+    };
+
+    const handleLocationSelect = (location: { address: string, url: string }) => {
+        form.setValue('address', location.address, { shouldValidate: true });
+        form.setValue('mapLink', location.url, { shouldValidate: true });
+        setIsMapOpen(false);
     };
 
 
@@ -128,6 +137,7 @@ export const BookingForm = ({ form, availableLocations, showGuestFields, artists
     }
 
     return (
+        <>
         <Card className="shadow-lg rounded-lg">
             <CardHeader>
                 <CardTitle>Booking Details</CardTitle>
@@ -180,8 +190,25 @@ export const BookingForm = ({ form, availableLocations, showGuestFields, artists
                             </FormItem> 
                         )}/>
 
-                        <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Full Service Address</FormLabel><FormControl><Textarea placeholder="Building name, street, landmark..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                        <FormField control={form.control} name="mapLink" render={({ field }) => ( <FormItem><FormLabel>Google Maps Link (Optional)</FormLabel><FormControl><Input placeholder="Paste precise location link from Google Maps" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="address" render={({ field }) => ( 
+                            <FormItem>
+                                <FormLabel>Full Service Address</FormLabel>
+                                <div className="flex gap-2">
+                                    <FormControl><Textarea placeholder="Building name, street, landmark..." {...field} /></FormControl>
+                                    <Button type="button" variant="outline" className="h-auto" onClick={() => setIsMapOpen(true)}>
+                                        <MapPin className="mr-2 h-4 w-4"/> Pin on Map
+                                    </Button>
+                                </div>
+                                <FormMessage />
+                            </FormItem> 
+                        )}/>
+                        <FormField control={form.control} name="mapLink" render={({ field }) => ( 
+                            <FormItem>
+                                <FormLabel>Google Maps Link (Optional)</FormLabel>
+                                <FormControl><Input placeholder="Auto-filled from map or paste precise location link" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem> 
+                        )}/>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField control={form.control} name="contact" render={({ field }) => ( <FormItem><FormLabel>Contact Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem> )}/>
@@ -194,5 +221,17 @@ export const BookingForm = ({ form, availableLocations, showGuestFields, artists
                 </Form>
             </CardContent>
         </Card>
+        <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+            <DialogContent className="sm:max-w-3xl h-[80vh]">
+                <DialogHeader>
+                    <DialogTitle>Pin Venue Location</DialogTitle>
+                    <DialogDescription>Search for your venue or drag the pin to the exact location. Click "Confirm Location" when done.</DialogDescription>
+                </DialogHeader>
+                <div className="h-full py-4">
+                    <MapPicker onLocationSelect={handleLocationSelect} />
+                </div>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 };
