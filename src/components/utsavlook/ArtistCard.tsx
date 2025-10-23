@@ -32,7 +32,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   const primaryWorkImage = artist.workImages?.[0] || 'https://picsum.photos/seed/placeholder/800/600';
 
   return (
-    <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
+    <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-lg hover:shadow-2xl hover:border-accent">
       <CardContent className="p-0 relative">
         <div className="aspect-[4/3] relative">
           <Image

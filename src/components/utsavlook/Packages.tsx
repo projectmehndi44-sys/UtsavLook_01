@@ -43,7 +43,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                 return (
                     <CarouselItem key={service.id} className="md:basis-1/2 lg:basis-1/3">
                         <div className="p-1">
-                            <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent h-full">
+                            <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-lg hover:shadow-2xl hover:border-accent h-full">
                                 <CardContent className="p-0 relative">
                                     <div className="aspect-[4/3] relative">
                                     <Image
