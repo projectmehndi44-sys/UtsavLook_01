@@ -15,13 +15,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import type { CartItem, Customer, Artist, Promotion, TeamMember, Booking } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCustomer, createBooking, getAvailableLocations, listenToCollection, getPromotions, getTeamMembers } from '@/lib/services';
+import { getCustomer, getAvailableLocations, listenToCollection, getPromotions, getTeamMembers } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { callFirebaseFunction } from '@/lib/firebase';
 
 const OrderSummary = ({
   items,
@@ -356,8 +357,6 @@ export default function CartPage() {
             district: bookingDetails.district,
             locality: bookingDetails.locality,
             mapLink: bookingDetails.mapLink,
-            guestMehndi: bookingDetails.guestMehndi,
-            guestMakeup: bookingDetails.guestMakeup,
             note: bookingDetails.notes,
             paymentMethod: paymentMethod,
             paidOut: false,
@@ -370,7 +369,11 @@ export default function CartPage() {
         }
 
         try {
-            await createBooking(bookingData as Omit<Booking, 'id'>, finalArtistIds, adminIds, artists);
+            const result: any = await callFirebaseFunction('createBooking', { bookingData });
+
+            if (!result.data.success) {
+                throw new Error(result.data.message || 'Booking creation failed on the server.');
+            }
 
             const successMessage = paymentMethod === 'online'
                 ? "Your booking request has been sent for approval."
@@ -384,11 +387,11 @@ export default function CartPage() {
             localStorage.removeItem(`cart_${customer.id}`);
             router.push('/account/bookings');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Booking creation failed: ", error);
             toast({
                 title: "Booking Failed",
-                description: "There was an error placing your booking. Please try again.",
+                description: error.message || "There was an error placing your booking. Please try again.",
                 variant: "destructive"
             });
         } finally {

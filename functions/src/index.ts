@@ -127,3 +127,89 @@ export const requestCancellation = functions.https.onCall(async (data, context) 
     return { success: true, message: "Booking cancelled. The advance payment is non-refundable as it is within 72 hours of the event." };
   }
 });
+
+
+/**
+ * Creates a new booking document and sends notifications.
+ */
+export const createBooking = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in to create a booking.");
+    }
+
+    const { bookingData } = data;
+
+    if (!bookingData) {
+        throw new functions.https.HttpsError("invalid-argument", "Booking data is required.");
+    }
+    
+    // Ensure customerId in bookingData matches the authenticated user.
+    if (bookingData.customerId !== context.auth.uid) {
+         throw new functions.https.HttpsError("permission-denied", "You can only create bookings for yourself.");
+    }
+
+    const bookingsCollection = db.collection("bookings");
+    const docRef = await bookingsCollection.add(bookingData);
+    await docRef.update({ id: docRef.id });
+    
+    // --- Notification Logic ---
+    const { artistIds, adminIds, items, eventType, customerName, district, state } = bookingData;
+    const eventDate = (bookingData.eventDate as admin.firestore.Timestamp).toDate();
+
+    const createNotification = async (notificationData: any) => {
+        await db.collection("notifications").add(notificationData);
+    };
+
+    // 1. Notify assigned artists
+    if (artistIds && artistIds.length > 0) {
+        for (const artistId of artistIds) {
+            await createNotification({
+                artistId,
+                bookingId: docRef.id,
+                title: "You have a new booking!",
+                message: `You've been assigned to a booking for ${eventType} on ${eventDate.toLocaleDateString()}.`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                type: 'booking',
+            });
+        }
+    } else { // 2. Notify all relevant artists if it's an express booking
+        const servicesNeeded = items.map((i: any) => i.servicePackage.service);
+        const artistsQuery = await db.collection("artists")
+            .where("services", "array-contains-any", servicesNeeded)
+            .get();
+        
+        for (const artistDoc of artistsQuery.docs) {
+             const artist = artistDoc.data();
+             const servesArea = artist.serviceAreas.some((area: any) => area.district === district && area.state === state);
+             if (servesArea) {
+                 await createNotification({
+                    artistId: artistDoc.id,
+                    bookingId: docRef.id,
+                    title: "New Job Available in Your Area!",
+                    message: `An express booking for ${eventType} in ${district} is available. Claim it now!`,
+                    timestamp: new Date().toISOString(),
+                    isRead: false,
+                    type: 'booking',
+                });
+             }
+        }
+    }
+
+    // 3. Notify admins
+    if (adminIds && adminIds.length > 0) {
+        for (const adminId of adminIds) {
+            await createNotification({
+                artistId: adminId, // Using 'artistId' field to also target admins in notifications collection
+                bookingId: docRef.id,
+                title: `New Booking by ${customerName}`,
+                message: `A new booking for ${eventType} on ${eventDate.toLocaleDateString()} has been created.`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                type: 'booking',
+            });
+        }
+    }
+
+    return { success: true, bookingId: docRef.id };
+});
