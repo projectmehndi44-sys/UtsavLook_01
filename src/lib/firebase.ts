@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getStorage } from "firebase/storage";
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
@@ -45,14 +45,18 @@ const initializeDb = (): Promise<Firestore> => {
     
     dbInitializationPromise = new Promise(async (resolve, reject) => {
         try {
-            const db = getFirestore(getFirebaseApp());
             if (typeof window !== 'undefined') {
-                await enableIndexedDbPersistence(db).catch((err: any) => {
-                    console.warn("Firebase Persistence Error:", err.code);
+                const db = initializeFirestore(getFirebaseApp(), {
+                    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
                 });
+                dbInstance = db;
+                resolve(dbInstance);
+            } else {
+                // For server-side rendering, use the standard getFirestore
+                const db = getFirestore(getFirebaseApp());
+                dbInstance = db;
+                resolve(dbInstance);
             }
-            dbInstance = db;
-            resolve(dbInstance);
         } catch (error) {
             console.error("Firestore initialization failed", error);
             dbInitializationPromise = null;

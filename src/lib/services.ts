@@ -82,13 +82,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
     try {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            // Handle nested data structures from the original implementation
-            if (docId === 'masterServices' && data && data.hasOwnProperty('packages')) return data.packages as T;
-            if (data && data.hasOwnProperty('promos')) return data.promos as T;
-            if (data && data.hasOwnProperty('images')) return data.images as T;
-            if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
-            return data as T; // Fallback for flat or correctly structured config docs
+            return docSnap.data() as T;
         }
         return null;
     } catch (serverError) {
