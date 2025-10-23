@@ -27,6 +27,8 @@ import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Footer } from '@/components/utsavlook/Footer';
 import { ArtistCard } from '@/components/utsavlook/ArtistCard';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase';
 
 export default function Home() {
   const router = useRouter();
@@ -65,28 +67,28 @@ export default function Home() {
   }, [toast]);
   
 
-  const checkLoggedInCustomer = React.useCallback(async () => {
-    const customerId = localStorage.getItem('currentCustomerId');
-    if (customerId) {
-        const currentCustomer = await getCustomer(customerId);
-        if (currentCustomer) {
-            setIsCustomerLoggedIn(true);
-            setCustomer(currentCustomer);
-            const storedCart = localStorage.getItem(`cart_${customerId}`);
-            setCart(storedCart ? JSON.parse(storedCart) : []);
-        } else {
-             // Clean up if customer ID is invalid
-             handleCustomerLogout();
-        }
+  const checkLoggedInCustomer = React.useCallback(async (uid: string) => {
+    const currentCustomer = await getCustomer(uid);
+    if (currentCustomer) {
+        setIsCustomerLoggedIn(true);
+        setCustomer(currentCustomer);
+        const storedCart = localStorage.getItem(`cart_${uid}`);
+        setCart(storedCart ? JSON.parse(storedCart) : []);
+        localStorage.setItem('currentCustomerId', uid);
     } else {
-        setIsCustomerLoggedIn(false);
-        setCustomer(null);
-        setCart([]);
+         handleCustomerLogout();
     }
   }, [handleCustomerLogout]);
 
   React.useEffect(() => {
-    checkLoggedInCustomer();
+    const auth = getAuth(getFirebaseApp());
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        checkLoggedInCustomer(user.uid);
+      } else {
+        handleCustomerLogout();
+      }
+    });
 
     const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
     
@@ -116,8 +118,9 @@ export default function Home() {
     return () => {
         clearInterval(intervalId);
         unsubscribeArtists();
+        unsubscribeAuth();
     };
-  }, [checkLoggedInCustomer, backgroundImages.length]);
+  }, [checkLoggedInCustomer, backgroundImages.length, handleCustomerLogout]);
   
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
@@ -157,7 +160,7 @@ export default function Home() {
   }
   
   const topArtists = React.useMemo(() => {
-      return [...artists].sort((a,b) => b.rating - a.rating).slice(0, 4);
+      return [...artists].sort((a,b) => b.rating - a.rating).slice(0, 5);
   }, [artists]);
 
   return (
