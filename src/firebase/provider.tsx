@@ -1,13 +1,14 @@
+
 'use client';
 
-import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFirebaseApp, auth, db } from '@/lib/firebase';
+import { type Auth } from 'firebase/auth';
+import { type Firestore } from 'firebase/firestore';
 import * as React from 'react';
 
 // Define the shape of the context data
 interface FirebaseContextValue {
-  app: FirebaseApp;
+  app: ReturnType<typeof getFirebaseApp>;
   auth: Auth;
   firestore: Firestore;
 }
@@ -18,11 +19,13 @@ const FirebaseContext = React.createContext<FirebaseContextValue | null>(null);
 // Define the props for the provider component
 interface FirebaseProviderProps {
   children: React.ReactNode;
-  value: FirebaseContextValue;
 }
 
 // Create the provider component
-export function FirebaseProvider({ children, value }: FirebaseProviderProps) {
+export function FirebaseProvider({ children }: FirebaseProviderProps) {
+  // The instances are now imported from the central module
+  const value = { app: getFirebaseApp(), auth: auth, firestore: db };
+
   return (
     <FirebaseContext.Provider value={value}>
       {children}

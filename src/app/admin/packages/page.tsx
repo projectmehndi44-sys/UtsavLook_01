@@ -19,7 +19,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Separator } from '@/components/ui/separator';
 import { doc, setDoc, addDoc, collection, deleteDoc } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
 import { getMasterServices, saveMasterServices } from '@/lib/services';
 
 const categorySchema = z.object({

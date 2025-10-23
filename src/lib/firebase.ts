@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signOut, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getStorage } from "firebase/storage";
 
@@ -28,6 +28,13 @@ export const getFirebaseApp = (): FirebaseApp => {
 const app = getFirebaseApp();
 const auth = getAuth(app);
 
+// Initialize Firestore with offline persistence enabled.
+// This is the SINGLE source of truth for the Firestore instance.
+const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
+
+
 const sendOtp = (phoneNumber: string, appVerifier: RecaptchaVerifier): Promise<ConfirmationResult> => {
     const fullPhoneNumber = `+91${phoneNumber}`;
     return signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
@@ -47,7 +54,7 @@ export const callFirebaseFunction = (functionName: string, data: any) => {
     return callable(data);
 };
 
-export { app, auth, sendOtp, signOutUser, getFirestore, getStorage, isSignInWithEmailLink, signInWithEmailLink };
+export { app, auth, db, sendOtp, signOutUser, getStorage, isSignInWithEmailLink, signInWithEmailLink };
 
 // This is required for the window.confirmationResult to be accessible
 declare global {

@@ -1,14 +1,17 @@
 
 
-import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { getFirebaseApp, callFirebaseFunction } from './firebase';
+import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+
+// Use the singleton instance of Firestore from the central firebase module
+const getDb = () => db;
+
 
 // New function to upload images to Firebase Storage
 export const uploadSiteImage = async (file: File, path: string, compress: boolean = true): Promise<string> => {
@@ -57,8 +60,7 @@ export const deleteSiteImage = async (imageUrl: string): Promise<void> => {
 
 // Generic function to get a single document
 export async function getDocument<T>(collectionName: string, id: string): Promise<T | null> {
-    const db = await getDb();
-    const docRef = doc(db, collectionName, id);
+    const docRef = doc(getDb(), collectionName, id);
     
     try {
         const docSnap = await getDoc(docRef);
@@ -77,8 +79,7 @@ export async function getDocument<T>(collectionName: string, id: string): Promis
 
 // Generic function to get a config document
 async function getConfigDocument<T>(docId: string): Promise<T | null> {
-    const db = await getDb();
-    const docRef = doc(db, 'config', docId);
+    const docRef = doc(getDb(), 'config', docId);
     try {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -99,8 +100,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
 // REFACTORED: This function now calls a Cloud Function for secure writes.
 export async function setConfigDocument(docId: string, configData: any): Promise<void> {
     try {
-        // Directly pass the docId and the data to the Cloud Function.
-        // The Cloud Function is responsible for handling the data structure.
+        // The data is passed directly, and the cloud function handles the structure.
         await callFirebaseFunction('updateConfig', { docId, configData });
     } catch (error) {
         console.error(`Failed to update config for ${docId}:`, error);
@@ -114,35 +114,30 @@ export async function setConfigDocument(docId: string, configData: any): Promise
 // --- Listener Functions for Real-Time Data ---
 
 export const listenToCollection = <T>(collectionName: string, callback: (data: T[]) => void, q?: any): Unsubscribe => {
-    let unsub: Unsubscribe = () => {};
-    getDb().then(db => {
-        const queryToUse = q || query(collection(db, collectionName));
-        unsub = onSnapshot(queryToUse, (querySnapshot) => {
-            const data: T[] = querySnapshot.docs.map(doc => {
-                const docData = doc.data();
-                // Convert Firestore Timestamps to JS Dates
-                Object.keys(docData).forEach(key => {
-                    if (docData[key] instanceof Timestamp) {
-                        docData[key] = (docData[key] as Timestamp).toDate();
-                    } else if (Array.isArray(docData[key])) {
-                        docData[key] = docData[key].map(item => item instanceof Timestamp ? item.toDate() : item);
-                    }
-                });
-                return { id: doc.id, ...docData } as T;
+    const queryToUse = q || query(collection(getDb(), collectionName));
+    const unsub = onSnapshot(queryToUse, (querySnapshot) => {
+        const data: T[] = querySnapshot.docs.map(doc => {
+            const docData = doc.data();
+            // Convert Firestore Timestamps to JS Dates
+            Object.keys(docData).forEach(key => {
+                if (docData[key] instanceof Timestamp) {
+                    docData[key] = (docData[key] as Timestamp).toDate();
+                } else if (Array.isArray(docData[key])) {
+                    docData[key] = docData[key].map(item => item instanceof Timestamp ? item.toDate() : item);
+                }
             });
-            callback(data);
-        }, (serverError) => {
-             const permissionError = new FirestorePermissionError({
-                path: q ? `query on ${collectionName}` : collectionName,
-                operation: 'list',
-            } satisfies SecurityRuleContext);
-            errorEmitter.emit('permission-error', permissionError);
-            console.error(`Error listening to ${collectionName}: `, serverError);
+            return { id: doc.id, ...docData } as T;
         });
-    }).catch(error => {
-        console.error("Failed to get DB for listener:", error);
+        callback(data);
+    }, (serverError) => {
+         const permissionError = new FirestorePermissionError({
+            path: q ? `query on ${collectionName}` : collectionName,
+            operation: 'list',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        console.error(`Error listening to ${collectionName}: `, serverError);
     });
-    return () => unsub();
+    return unsub;
 };
 
 
@@ -169,8 +164,7 @@ export const getArtist = async (id: string): Promise<Artist | null> => {
     return data as Artist;
 };
 export const getArtistByEmail = async (email: string): Promise<Artist | null> => {
-    const db = await getDb();
-    const q = query(collection(db, 'artists'), where('email', '==', email));
+    const q = query(collection(getDb(), 'artists'), where('email', '==', email));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
         return null;
@@ -190,8 +184,7 @@ export const getArtistByEmail = async (email: string): Promise<Artist | null> =>
 
 // Creates only the Firestore document. Auth user is created separately.
 export const createArtistWithId = async (data: Omit<Artist, 'id'> & {id: string}): Promise<void> => {
-    const db = await getDb();
-    const docRef = doc(db, "artists", data.id);
+    const docRef = doc(getDb(), "artists", data.id);
     const { id, ...dataToSave } = data; // Exclude id from the data being saved
     setDoc(docRef, dataToSave).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -205,8 +198,7 @@ export const createArtistWithId = async (data: Omit<Artist, 'id'> & {id: string}
 
 
 export const updateArtist = async (id: string, data: Partial<Artist>): Promise<void> => {
-    const db = await getDb();
-    const artistRef = doc(db, "artists", id);
+    const artistRef = doc(getDb(), "artists", id);
     updateDoc(artistRef, data).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: artistRef.path,
@@ -217,10 +209,9 @@ export const updateArtist = async (id: string, data: Partial<Artist>): Promise<v
     });
 };
 export const deleteArtist = async (id: string): Promise<void> => {
-    const db = await getDb();
     // This should ideally be a cloud function for security to delete the auth user as well.
     // For now, we will just delete the Firestore document.
-    const artistRef = doc(db, "artists", id);
+    const artistRef = doc(getDb(), "artists", id);
      deleteDoc(artistRef).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: artistRef.path,
@@ -233,8 +224,7 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 // Bookings
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
-    const db = await getDb();
-    const bookingRef = doc(db, "bookings", id);
+    const bookingRef = doc(getDb(), "bookings", id);
     updateDoc(bookingRef, data).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: bookingRef.path,
@@ -248,8 +238,7 @@ export const updateBooking = async (id: string, data: Partial<Booking>): Promise
 // Customers
 export const getCustomer = async (id: string): Promise<Customer | null> => getDocument<Customer>('customers', id);
 export const getCustomerByPhone = async (phone: string): Promise<Customer | null> => {
-    const db = await getDb();
-    const q = query(collection(db, "customers"), where("phone", "==", phone));
+    const q = query(collection(getDb(), "customers"), where("phone", "==", phone));
     try {
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
@@ -267,8 +256,7 @@ export const getCustomerByPhone = async (phone: string): Promise<Customer | null
     }
 }
 export const getCustomerByEmail = async (email: string): Promise<Customer | null> => {
-    const db = await getDb();
-    const q = query(collection(db, "customers"), where("email", "==", email));
+    const q = query(collection(getDb(), "customers"), where("email", "==", email));
     try {
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
@@ -287,9 +275,8 @@ export const getCustomerByEmail = async (email: string): Promise<Customer | null
 };
 export const createCustomer = (data: Omit<Customer, 'id'> & {id: string}): Promise<string> => {
     return new Promise(async (resolve, reject) => {
-        const db = await getDb();
         const customerId = data.id; // Use UID from Google or phone auth
-        const customerRef = doc(db, "customers", customerId);
+        const customerRef = doc(getDb(), "customers", customerId);
         const { id, ...dataToSave } = data;
         const finalData = { ...dataToSave, status: 'Active', createdOn: Timestamp.now() };
 
@@ -310,8 +297,7 @@ export const createCustomer = (data: Omit<Customer, 'id'> & {id: string}): Promi
 
 export const updateCustomer = (id: string, data: Partial<Customer>): Promise<void> => {
      return new Promise(async (resolve, reject) => {
-        const db = await getDb();
-        const customerRef = doc(db, "customers", id);
+        const customerRef = doc(getDb(), "customers", id);
         
         updateDoc(customerRef, data)
             .then(() => resolve())
@@ -328,8 +314,7 @@ export const updateCustomer = (id: string, data: Partial<Customer>): Promise<voi
 };
 
 export const deleteCustomer = async (id: string): Promise<void> => {
-    const db = await getDb();
-    const customerRef = doc(db, "customers", id);
+    const customerRef = doc(getDb(), "customers", id);
     deleteDoc(customerRef).catch((serverError) => {
         const permissionError = new FirestorePermissionError({
             path: customerRef.path,
@@ -381,7 +366,7 @@ export const getAvailableLocations = async (): Promise<Record<string, string[]>>
     const config = await getConfigDocument<Record<string, string[]>>('availableLocations');
     return config || {};
 };
-export const saveAvailableLocations = async (locations: Record<string, string[]>): Promise<void> => {
+export const saveAvailableLocations = async (locations: Record<string, string[]>) => {
     await setConfigDocument('availableLocations', locations);
 };
 
@@ -407,9 +392,8 @@ export const getFinancialSettings = async () => {
 export const saveFinancialSettings = (data: any) => setConfigDocument('financialSettings', data);
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
-    const db = await getDb();
     // This now reads from the top-level 'teamMembers' collection
-    const querySnapshot = await getDocs(collection(db, 'teamMembers'));
+    const querySnapshot = await getDocs(collection(getDb(), 'teamMembers'));
     if (querySnapshot.empty) {
         return [];
     }
@@ -419,13 +403,11 @@ export const saveTeamMembers = (members: TeamMember[]) => {
     // This function is now deprecated in favor of addOrUpdateTeamMember for better security.
 };
 export const addOrUpdateTeamMember = async (member: TeamMember) => {
-    const db = await getDb();
-    const memberRef = doc(db, "teamMembers", member.id);
+    const memberRef = doc(getDb(), "teamMembers", member.id);
     await setDoc(memberRef, member, { merge: true });
 }
 export const deleteTeamMember = async (id: string) => {
-    const db = await getDb();
-    const memberRef = doc(db, "teamMembers", id);
+    const memberRef = doc(getDb(), "teamMembers", id);
     await deleteDoc(memberRef);
 }
 
@@ -439,22 +421,19 @@ export const savePromotions = (promos: Promotion[]) => setConfigDocument('promot
 
 // Pending Artists
 export const createPendingArtist = async (data: any): Promise<string> => {
-    const db = await getDb();
-    const pendingArtistsCollection = collection(db, "pendingArtists");
+    const pendingArtistsCollection = collection(getDb(), "pendingArtists");
     const docRef = await addDoc(pendingArtistsCollection, data);
     return docRef.id;
 };
 export const deletePendingArtist = async (id: string): Promise<void> => {
-    const db = await getDb();
-    const artistRef = doc(db, "pendingArtists", id);
+    const artistRef = doc(getDb(), "pendingArtists", id);
     await deleteDoc(artistRef);
 };
 
 
 // To be DEPRECATED. Use listeners instead for performance.
 async function getCollection<T>(collectionName: string): Promise<T[]> {
-  const db = await getDb();
-  const querySnapshot = await getDocs(collection(db, collectionName));
+  const querySnapshot = await getDocs(collection(getDb(), collectionName));
   return querySnapshot.docs.map(doc => {
        const data = doc.data();
         // Convert Timestamps
@@ -488,5 +467,3 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
 export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
 
 export { getDb };
-
-    

@@ -16,7 +16,7 @@ import { Terminal } from 'lucide-react';
 import { exportPayoutToPdf, generateGstInvoiceForPlatformFee } from '@/lib/export';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { addDoc, collection } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
+import { getDb } from '@/lib/services';
 
 
 export default function PayoutManagementPage() {
@@ -111,7 +111,7 @@ export default function PayoutManagementPage() {
     }, [calculatePayouts]);
     
     const handleMarkAsPaid = async (payout: Payout) => {
-        const db = await getDb();
+        const db = getDb();
         const newHistoryRecord: Omit<PayoutHistory, 'id'> = {
             paymentDate: new Date().toISOString(),
             ...payout
@@ -258,18 +258,19 @@ export default function PayoutManagementPage() {
                                     </TableBody>
                                 </Table>
                                 ) : (
-                                <Alert>
-                                    <Terminal className="h-4 w-4" />
-                                    <AlertTitle>No History</AlertTitle>
-                                    <AlertDescription>
-                                        No payouts have been recorded yet.
-                                    </AlertDescription>
-                                </Alert>
-                                )}
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
+                                     <Alert>
+                                        <Terminal className="h-4 w-4" />
+                                        <AlertTitle>No History</AlertTitle>
+                                        <AlertDescription>
+                                            You have not received any payouts yet.
+                                        </AlertDescription>
+                                    </Alert>
+                                 )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
         </>
     );
 }

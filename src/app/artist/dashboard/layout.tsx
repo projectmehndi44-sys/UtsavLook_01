@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { LayoutDashboard, Briefcase, Bell, User, LogOut, Palette, CalendarOff, IndianRupee, Package, Star, PanelLeft, Megaphone } from 'lucide-react';
 import type { Artist, Booking, Notification } from '@/lib/types';
-import { getArtist, listenToCollection, getDb } from '@/lib/services';
+import { getArtist, listenToCollection } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -170,26 +170,25 @@ export default function ArtistDashboardLayout({
     React.useEffect(() => {
         if (!artist?.id) return;
         
-        getDb().then(db => {
-            const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
-            const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
-                const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
-                setArtistBookings(sortedBookings);
-            }, bookingsQuery);
+        const db = getFirestore(getFirebaseApp());
+        const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
+        const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
+            const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
+            setArtistBookings(sortedBookings);
+        }, bookingsQuery);
 
 
-            const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
-            const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
-                const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-                setNotifications(sortedNotifications);
-                setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
-            }, notificationsQuery);
-            
-            return () => {
-                unsubscribeBookings();
-                unsubscribeNotifications();
-            };
-        });
+        const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
+        const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
+            const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            setNotifications(sortedNotifications);
+            setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
+        }, notificationsQuery);
+        
+        return () => {
+            unsubscribeBookings();
+            unsubscribeNotifications();
+        };
 
     }, [artist?.id]);
 
