@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { Booking } from '@/lib/types';
 import { useArtistPortal } from '../layout';
-import { MapPin, User, Calendar, IndianRupee, FileText, Check, AlertTriangle, Clock, FilePlus2, Receipt } from 'lucide-react';
+import { MapPin, User, Calendar, IndianRupee, FileText, Check, AlertTriangle, Clock, FilePlus2, Receipt, Trash2 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import {
   AlertDialog,
@@ -30,6 +30,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
 
 
 function getSafeDate(date: any): Date {
