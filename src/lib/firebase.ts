@@ -1,11 +1,10 @@
 
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signOut, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getStorage } from "firebase/storage";
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   "projectId": "studio-163529036-f9a8c",
@@ -18,61 +17,16 @@ const firebaseConfig = {
 
 
 // --- Singleton Pattern for Firebase App Initialization ---
-let app: FirebaseApp;
-const getFirebaseApp = (): FirebaseApp => {
+export const getFirebaseApp = (): FirebaseApp => {
     if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
+        return initializeApp(firebaseConfig);
     } else {
-        app = getApp();
+        return getApp();
     }
-    return app;
 }
 
-// Initialize on first call
-getFirebaseApp();
-
-const auth = getAuth(getFirebaseApp());
-const googleProvider = new GoogleAuthProvider();
-
-// --- Firestore Initialization with Offline Persistence ---
-let dbInstance: Firestore | null = null;
-let dbInitializationPromise: Promise<Firestore> | null = null;
-
-const initializeDb = (): Promise<Firestore> => {
-    if (dbInitializationPromise) {
-        return dbInitializationPromise;
-    }
-    
-    dbInitializationPromise = new Promise(async (resolve, reject) => {
-        try {
-            if (typeof window !== 'undefined') {
-                const db = initializeFirestore(getFirebaseApp(), {
-                    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-                });
-                dbInstance = db;
-                resolve(dbInstance);
-            } else {
-                // For server-side rendering, use the standard getFirestore
-                const db = getFirestore(getFirebaseApp());
-                dbInstance = db;
-                resolve(dbInstance);
-            }
-        } catch (error) {
-            console.error("Firestore initialization failed", error);
-            dbInitializationPromise = null;
-            reject(error);
-        }
-    });
-
-    return dbInitializationPromise;
-};
-
-export const getDb = async (): Promise<Firestore> => {
-    if (dbInstance) {
-        return dbInstance;
-    }
-    return initializeDb();
-}
+const app = getFirebaseApp();
+const auth = getAuth(app);
 
 const sendOtp = (phoneNumber: string, appVerifier: RecaptchaVerifier): Promise<ConfirmationResult> => {
     const fullPhoneNumber = `+91${phoneNumber}`;
@@ -93,8 +47,9 @@ export const callFirebaseFunction = (functionName: string, data: any) => {
     return callable(data);
 };
 
+export { app, auth, sendOtp, signOutUser, getFirestore, getStorage, isSignInWithEmailLink, signInWithEmailLink };
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore, getStorage, isSignInWithEmailLink, signInWithEmailLink };
+// This is required for the window.confirmationResult to be accessible
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
