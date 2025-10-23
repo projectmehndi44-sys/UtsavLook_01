@@ -7,23 +7,35 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Booking, Customer, Artist } from '@/lib/types';
-import { LogOut, Briefcase, CalendarCheck2, History, Download, ShieldCheck, Star } from 'lucide-react';
+import { LogOut, Briefcase, CalendarCheck2, History, Download, ShieldCheck, Star, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { generateCustomerInvoice } from '@/lib/export';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { updateBooking } from '@/lib/services';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from '@/components/ui/textarea';
 import { useAccount } from '../layout';
 import { getSafeDate } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { callFirebaseFunction } from '@/lib/firebase';
 
 export default function BookingsPage() {
     const { toast } = useToast();
     const { customer, artists, upcomingBookings, pastBookings, fetchData } = useAccount();
 
     const [reviewBooking, setReviewBooking] = React.useState<Booking | null>(null);
+    const [cancelBooking, setCancelBooking] = React.useState<Booking | null>(null);
     const [rating, setRating] = React.useState(0);
     const [comment, setComment] = React.useState('');
 
@@ -43,6 +55,27 @@ export default function BookingsPage() {
             });
         }
     };
+    
+    const handleCancellation = async () => {
+        if (!cancelBooking) return;
+        try {
+            const result: any = await callFirebaseFunction('requestCancellation', { bookingId: cancelBooking.id });
+            toast({
+                title: 'Cancellation Processed',
+                description: result.data.message,
+            });
+            await fetchData(); // Refetch data to update UI
+        } catch (error: any) {
+            toast({
+                title: 'Cancellation Failed',
+                description: error.message || 'There was an error processing your cancellation.',
+                variant: 'destructive',
+            });
+        } finally {
+            setCancelBooking(null);
+        }
+    }
+
 
     const handleSubmitReview = async () => {
         if (!reviewBooking || rating === 0 || !comment || !customer) return;
@@ -78,6 +111,8 @@ export default function BookingsPage() {
     
     const renderBookingRow = (booking: Booking) => {
         const assignedArtists = artists.filter(a => booking.artistIds?.includes(a.id));
+        const canCancel = booking.status === 'Confirmed' || booking.status === 'Pending Approval';
+
         return (
              <TableRow key={booking.id}>
                 <TableCell className="font-medium">{booking.items.map(i => i.servicePackage.name).join(', ')}</TableCell>
@@ -104,17 +139,23 @@ export default function BookingsPage() {
                 <TableCell>₹{booking.amount.toLocaleString(undefined, {maximumFractionDigits: 0})}</TableCell>
                 <TableCell><Badge variant={getStatusVariant(booking.status)}>{booking.status}</Badge></TableCell>
                 <TableCell className="text-right">
-                    {booking.status === 'Completed' && !booking.reviewSubmitted && (
-                        <Button variant="outline" size="sm" onClick={() => setReviewBooking(booking)}>
-                            <Star className="mr-2 h-4 w-4"/> Rate Artist
-                        </Button>
-                    )}
-                    {booking.status !== 'Cancelled' && booking.status !== 'Needs Assignment' && (
-                        <Button variant="ghost" size="icon" onClick={() => handleDownloadInvoice(booking)}>
-                            <Download className="h-4 w-4" />
-                            <span className="sr-only">Download Invoice</span>
-                        </Button>
-                    )}
+                    <div className="flex justify-end items-center gap-1">
+                        {booking.status === 'Completed' && !booking.reviewSubmitted && (
+                            <Button variant="outline" size="sm" onClick={() => setReviewBooking(booking)}>
+                                <Star className="mr-2 h-4 w-4"/> Rate Artist
+                            </Button>
+                        )}
+                        {booking.status !== 'Cancelled' && booking.status !== 'Needs Assignment' && (
+                            <Button variant="ghost" size="icon" onClick={() => handleDownloadInvoice(booking)} title="Download Invoice">
+                                <Download className="h-4 w-4" />
+                            </Button>
+                        )}
+                         {canCancel && (
+                             <Button variant="ghost" size="icon" onClick={() => setCancelBooking(booking)} title="Cancel Booking">
+                                <X className="h-4 w-4 text-destructive" />
+                            </Button>
+                        )}
+                    </div>
                 </TableCell>
             </TableRow>
         );
@@ -182,6 +223,26 @@ export default function BookingsPage() {
             </CardContent>
         </Card>
 
+        {/* Cancellation Dialog */}
+         <AlertDialog open={!!cancelBooking} onOpenChange={() => setCancelBooking(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Please review the cancellation policy. Bookings cancelled within 72 hours of the event are not eligible for an advance refund.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>No, Keep Booking</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCancellation} className="bg-destructive hover:bg-destructive/90">
+                       Yes, Cancel Booking
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+
+        {/* Review Dialog */}
         <Dialog open={!!reviewBooking} onOpenChange={() => setReviewBooking(null)}>
             <DialogContent>
                 <DialogHeader>

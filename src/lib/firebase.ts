@@ -1,7 +1,9 @@
 
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
@@ -78,6 +80,13 @@ const signOutUser = () => {
 
 const isSignInWithEmailLink = (auth: any, link: any) => isFbSignInWithEmailLink(auth, link);
 const signInWithEmailLink = (auth: any, email: any, link: any) => fbSignInWithEmailLink(auth, email, link);
+
+// --- Firebase Functions ---
+const functions = getFunctions(getFirebaseApp());
+export const callFirebaseFunction = (functionName: string, data: any) => {
+    const callable = httpsCallable(functions, functionName);
+    return callable(data);
+};
 
 
 export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore, isSignInWithEmailLink, signInWithEmailLink };
