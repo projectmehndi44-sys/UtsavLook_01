@@ -12,8 +12,6 @@ import {
   ShoppingBag,
   Palette,
   LogIn,
-  ChevronDown,
-  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +25,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import type { Customer } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   isCustomerLoggedIn: boolean;
@@ -97,19 +94,6 @@ export function Header({
           </>
         ) : (
            <div className="flex items-center gap-1 md:gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">More <ChevronDown className="w-4 h-4 ml-1" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => router.push('/about')}>About Us</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => router.push('/contact')}>Contact Us</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => router.push('/terms')}>Terms & Conditions</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => router.push('/privacy')}>Privacy Policy</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => router.push('/refund')}>Refund Policy</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
               <Button variant="ghost" size="sm" onClick={() => router.push('/login')}>
                 <LogIn className="mr-1 h-4 w-4" />
                 Login

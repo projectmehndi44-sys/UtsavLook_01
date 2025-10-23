@@ -26,6 +26,7 @@ import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Footer } from '@/components/utsavlook/Footer';
 
 export default function Home() {
   const router = useRouter();
@@ -282,6 +283,7 @@ export default function Home() {
             />
         )}
       </main>
+      <Footer />
     </div>
   );
 }
