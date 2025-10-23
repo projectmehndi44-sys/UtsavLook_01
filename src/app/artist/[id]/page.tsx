@@ -91,7 +91,7 @@ export default function ArtistPublicProfilePage() {
                     <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow text-center md:text-left py-4 pt-12 md:pt-4">
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-primary">
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-primary font-headline">
                     {artist.name}
                   </h1>
                    <div className="flex items-center gap-4 mt-2 justify-center md:justify-start">
@@ -232,5 +232,3 @@ export default function ArtistPublicProfilePage() {
     </div>
   );
 }
-
-    
