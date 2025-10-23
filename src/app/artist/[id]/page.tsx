@@ -232,3 +232,5 @@ export default function ArtistPublicProfilePage() {
     </div>
   );
 }
+
+    
