@@ -87,7 +87,7 @@ export function StyleMatch() {
   };
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 p-4 md:p-6">
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
             <div className="space-y-4">

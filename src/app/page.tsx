@@ -140,7 +140,7 @@ export default function Home() {
     const relevantPackages = masterServices.filter(p => p.service === serviceType);
     
     return (
-      <div className="space-y-8 mt-8">
+      <div className="space-y-8 mt-4 md:mt-8">
         <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
       </div>
     );
@@ -172,12 +172,12 @@ export default function Home() {
         cartCount={cart.length}
       />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="text-center py-8">
-            <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
+        <div className="text-center py-4 md:py-8">
+            <h1 className="font-headline text-4xl sm:text-5xl font-bold text-accent md:text-7xl">
                 Utsav<span className="text-primary">Look</span>
             </h1>
-            <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
-            <div className="mt-4 font-body text-base text-foreground/80 max-w-3xl mx-auto md:text-lg">
+            <p className="mt-2 font-dancing-script text-xl sm:text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
+            <div className="mt-4 font-body text-sm text-foreground/80 max-w-3xl mx-auto md:text-lg">
               <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists,</p>
               <p>all verified professionals dedicated to making your special day unforgettable.</p>
             </div>
@@ -187,11 +187,11 @@ export default function Home() {
             <div id="style-match" className="py-8 max-w-4xl mx-auto w-full">
                <Accordion type="single" collapsible className="w-full bg-card rounded-lg shadow-lg border-accent/20">
                 <AccordionItem value="item-1">
-                  <AccordionTrigger className="p-6 text-left">
+                  <AccordionTrigger className="p-4 md:p-6 text-left">
                     <div className="flex items-center gap-4">
-                        <Sparkles className="w-8 h-8 text-accent flex-shrink-0" />
+                        <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-accent flex-shrink-0" />
                         <div>
-                            <h3 className="text-2xl font-bold font-headline text-primary">AI Style Match</h3>
+                            <h3 className="text-xl md:text-2xl font-bold font-headline text-primary">AI Style Match</h3>
                             <p className="text-sm text-muted-foreground mt-1">Get personalized recommendations by uploading a photo of your outfit.</p>
                         </div>
                     </div>
@@ -204,13 +204,13 @@ export default function Home() {
             </div>
         )}
 
-        <div className="mt-8">
-            <h2 className="text-center font-headline text-5xl text-primary mb-8">Our Services</h2>
+        <div className="mt-4 md:mt-8">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-4 md:mb-8">Our Services</h2>
             <Tabs defaultValue="mehndi" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
-                    <TabsTrigger value="mehndi" className="py-2.5 flex items-center gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
-                    <TabsTrigger value="makeup" className="py-2.5 flex items-center gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
-                    <TabsTrigger value="photography" className="py-2.5 flex items-center gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-sm sm:text-lg py-2 md:py-3">
+                    <TabsTrigger value="mehndi" className="py-2 flex items-center gap-1 sm:gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
+                    <TabsTrigger value="makeup" className="py-2 flex items-center gap-1 sm:gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
+                    <TabsTrigger value="photography" className="py-2 flex items-center gap-1 sm:gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
                 </TabsList>
                 <TabsContent value="mehndi">
                     <CategoryTabContent serviceType="mehndi" />
@@ -226,8 +226,8 @@ export default function Home() {
         
         <Separator className="my-8"/>
 
-        <div className="py-12">
-            <h2 className="text-center font-headline text-5xl text-primary">Our Works</h2>
+        <div className="py-8 md:py-12">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
             <Carousel
                 opts={{
                     align: "start",
@@ -238,11 +238,11 @@ export default function Home() {
                         delay: 3000,
                     }),
                 ]}
-                className="w-full max-w-6xl mx-auto"
+                className="w-full max-w-6xl mx-auto mt-4 md:mt-8"
             >
                 <CarouselContent>
                     {galleryImages.map((image, index) => (
-                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                        <CarouselItem key={index} className="sm:basis-1/2 lg:basis-1/3">
                             <div className="p-1">
                                 <Card className="overflow-hidden">
                                     <CardContent className="flex aspect-video items-center justify-center p-0">

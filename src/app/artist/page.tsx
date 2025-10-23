@@ -151,7 +151,7 @@ export default function ArtistHomePage() {
                                 <p className="max-w-[600px] text-foreground/80 md:text-xl mx-auto">
                                     We provide the tools, you provide the talent. Get discovered by more customers, manage your business professionally, and increase your earnings.
                                 </p>
-                                <div className="w-full max-w-sm mx-auto space-y-2 sm:space-y-0 sm:space-x-4 flex flex-col sm:flex-row">
+                                <div className="w-full max-w-sm mx-auto space-y-2 sm:space-y-0 sm:flex sm:gap-4">
                                      <Link href="/artist/register" className="w-full">
                                         <Button size="lg" className="bg-accent hover:bg-accent/90 w-full">
                                             Register Now
