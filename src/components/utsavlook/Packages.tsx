@@ -41,7 +41,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
             {packages.map((service) => {
                 const lowestPrice = Math.min(...service.categories.map(c => c.basePrice));
                 return (
-                    <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/2 lg:basis-1/3">
                         <div className="p-1 h-full">
                             <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent h-full">
                                 <CardContent className="p-0 relative">
