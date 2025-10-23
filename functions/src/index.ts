@@ -1,3 +1,4 @@
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -10,16 +11,16 @@ const db = admin.firestore();
  * This is a "Callable Function" that allows an artist to claim a job.
  * It uses a transaction to ensure that only one artist can claim a job.
  */
-export const claimJob = functions.https.onCall(async (request) => {
+export const claimJob = functions.https.onCall(async (data, context) => {
   // 1. Authentication Check: Ensure the user is a logged-in artist
-  if (!request.auth) {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
       "You must be logged in to claim a job.",
     );
   }
-  const artistId = request.auth.uid;
-  const bookingId = request.data.bookingId;
+  const artistId = context.auth.uid;
+  const bookingId = data.bookingId;
 
   if (!bookingId) {
     throw new functions.https.HttpsError(
@@ -82,13 +83,13 @@ const CANCELLATION_WINDOW_HOURS = 72;
 // NOTE: In a real app, you would install a payment SDK like Stripe or Razorpay.
 // e.g., const stripe = require("stripe")("YOUR_STRIPE_SECRET_KEY");
 
-export const requestCancellation = functions.https.onCall(async (request) => {
+export const requestCancellation = functions.https.onCall(async (data, context) => {
   // 1. Authentication Check
-  if (!request.auth) {
+  if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
   }
-  const customerId = request.auth.uid;
-  const { bookingId } = request.data;
+  const customerId = context.auth.uid;
+  const { bookingId } = data;
 
   if (!bookingId) {
     throw new functions.https.HttpsError("invalid-argument", "Booking ID is required.");
