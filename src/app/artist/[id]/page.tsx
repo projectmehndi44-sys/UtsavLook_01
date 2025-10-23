@@ -91,22 +91,22 @@ export default function ArtistPublicProfilePage() {
                         <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="pt-4 pl-0 md:pl-48 md:absolute md:bottom-2">
-                        <h1 className="text-3xl md:text-4xl font-bold font-headline text-primary">
+                        <h1 className="text-2xl md:text-3xl font-bold font-headline text-primary">
                             {artist.name}
                         </h1>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
                             <div className="flex items-center text-amber-500">
-                                <Star className="w-5 h-5 mr-1 fill-current" />
-                                <span className="font-bold text-lg">{artist.rating.toFixed(1)}</span>
+                                <Star className="w-4 h-4 mr-1 fill-current" />
+                                <span className="font-bold text-sm">{artist.rating.toFixed(1)}</span>
                             </div>
-                            <div className="flex items-center text-muted-foreground">
-                                <MapPin className="w-5 h-5 mr-1" />
+                            <div className="flex items-center text-muted-foreground text-sm">
+                                <MapPin className="w-4 h-4 mr-1" />
                                 <span>{artist.location}</span>
                             </div>
                         </div>
                          <div className="flex flex-wrap gap-2 mt-3">
                             {artist.verified && <Badge className="bg-green-100 text-green-800 border-green-300 text-xs px-2 py-0.5"><CheckCircle className="w-3 h-3 mr-1"/>UtsavLook Verified</Badge>}
-                            {artist.isFoundersClubMember && <Badge className="bg-amber-100 text-amber-800 border-amber-300"><Sparkles className="w-4 h-4 mr-1"/>Founder's Club</Badge>}
+                            {artist.isFoundersClubMember && <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-xs"><Sparkles className="w-3 h-3 mr-1"/>Founder's Club</Badge>}
                         </div>
                     </div>
                 </div>
