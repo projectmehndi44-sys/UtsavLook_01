@@ -29,12 +29,12 @@ const getServiceIcon = (service: Artist['services'][number]) => {
 export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   const primaryService = artist.services?.[0];
   const baseCharge = (primaryService && artist.charges?.[primaryService]) || artist.charge || 0;
-  const primaryWorkImage = artist.workImages?.[0] || 'https://picsum.photos/seed/placeholder/600/900';
+  const primaryWorkImage = artist.workImages?.[0] || 'https://picsum.photos/seed/placeholder/800/600';
 
   return (
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
       <CardContent className="p-0 relative">
-        <div className="aspect-square relative">
+        <div className="aspect-[4/3] relative">
           <Image
             src={primaryWorkImage}
             alt={`${artist.name}'s work`}
@@ -109,4 +109,3 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
     </Card>
   );
 }
-
