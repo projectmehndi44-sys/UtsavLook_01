@@ -4,12 +4,13 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { getStorage } from "firebase/storage";
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   "projectId": "studio-163529036-f9a8c",
   "appId": "1:240526745218:web:bf45387565e48cb9cf9e9b",
-  "storageBucket": "studio-163529036-f9a8c.firebasestorage.app",
+  "storageBucket": "studio-163529036-f9a8c.appspot.com",
   "apiKey": "AIzaSyD8DvhHJ3nzHmBXRFNDVzxgWcb7Nx5qkrY",
   "authDomain": "studio-163529036-f9a8c.firebaseapp.com",
   "messagingSenderId": "240526745218"
@@ -89,7 +90,7 @@ export const callFirebaseFunction = (functionName: string, data: any) => {
 };
 
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore, isSignInWithEmailLink, signInWithEmailLink };
+export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore, getStorage, isSignInWithEmailLink, signInWithEmailLink };
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;
