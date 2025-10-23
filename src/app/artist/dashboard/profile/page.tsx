@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { Trash2, Upload, UserCircle, Briefcase, Tag, Lock, Image as ImageIcon, IndianRupee, Gift, PlusCircle, MapPin, Loader2 } from 'lucide-react';
+import { Trash2, Upload, UserCircle, Briefcase, Tag, Lock, Image as ImageIcon, IndianRupee, Gift, PlusCircle, MapPin, Loader2, Eye } from 'lucide-react';
 import NextImage from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -25,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { v4 as uuidv4 } from 'uuid';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 
 const serviceAreaSchema = z.object({
   id: z.string(),
@@ -47,6 +48,7 @@ const profileSchema = z.object({
   serviceAreas: z.array(serviceAreaSchema).min(1, "You must have at least one service area."),
   referralCode: z.string().optional(),
   referralDiscount: z.coerce.number().min(0).max(20).optional(),
+  showContactInfo: z.boolean().default(true),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -110,6 +112,7 @@ export default function ArtistProfilePage() {
             serviceAreas: [],
             referralCode: '',
             referralDiscount: 10,
+            showContactInfo: true,
         },
     });
     
@@ -141,6 +144,7 @@ export default function ArtistProfilePage() {
                 serviceAreas: artist.serviceAreas || [],
                 referralCode: artist.referralCode || artist.name.split(' ')[0].toUpperCase() + '10',
                 referralDiscount: artist.referralDiscount || 10,
+                showContactInfo: artist.showContactInfo === undefined ? true : artist.showContactInfo,
             });
         }
     }, [artist, form]);
@@ -160,6 +164,7 @@ export default function ArtistProfilePage() {
             serviceAreas: data.serviceAreas,
             referralCode: data.referralCode,
             referralDiscount: data.referralDiscount,
+            showContactInfo: data.showContactInfo,
         };
 
         if (data.password) {
@@ -187,7 +192,7 @@ export default function ArtistProfilePage() {
 
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
-            const uploadPath = uploadKey === 'profilePicture' ? `artists/${artist.id}/profile` : `artists/${artist.id}/gallery`;
+            const uploadPath = `artists/${artist.id}/${uploadKey}`;
             const downloadURL = await uploadSiteImage(file, uploadPath, true);
             toast({ title: "Upload successful!", description: "Image has been saved." });
             return downloadURL;
@@ -206,6 +211,19 @@ export default function ArtistProfilePage() {
             try {
                 const url = await handleFileUpload(file, 'profilePicture');
                 await updateArtist(artist.id, { profilePicture: url });
+                await fetchData();
+            } catch (error) {
+                // Error is already toasted in handleFileUpload
+            }
+        }
+    };
+
+    const handleCoverPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file && artist) {
+            try {
+                const url = await handleFileUpload(file, 'coverPhoto');
+                await updateArtist(artist.id, { coverPhoto: url });
                 await fetchData();
             } catch (error) {
                 // Error is already toasted in handleFileUpload
@@ -287,7 +305,7 @@ export default function ArtistProfilePage() {
             
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <Accordion type="multiple" defaultValue={['item-1', 'item-7', 'item-2', 'item-5', 'item-6']} className="w-full space-y-4">
+                    <Accordion type="multiple" defaultValue={['item-1', 'item-7', 'item-2', 'item-5', 'item-6', 'item-privacy']} className="w-full space-y-4">
                         <AccordionItem value="item-1">
                             <Card>
                                 <AccordionTrigger className="p-6 hover:no-underline">
@@ -357,7 +375,7 @@ export default function ArtistProfilePage() {
                         <AccordionItem value="item-2">
                              <Card>
                                 <AccordionTrigger className="p-6 hover:no-underline">
-                                    <CardTitle className="flex items-center gap-2 text-lg"><Briefcase /> Services &amp; Pricing</CardTitle>
+                                    <CardTitle className="flex items-center gap-2 text-lg"><Briefcase /> Services & Pricing</CardTitle>
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <CardContent className="space-y-6 pt-2">
@@ -489,36 +507,41 @@ export default function ArtistProfilePage() {
                             </Card>
                         </AccordionItem>
 
-                        <AccordionItem value="item-3">
+                        <AccordionItem value="item-privacy">
                              <Card>
                                 <AccordionTrigger className="p-6 hover:no-underline">
-                                    <CardTitle className="flex items-center gap-2 text-lg"><Tag /> Style Tags</CardTitle>
+                                    <CardTitle className="flex items-center gap-2 text-lg"><Eye /> Privacy Settings</CardTitle>
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <CardHeader className="pt-0">
-                                        <CardDescription>Add tags that describe your work (e.g., 'bridal', 'minimalist').</CardDescription>
+                                        <CardDescription>Control what information is visible on your public profile.</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-4 pt-2">
-                                        <div className="flex items-center gap-2">
-                                            <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Add a new tag" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }} />
-                                            <Button type="button" onClick={handleAddTag}>Add Tag</Button>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {styleTagFields.map((field, index) => (
-                                                <Badge key={field.id} variant="secondary" className="flex items-center gap-1">
-                                                    {field.value}
-                                                    <button type="button" onClick={() => removeTag(index)} className="rounded-full hover:bg-muted-foreground/20 p-0.5">
-                                                    <Trash2 className="h-3 w-3" />
-                                                    </button>
-                                                </Badge>
-                                            ))}
-                                        </div>
+                                    <CardContent>
+                                       <FormField
+                                            control={form.control}
+                                            name="showContactInfo"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                                    <div className="space-y-0.5">
+                                                        <FormLabel className="text-base">Show Contact Info</FormLabel>
+                                                        <FormDescription>
+                                                            If enabled, your phone and email will be visible on your public profile page.
+                                                        </FormDescription>
+                                                    </div>
+                                                    <FormControl>
+                                                        <Switch
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
                                     </CardContent>
                                 </AccordionContent>
                             </Card>
                         </AccordionItem>
 
-                        
                         <AccordionItem value="item-5">
                              <Card>
                                 <AccordionTrigger className="p-6 hover:no-underline">
@@ -526,7 +549,7 @@ export default function ArtistProfilePage() {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                      <CardHeader className="pt-0">
-                                        <CardDescription>Update your profile picture and work gallery.</CardDescription>
+                                        <CardDescription>Update your profile picture, cover photo, and work gallery.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
                                         <div className="space-y-2">
@@ -538,6 +561,19 @@ export default function ArtistProfilePage() {
                                                         {isUploading['profilePicture'] ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2"/>}
                                                         Change Picture
                                                         <Input type="file" className="sr-only" accept="image/*" onChange={handleProfilePicUpload} />
+                                                    </label>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label>Cover Photo</Label>
+                                            <div className="flex items-center gap-4">
+                                                <NextImage src={artist.coverPhoto || 'https://picsum.photos/seed/cover/200/80'} alt="Cover Photo" width={200} height={80} className="rounded-md object-cover" />
+                                                <Button asChild variant="outline" disabled={isUploading['coverPhoto']}>
+                                                    <label>
+                                                        {isUploading['coverPhoto'] ? <Loader2 className="mr-2 animate-spin"/> : <Upload className="mr-2"/>}
+                                                        Change Cover
+                                                        <Input type="file" className="sr-only" accept="image/*" onChange={handleCoverPhotoUpload} />
                                                     </label>
                                                 </Button>
                                             </div>
@@ -576,3 +612,4 @@ export default function ArtistProfilePage() {
         </div>
     );
 }
+
