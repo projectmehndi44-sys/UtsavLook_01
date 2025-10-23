@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { MakeupIcon, MehndiIcon, PhotographyIcon } from '@/components/icons';
 import type { MasterServicePackage } from '@/lib/types';
 import { PackageSearch } from 'lucide-react';
+import { CarouselItem } from '@/components/ui/carousel';
 
 interface PackagesProps {
     packages: MasterServicePackage[];
@@ -35,44 +37,59 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <>
             {packages.map((service) => {
                 const lowestPrice = Math.min(...service.categories.map(c => c.basePrice));
                 return (
-                    <div key={service.id} className="p-1 h-full">
-                        <Card className="overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow">
-                            <CardHeader className="p-0">
-                                 <Image src={service.image} alt={service.name} width={400} height={250} className="w-full object-cover aspect-video" data-ai-hint="mehndi design"/>
-                            </CardHeader>
-                            <CardContent className="p-4 flex-grow">
-                                <CardTitle className="text-xl font-semibold text-primary mb-2">{service.name}</CardTitle>
-                                <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
-                                <div className="flex flex-wrap gap-1">
-                                    {service.tags.map(tag => (
-                                        <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
-                                            {getServiceIcon(service.service)}
-                                            <span className="capitalize">{tag}</span>
-                                        </Badge>
-                                    ))}
+                    <CarouselItem key={service.id} className="md:basis-1/2 lg:basis-1/3">
+                        <div className="p-1">
+                            <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent h-full">
+                                <CardContent className="p-0 relative">
+                                    <div className="aspect-[4/3] relative">
+                                    <Image
+                                        src={service.image}
+                                        alt={service.name}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint="mehndi makeup"
+                                    />
+                                    </div>
+                                </CardContent>
+
+                                <div className="p-4 flex flex-col flex-grow">
+                                    <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1 flex-grow">
+                                    {service.description}
+                                    </p>
+
+                                    <div className="flex flex-wrap gap-1 my-4">
+                                        {service.tags.map(tag => (
+                                            <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
+                                                {getServiceIcon(service.service)}
+                                                <span className="capitalize">{tag}</span>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center mt-auto pt-4 border-t">
+                                        <div className="text-lg font-bold text-primary">
+                                            <span className="text-xs font-normal text-muted-foreground">From</span><br/>
+                                            ₹{lowestPrice.toLocaleString()}
+                                        </div>
+                                        <Button 
+                                            onClick={() => onServiceSelect(service)} 
+                                            className="bg-accent hover:bg-accent/90"
+                                        >
+                                            <PackageSearch className="mr-2 h-4 w-4"/>
+                                            View Options
+                                        </Button>
+                                    </div>
                                 </div>
-                            </CardContent>
-                            <CardFooter className="p-4 bg-background/50 flex justify-between items-center mt-auto">
-                                <div className="text-lg font-bold text-primary">
-                                    <span className="text-xs font-normal text-muted-foreground">Starts from</span><br/>
-                                    ₹{lowestPrice.toLocaleString()}
-                                </div>
-                                <Button 
-                                    onClick={() => onServiceSelect(service)} 
-                                    className="bg-accent hover:bg-accent/90"
-                                >
-                                    <PackageSearch className="mr-2 h-4 w-4"/>
-                                    View Options
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
+                            </Card>
+                        </div>
+                    </CarouselItem>
                 )
             })}
-        </div>
+        </>
     );
 }

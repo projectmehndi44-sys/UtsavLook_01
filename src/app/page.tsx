@@ -142,7 +142,16 @@ export default function Home() {
     
     return (
       <div className="space-y-8 mt-4 md:mt-8">
-        <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+        <Carousel
+            opts={{
+                align: "start",
+            }}
+            className="w-full"
+        >
+            <CarouselContent>
+                <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+            </CarouselContent>
+        </Carousel>
       </div>
     );
   }
