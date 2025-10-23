@@ -1,3 +1,4 @@
+
 import type { Artist } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,11 +32,11 @@ export function ArtistCard({ artist }: ArtistCardProps) {
 
 
   return (
-    <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
+    <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent hover:-translate-y-2 hover:rotate-[-1deg]">
       <CardHeader className="p-0 relative">
         <Carousel className="w-full">
           <CarouselContent>
-            {(artist.workImages || []).map((src, index) => (
+            {(artist.workImages || ['https://picsum.photos/seed/placeholder/600/400']).map((src, index) => (
               <CarouselItem key={index}>
                 <div className="aspect-[4/3]">
                    <Image
@@ -55,13 +56,13 @@ export function ArtistCard({ artist }: ArtistCardProps) {
         </Carousel>
          <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
             {artist.verified && (
-                <Badge className="bg-green-600 text-white pl-2">
+                <Badge className="bg-green-600 text-white pl-2 border-green-700">
                     <CheckCircle className="w-3.5 h-3.5 mr-1"/>
                     UtsavLook Verified
                 </Badge>
             )}
             {artist.isFoundersClubMember && (
-                <Badge className="bg-amber-500 text-white pl-2">
+                <Badge className="bg-amber-500 text-white pl-2 border-amber-600">
                     <Star className="w-3.5 h-3.5 mr-1 fill-current"/>
                     Founder's Club
                 </Badge>
@@ -69,7 +70,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
         </div>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-xl font-bold text-primary mb-2">{artist.name}</CardTitle>
+        <CardTitle className="text-xl font-headline text-primary mb-2">{artist.name}</CardTitle>
         <div className="flex items-center text-sm text-muted-foreground mb-3">
           <MapPin className="w-4 h-4 mr-1.5 text-accent" />
           <span>{artist.location}</span>
@@ -91,7 +92,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
             </div>
             <div className="flex items-center text-amber-500">
                 <Star className="w-4 h-4 mr-1 fill-current" />
-                <span className="font-bold text-sm">{artist.rating}</span>
+                <span className="font-bold text-sm">{artist.rating.toFixed(1)}</span>
             </div>
         </div>
         <Button asChild className="bg-accent hover:bg-accent/90">
