@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Palette,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -24,6 +25,7 @@ import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
 import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function Home() {
   const router = useRouter();
@@ -182,8 +184,23 @@ export default function Home() {
         </div>
 
         {isCustomerLoggedIn && (
-            <div id="style-match" className="py-8">
-                <StyleMatch />
+            <div id="style-match" className="py-8 max-w-4xl mx-auto w-full">
+               <Accordion type="single" collapsible className="w-full bg-card rounded-lg shadow-lg border-accent/20">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="p-6 text-left">
+                    <div className="flex items-center gap-4">
+                        <Sparkles className="w-8 h-8 text-accent flex-shrink-0" />
+                        <div>
+                            <h3 className="text-2xl font-bold font-headline text-primary">AI Style Match</h3>
+                            <p className="text-sm text-muted-foreground mt-1">Get personalized recommendations by uploading a photo of your outfit.</p>
+                        </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-0">
+                    <StyleMatch />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
         )}
 

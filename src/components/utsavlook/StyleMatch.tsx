@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -86,115 +87,101 @@ export function StyleMatch() {
   };
 
   return (
-    <div className="space-y-8">
-      <Card className="max-w-4xl mx-auto shadow-lg border-accent/20">
-        <CardHeader className="text-center">
-          <Wand2 className="w-12 h-12 text-accent mx-auto" />
-          <CardTitle className="text-3xl font-bold font-headline text-primary mt-2">
-            AI Style Match
-          </CardTitle>
-          <CardDescription className="text-lg text-muted-foreground">
-            Unsure what style to go for? Upload a photo of your outfit and let our AI stylist create the perfect complementary look for your event!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-              <div className="space-y-4">
-                 <FormField
-                    control={form.control}
-                    name="outfitPhoto"
-                    render={() => (
-                        <FormItem>
-                            <FormLabel className="font-semibold">1. Upload Your Outfit Photo</FormLabel>
-                             <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer aspect-square flex items-center justify-center">
-                               {imagePreview ? (
+    <div className="space-y-8 p-6">
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            <div className="space-y-4">
+                <FormField
+                control={form.control}
+                name="outfitPhoto"
+                render={() => (
+                    <FormItem>
+                        <FormLabel className="font-semibold">1. Upload Your Outfit Photo</FormLabel>
+                            <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent cursor-pointer aspect-square flex items-center justify-center">
+                            {imagePreview ? (
                                     <Image src={imagePreview} alt="Outfit preview" fill className="object-contain rounded-md p-2"/>
-                               ) : (
+                            ) : (
                                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                                         <Upload className="h-10 w-10" />
                                         <p className="mt-2 text-sm">Click to upload or drag & drop</p>
                                         <p className="text-xs">PNG, JPG, WEBP up to 5MB</p>
                                     </div>
-                               )}
-                                <FormControl>
-                                    <Input 
-                                        type="file" 
-                                        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-                                        accept="image/png, image/jpeg, image/webp"
-                                        onChange={handleImageChange}
-                                    />
-                                </FormControl>
-                            </div>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="eventDescription"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="font-semibold">2. Describe Your Event</FormLabel>
-                        <FormControl>
-                        <Textarea
-                            placeholder="e.g., 'Attending my best friend's Sangeet at a palace hotel. The theme is royal and glamorous. I want my mehndi to be traditional but not too heavy.'"
-                            {...field}
-                            rows={5}
-                        />
-                        </FormControl>
+                            )}
+                            <FormControl>
+                                <Input 
+                                    type="file" 
+                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                    accept="image/png, image/jpeg, image/webp"
+                                    onChange={handleImageChange}
+                                />
+                            </FormControl>
+                        </div>
                         <FormMessage />
                     </FormItem>
-                    )}
-                />
-                 <Button type="submit" disabled={isLoading} size="lg" className="w-full bg-accent hover:bg-accent/90">
-                    {isLoading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating Your Look...</>
-                    ) : (
-                    <><Sparkles className="mr-2 h-4 w-4" /> Get Style Recommendations</>
-                    )}
-              </Button>
-              </div>
+                )}
+            />
+                <FormField
+                control={form.control}
+                name="eventDescription"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="font-semibold">2. Describe Your Event</FormLabel>
+                    <FormControl>
+                    <Textarea
+                        placeholder="e.g., 'Attending my best friend's Sangeet at a palace hotel. The theme is royal and glamorous. I want my mehndi to be traditional but not too heavy.'"
+                        {...field}
+                        rows={5}
+                    />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+                <Button type="submit" disabled={isLoading} size="lg" className="w-full bg-accent hover:bg-accent/90">
+                {isLoading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating Your Look...</>
+                ) : (
+                <><Sparkles className="mr-2 h-4 w-4" /> Get Style Recommendations</>
+                )}
+            </Button>
+            </div>
 
-             <div className="space-y-4">
-                <h3 className="font-semibold text-center text-primary">Your Personalized Style Recommendations</h3>
-                 {isLoading ? (
-                    <div className="flex justify-center items-center py-16 flex-col gap-4 h-full">
-                        <Loader2 className="h-12 w-12 animate-spin text-primary"/>
-                        <p className="text-muted-foreground">Our AI is analyzing your style...</p>
+            <div className="space-y-4">
+            <h3 className="font-semibold text-center text-primary">Your Personalized Style Recommendations</h3>
+                {isLoading ? (
+                <div className="flex justify-center items-center py-16 flex-col gap-4 h-full">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary"/>
+                    <p className="text-muted-foreground">Our AI is analyzing your style...</p>
+                </div>
+                ) : recommendations ? (
+                    <div className="space-y-6">
+                    <Card className="bg-primary/5">
+                        <CardHeader className="flex flex-row items-center gap-3">
+                            <MehndiIcon className="w-8 h-8 text-primary"/>
+                            <CardTitle className="text-xl text-primary">Mehndi Style</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-base text-foreground/90">{recommendations.mehndiRecommendation}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-secondary/20">
+                        <CardHeader className="flex flex-row items-center gap-3">
+                            <MakeupIcon className="w-8 h-8 text-accent"/>
+                            <CardTitle className="text-xl text-accent">Makeup Look</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-base text-foreground/90">{recommendations.makeupRecommendation}</p>
+                        </CardContent>
+                    </Card>
                     </div>
-                 ) : recommendations ? (
-                     <div className="space-y-6">
-                        <Card className="bg-primary/5">
-                            <CardHeader className="flex flex-row items-center gap-3">
-                                <MehndiIcon className="w-8 h-8 text-primary"/>
-                                <CardTitle className="text-xl text-primary">Mehndi Style</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-base text-foreground/90">{recommendations.mehndiRecommendation}</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-secondary/20">
-                            <CardHeader className="flex flex-row items-center gap-3">
-                                <MakeupIcon className="w-8 h-8 text-accent"/>
-                                <CardTitle className="text-xl text-accent">Makeup Look</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-base text-foreground/90">{recommendations.makeupRecommendation}</p>
-                            </CardContent>
-                        </Card>
-                     </div>
-                 ) : (
-                    <div className="flex items-center justify-center h-full rounded-lg bg-muted/50 p-8 text-center min-h-[200px]">
-                        <p className="text-muted-foreground">Your recommendations will appear here once you submit your photo and event details.</p>
-                    </div>
-                 )}
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
+                ) : (
+                <div className="flex items-center justify-center h-full rounded-lg bg-muted/50 p-8 text-center min-h-[200px]">
+                    <p className="text-muted-foreground">Your recommendations will appear here once you submit your photo and event details.</p>
+                </div>
+                )}
+            </div>
+        </form>
+        </Form>
     </div>
   );
 }
