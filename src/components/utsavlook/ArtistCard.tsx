@@ -34,7 +34,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   return (
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
       <CardContent className="p-0 relative">
-        <div className="aspect-[2/3] relative">
+        <div className="aspect-[2/2.5] relative">
           <Image
             src={primaryWorkImage}
             alt={`${artist.name}'s work`}
@@ -56,7 +56,7 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
                 </Badge>
             )}
           </div>
-          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 z-20">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
              <Image
                 src={artist.profilePicture}
                 alt={artist.name}
