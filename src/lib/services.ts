@@ -246,78 +246,85 @@ export const deleteArtist = async (id: string): Promise<void> => {
 
 
 // Bookings
-export const createBooking = async (data: Omit<Booking, 'id'>, artistIds: string[], adminIds: string[], allArtists: Artist[]): Promise<void> => {
+export const createBooking = async (data: Omit<Booking, 'id'>, artistIds: string[], adminIds: string[], allArtists: Artist[]): Promise<string> => {
     const db = await getDb();
     const bookingsCollection = collection(db, 'bookings');
-    
-    addDoc(bookingsCollection, data)
-        .then(async (docRef) => {
-            // If the write is successful, update the document with its own ID.
-            await updateDoc(docRef, { id: docRef.id });
 
-            const eventDate = (data.eventDate as unknown as Timestamp).toDate();
-            const notificationTitle = `New Booking by ${data.customerName}`;
-            const notificationMessage = `A new booking for ${data.eventType} on ${eventDate.toLocaleDateString()} has been created.`;
+    try {
+        const docRef = await addDoc(bookingsCollection, data);
 
-            // Notification for assigned artists (if any)
-            artistIds.forEach(artistId => {
-                createNotification({
-                    artistId,
+        // Update the document with its own ID.
+        await updateDoc(docRef, { id: docRef.id });
+
+        const eventDate = (data.eventDate as unknown as Timestamp).toDate();
+        const notificationTitle = `New Booking by ${data.customerName}`;
+        const notificationMessage = `A new booking for ${data.eventType} on ${eventDate.toLocaleDateString()} has been created.`;
+        
+        // --- NOTIFICATION LOGIC ---
+
+        // 1. Notify assigned artists (if any)
+        for (const artistId of artistIds) {
+            await createNotification({
+                artistId,
+                bookingId: docRef.id,
+                title: "You have a new booking!",
+                message: `You've been assigned to a booking for ${data.eventType} on ${eventDate.toLocaleDateString()}.`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                type: 'booking',
+            });
+        }
+
+        // 2. If it's an Express Booking (no specific artist chosen), notify all relevant local artists
+        if (artistIds.length === 0) {
+            const relevantArtists = allArtists.filter(artist => 
+                artist.services.some(s => data.items.some(i => i.servicePackage.service === s)) &&
+                artist.serviceAreas.some(area => area.district === data.district && area.state === data.state)
+            );
+
+            for (const artist of relevantArtists) {
+                await createNotification({
+                    artistId: artist.id,
                     bookingId: docRef.id,
-                    title: "You have a new booking!",
-                    message: `You've been assigned to a booking for ${data.eventType} on ${eventDate.toLocaleDateString()}.`,
+                    title: "New Job Available in Your Area!",
+                    message: `An express booking for ${data.eventType} in ${data.district} is available.`,
                     timestamp: new Date().toISOString(),
                     isRead: false,
                     type: 'booking',
-                });
-            });
-
-            // If no artists were assigned (Express Booking), notify all relevant artists.
-            if (artistIds.length === 0) {
-                 const relevantArtists = allArtists.filter(artist => 
-                    artist.services.some(s => data.items.some(i => i.servicePackage.service === s)) &&
-                    artist.serviceAreas.some(area => area.district === data.district && area.state === data.state)
-                );
-
-                relevantArtists.forEach(artist => {
-                     createNotification({
-                        artistId: artist.id,
-                        bookingId: docRef.id,
-                        title: "New Job Available in Your Area!",
-                        message: `An express booking for ${data.eventType} in ${data.district} is available.`,
-                        timestamp: new Date().toISOString(),
-                        isRead: false,
-                        type: 'booking',
-                    });
                 });
             }
+        }
 
-            // Notification for admins
-            adminIds.forEach(adminId => {
-                 createNotification({
-                    artistId: adminId, // Using artistId field to notify an admin user
-                    bookingId: docRef.id,
-                    title: notificationTitle,
-                    message: notificationMessage,
-                    timestamp: new Date().toISOString(),
-                    isRead: false,
-                    type: 'booking',
-                });
-            })
+        // 3. Notify all relevant admins
+        for (const adminId of (adminIds || [])) {
+            await createNotification({
+                artistId: adminId, // Using artistId field to also target admin users in the notifications collection
+                bookingId: docRef.id,
+                title: notificationTitle,
+                message: notificationMessage,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                type: 'booking',
+            });
+        }
+        
+        return docRef.id;
 
-        })
-        .catch((serverError) => {
-            // This block specifically handles errors from the Firestore server, like permission denied.
-            const permissionError = new FirestorePermissionError({
-                path: bookingsCollection.path, // Use collection path for a create operation
-                operation: 'create',
-                requestResourceData: data, // Include the data that failed to be written
-            } satisfies SecurityRuleContext);
+    } catch (serverError) {
+        // This block specifically handles errors from the Firestore server, like permission denied.
+        const permissionError = new FirestorePermissionError({
+            path: bookingsCollection.path, // Use collection path for a create operation
+            operation: 'create',
+            requestResourceData: data, // Include the data that failed to be written
+        } satisfies SecurityRuleContext);
 
-            // Emit the rich, contextual error through the central emitter.
-            errorEmitter.emit('permission-error', permissionError);
-        });
+        // Emit the rich, contextual error through the central emitter.
+        errorEmitter.emit('permission-error', permissionError);
+        // Re-throw the error to be handled by the calling UI function
+        throw permissionError;
+    }
 };
+
 
 
 export const updateBooking = async (id: string, data: Partial<Booking>): Promise<void> => {
@@ -543,6 +550,7 @@ export const createNotification = async (data: Omit<Notification, 'id'>): Promis
     const db = await getDb();
     const notificationsCollection = collection(db, "notifications");
     const docRef = await addDoc(notificationsCollection, data);
+    // This is a fire-and-forget operation, but we could add error handling if needed.
     return docRef.id;
 };
 
