@@ -1,13 +1,11 @@
 
 
-const withPWA = require('next-pwa');
-
-const pwaConfig = {
+const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
-};
+});
 
 
 const nextConfig = {
@@ -57,7 +55,7 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https,
         hostname: 'firebasestorage.googleapis.com',
         port: '',
         pathname: '/**',
@@ -66,4 +64,5 @@ const nextConfig = {
   },
 };
 
-module.exports = withPWA(pwaConfig)(nextConfig);
+module.exports = withPWA(nextConfig);
+
