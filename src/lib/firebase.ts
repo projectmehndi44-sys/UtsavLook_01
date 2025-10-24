@@ -1,4 +1,6 @@
 
+'use client';
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signOut, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
@@ -54,13 +56,15 @@ const signInWithEmailLink = (auth: any, email: any, link: any) => fbSignInWithEm
 
 // --- Firebase Functions ---
 const functions = getFunctions(getFirebaseApp());
-export const callFirebaseFunction = (functionName: string, data: any) => {
+export const callFirebaseFunction = async (functionName: string, data: any) => {
     const callable = httpsCallable(functions, functionName);
     
-    // Return the promise chain
-    return callable(data).catch((error: FunctionsError) => {
+    try {
+        const result = await callable(data);
+        return result;
+    } catch (error: any) {
         // Check if it's a permission-denied error from the function
-        if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.code === 'failed-precondition') {
+        if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.code === 'failed-precondition' || error.code === 'invalid-argument') {
              const permissionError = new FirestorePermissionError({
                 path: `Cloud Function: ${functionName}`,
                 operation: 'write', // Functions that modify data are 'write' operations
@@ -68,10 +72,10 @@ export const callFirebaseFunction = (functionName: string, data: any) => {
             } satisfies SecurityRuleContext);
             errorEmitter.emit('permission-error', permissionError);
         }
-        // Re-throw the original error to be caught by the caller if they need it
-        // but without a `try/catch` in the component, it won't be silently caught.
-        throw error;
-    });
+        // Instead of re-throwing, return an object indicating failure
+        // This allows the caller to handle UI without crashing on an unhandled promise rejection
+        return { data: { success: false, message: error.message } };
+    }
 };
 
 
