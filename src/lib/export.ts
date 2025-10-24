@@ -288,6 +288,67 @@ export const generateGstInvoiceForPlatformFee = async (payout: Payout | PayoutHi
 };
 
 /**
+ * Generates a final invoice for the artist to give to the customer.
+ * @param booking The completed booking object.
+ * @param additionalCharges Any extra charges added by the artist.
+ */
+export const generateArtistInvoice = async (booking: Booking, additionalCharges: { description: string; amount: number }[]) => {
+    const doc = new jsPDF();
+    const companyProfile = await getCompanyProfile();
+    const invoiceId = `INV-FINAL-${booking.id.substring(5)}`;
+    const invoiceDate = new Date().toLocaleDateString();
+
+    addHeader(doc, 'Final Invoice');
+    
+    doc.setFontSize(10);
+    doc.setTextColor(brandColors.text);
+    doc.text(`From: ${booking.items[0]?.artist?.name || 'UtsavLook Artist'}`, 14, 45);
+    doc.text(`Billed To: ${booking.customerName}`, 14, 55);
+    doc.text(`Contact: ${booking.customerContact}`, 14, 60);
+
+    doc.text(`Invoice #: ${invoiceId}`, 196, 45, { align: 'right' });
+    doc.text(`Date: ${invoiceDate}`, 196, 50, { align: 'right' });
+    doc.text(`Event Date: ${(booking.eventDate as any).toLocaleDateString()}`, 196, 55, { align: 'right' });
+
+    const tableBody = booking.items.map(item => ([
+        `${item.servicePackage.name} - ${item.selectedTier.name}`,
+        `₹ ${item.price.toLocaleString(undefined, {minimumFractionDigits: 2})}`
+    ]));
+
+    additionalCharges.forEach(charge => {
+        tableBody.push([
+            `Additional: ${charge.description}`,
+            `₹ ${charge.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`
+        ]);
+    });
+
+    const baseTotal = booking.items.reduce((sum, item) => sum + item.price, 0);
+    const additionalTotal = additionalCharges.reduce((sum, charge) => sum + charge.amount, 0);
+    const finalTotal = baseTotal + additionalTotal;
+    
+    autoTable(doc, {
+        startY: 70,
+        head: [['Service Description', 'Amount']],
+        body: tableBody,
+        foot: [[{content: 'Total Amount Due', styles:{fontStyle: 'bold'}}, {content:`₹ ${finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`, styles:{fontStyle: 'bold'}}]],
+        theme: 'striped',
+        headStyles: { fillColor: brandColors.primary },
+        footStyles: { fillColor: brandColors.accent, textColor: brandColors.background },
+    });
+    
+    const finalY = (doc as any).lastAutoTable.finalY;
+
+    // Footer
+    doc.setFontSize(10);
+    doc.setTextColor(brandColors.muted);
+    doc.text('This is a computer-generated invoice. Thank you for your business!', 105, finalY + 20, { align: 'center' });
+
+    addFooter(doc);
+    doc.save(`utsavlook-invoice-${invoiceId}.pdf`);
+};
+
+
+/**
  * Generates a customer-facing GST invoice for a booking.
  * @param booking The booking object.
  * @param customer The customer object.
