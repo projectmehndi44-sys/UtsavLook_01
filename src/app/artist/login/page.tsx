@@ -45,8 +45,8 @@ export default function ArtistLoginPage() {
         } catch (error: any) {
             console.error("Login error:", error);
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                description = 'Invalid credentials. Please check your email and password.';
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                description = 'Invalid email or password. Please check your credentials and try again.';
             } else if (error.code === 'auth/user-disabled') {
                 description = 'Your account has been suspended by an administrator.';
             }
@@ -167,5 +167,7 @@ export default function ArtistLoginPage() {
         </>
     );
 }
+
+    
 
     
