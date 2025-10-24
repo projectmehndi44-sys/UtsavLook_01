@@ -80,6 +80,7 @@ const BottomNavLink = ({ href, pathname, icon: Icon, label, children }: { href: 
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
+    const pathname = usePathname();
     const { toast } = useToast();
     const auth = getAuth(getFirebaseApp());
     const { artist, fetchData } = useArtistPortal();
@@ -101,25 +102,22 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
                     await fetchData(user.uid);
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
-                    handleLogout();
+                    await handleLogout();
                 }
-            } else if (window.location.pathname.startsWith('/artist/dashboard')) {
+            } else if (pathname.startsWith('/artist/dashboard')) { // Only redirect if trying to access protected routes
                 router.push('/artist/login');
             }
             setIsLoading(false);
         });
         return () => unsubscribe();
-    }, [auth, router, fetchData, handleLogout]);
+    }, [auth, router, fetchData, handleLogout, pathname]);
     
 
     if (isLoading) {
         return <div className="flex items-center justify-center min-h-screen">Loading Artist Portal...</div>;
     }
     
-    if (!artist) {
-        if(window.location.pathname.startsWith('/artist/dashboard')) {
-            router.push('/artist/login');
-        }
+    if (!artist && pathname.startsWith('/artist/dashboard')) {
         return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
     }
 

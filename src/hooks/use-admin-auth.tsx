@@ -41,7 +41,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     } else {
                         await auth.signOut();
                         setUser(null);
-                        if (window.location.pathname.startsWith('/admin/')) {
+                         if (pathname.startsWith('/admin/')) {
                             router.push('/admin/login');
                         }
                     }
@@ -49,13 +49,13 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     console.error("Failed to fetch team member profile:", error);
                     await auth.signOut();
                     setUser(null);
-                    if (window.location.pathname.startsWith('/admin/')) {
+                    if (pathname.startsWith('/admin/')) {
                         router.push('/admin/login');
                     }
                 }
             } else {
                 setUser(null);
-                if (window.location.pathname.startsWith('/admin/')) {
+                if (pathname.startsWith('/admin/')) {
                     router.push('/admin/login');
                 }
             }
