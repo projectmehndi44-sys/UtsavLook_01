@@ -330,35 +330,37 @@ export default function CartPage() {
             guestMakeup: bookingDetails.guestMakeup,
         };
 
-        try {
-            const result: any = await callFirebaseFunction('createBooking', { bookingData });
-
-            if (!result.data.success) {
-                throw new Error(result.data.message || 'Booking creation failed on the server.');
-            }
-
-            const successMessage = paymentMethod === 'online'
-                ? "Your booking request has been sent for approval."
-                : "Your booking request has been sent. Our team will call you shortly to confirm.";
-
-            toast({
-                title: "Booking Request Sent!",
-                description: successMessage,
+        // This call will now throw a specific error on permission failure
+        // which will be caught by the FirebaseErrorListener
+        callFirebaseFunction('createBooking', { bookingData })
+            .then((result: any) => {
+                if (!result.data.success) {
+                    // This handles non-permission errors returned by the function
+                    throw new Error(result.data.message || 'Booking creation failed on the server.');
+                }
+                const successMessage = paymentMethod === 'online'
+                    ? "Your booking request has been sent for approval."
+                    : "Your booking request has been sent. Our team will call you shortly to confirm.";
+                toast({
+                    title: "Booking Request Sent!",
+                    description: successMessage,
+                });
+                localStorage.removeItem(`cart_${customer.id}`);
+                router.push('/account/bookings');
+            })
+            .catch((error: any) => {
+                // This will now catch more descriptive errors if they are not permission errors
+                // Permission errors are thrown globally by the listener
+                console.error("Booking creation failed: ", error);
+                toast({
+                    title: "Booking Failed",
+                    description: error.message || "There was an error placing your booking. Please try again.",
+                    variant: "destructive"
+                });
+            })
+            .finally(() => {
+                setIsProcessing(false);
             });
-            
-            localStorage.removeItem(`cart_${customer.id}`);
-            router.push('/account/bookings');
-
-        } catch (error: any) {
-            console.error("Booking creation failed: ", error);
-            toast({
-                title: "Booking Failed",
-                description: error.message || "There was an error placing your booking. Please try again.",
-                variant: "destructive"
-            });
-        } finally {
-            setIsProcessing(false);
-        }
     };
     
     const showGuestFields = {

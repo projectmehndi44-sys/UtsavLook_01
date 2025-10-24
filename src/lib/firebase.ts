@@ -1,10 +1,11 @@
 
-
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signOut, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { getFunctions, httpsCallable, FunctionsError } from "firebase/functions";
 import { getStorage } from "firebase/storage";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const firebaseConfig = {
   "projectId": "studio-163529036-f9a8c",
@@ -20,8 +21,8 @@ const firebaseConfig = {
 export const getFirebaseApp = (): FirebaseApp => {
     if (getApps().length === 0) {
         // In a Vercel production environment, dynamically set the authDomain
-        if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_URL) {
-            firebaseConfig.authDomain = process.env.NEXT_PUBLIC_VERCEL_URL;
+        if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+            firebaseConfig.authDomain = window.location.hostname;
         }
         return initializeApp(firebaseConfig);
     } else {
@@ -55,8 +56,24 @@ const signInWithEmailLink = (auth: any, email: any, link: any) => fbSignInWithEm
 const functions = getFunctions(getFirebaseApp());
 export const callFirebaseFunction = (functionName: string, data: any) => {
     const callable = httpsCallable(functions, functionName);
-    return callable(data);
+    
+    // Return the promise chain
+    return callable(data).catch((error: FunctionsError) => {
+        // Check if it's a permission-denied error from the function
+        if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.code === 'failed-precondition') {
+             const permissionError = new FirestorePermissionError({
+                path: `Cloud Function: ${functionName}`,
+                operation: 'write', // Functions that modify data are 'write' operations
+                requestResourceData: data,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+        }
+        // Re-throw the original error to be caught by the caller if they need it
+        // but without a `try/catch` in the component, it won't be silently caught.
+        throw error;
+    });
 };
+
 
 export { app, auth, db, sendOtp, signOutUser, getStorage, isSignInWithEmailLink, signInWithEmailLink };
 
