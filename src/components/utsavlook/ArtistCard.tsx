@@ -33,7 +33,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
   return (
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent">
       <CardContent className="p-0 relative">
-        <div className="aspect-[4/3] relative">
+        <Link href={`/artist/${artist.id}`} className="aspect-[4/3] relative block">
           <Image
             src={primaryWorkImage}
             alt={`${artist.name}'s work`}
@@ -64,7 +64,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
                 className="rounded-full border-4 border-white object-cover shadow-lg aspect-square"
             />
           </div>
-        </div>
+        </Link>
       </CardContent>
 
       <div className="pt-12 p-4 flex flex-col flex-grow text-center">

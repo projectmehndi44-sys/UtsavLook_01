@@ -29,6 +29,7 @@ import { Footer } from '@/components/utsavlook/Footer';
 import { ArtistCard } from '@/components/utsavlook/ArtistCard';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
+import { ClientOnly } from '@/components/ClientOnly';
 
 export default function Home() {
   const router = useRouter();
@@ -43,12 +44,10 @@ export default function Home() {
   // State for the service selection modal
   const [isServiceModalOpen, setIsServiceModalOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState<MasterServicePackage | null>(null);
-
-  const [isArtistModalOpen, setIsArtistModalOpen] = React.useState(false);
-  const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
   
   const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
   const [backgroundImages, setBackgroundImages] = React.useState<ImagePlaceholder[]>([]);
+  const [topArtists, setTopArtists] = React.useState<Artist[]>([]);
 
 
   const { toast } = useToast();
@@ -56,6 +55,7 @@ export default function Home() {
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   
   const handleCustomerLogout = React.useCallback(() => {
+    getAuth(getFirebaseApp()).signOut();
     setIsCustomerLoggedIn(false);
     setCustomer(null);
     setCart([]);
@@ -90,7 +90,11 @@ export default function Home() {
       }
     });
 
-    const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
+    const unsubscribeArtists = listenToCollection<Artist>('artists', (fetchedArtists) => {
+        setArtists(fetchedArtists);
+        // Set initial sorted artists, then shuffle on client
+        setTopArtists([...fetchedArtists].sort((a, b) => b.rating - a.rating).slice(0, 5));
+    });
     
     getMasterServices().then((services) => {
         const updatedServices = services.map(service => ({
@@ -122,6 +126,14 @@ export default function Home() {
     };
   }, [checkLoggedInCustomer, backgroundImages.length, handleCustomerLogout]);
   
+   // This effect runs only on the client after mount to prevent hydration errors.
+  React.useEffect(() => {
+      if (artists.length > 0) {
+          setTopArtists(prevArtists => [...prevArtists].sort(() => 0.5 - Math.random()));
+      }
+  }, [artists]);
+
+
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
         // If user is not logged in, save the item to local storage and redirect
@@ -159,13 +171,6 @@ export default function Home() {
     );
   }
   
-  const topArtists = React.useMemo(() => {
-    // Shuffling on the client side only to prevent hydration errors.
-    if (typeof window === 'undefined') {
-        return [...artists].sort((a, b) => b.rating - a.rating).slice(0, 5);
-    }
-    return [...artists].sort(() => 0.5 - Math.random()).slice(0, 5);
-  }, [artists]);
 
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
@@ -203,7 +208,7 @@ export default function Home() {
               <p>all verified professionals dedicated to making your special day unforgettable.</p>
             </div>
         </div>
-
+        <ClientOnly>
         {isCustomerLoggedIn && (
             <div id="style-match" className="py-8 max-w-4xl mx-auto w-full">
                <Accordion type="single" collapsible className="w-full bg-card rounded-lg shadow-lg border-accent/20">
@@ -224,25 +229,28 @@ export default function Home() {
               </Accordion>
             </div>
         )}
+        </ClientOnly>
 
         <div className="mt-4 md:mt-8">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-4 md:mb-8">Our Services</h2>
-            <Tabs defaultValue="mehndi" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-sm sm:text-lg py-2 md:py-3">
-                    <TabsTrigger value="mehndi" className="py-2 flex items-center gap-1 sm:gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
-                    <TabsTrigger value="makeup" className="py-2 flex items-center gap-1 sm:gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
-                    <TabsTrigger value="photography" className="py-2 flex items-center gap-1 sm:gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
-                </TabsList>
-                <TabsContent value="mehndi">
-                    <CategoryTabContent serviceType="mehndi" />
-                </TabsContent>
-                <TabsContent value="makeup">
-                    <CategoryTabContent serviceType="makeup" />
-                </TabsContent>
-                <TabsContent value="photography">
-                    <CategoryTabContent serviceType="photography" />
-                </TabsContent>
-            </Tabs>
+             <ClientOnly>
+                <Tabs defaultValue="mehndi" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-sm sm:text-lg py-2 md:py-3">
+                        <TabsTrigger value="mehndi" className="py-2 flex items-center gap-1 sm:gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
+                        <TabsTrigger value="makeup" className="py-2 flex items-center gap-1 sm:gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
+                        <TabsTrigger value="photography" className="py-2 flex items-center gap-1 sm:gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="mehndi">
+                        <CategoryTabContent serviceType="mehndi" />
+                    </TabsContent>
+                    <TabsContent value="makeup">
+                        <CategoryTabContent serviceType="makeup" />
+                    </TabsContent>
+                    <TabsContent value="photography">
+                        <CategoryTabContent serviceType="photography" />
+                    </TabsContent>
+                </Tabs>
+             </ClientOnly>
         </div>
         
         <Separator className="my-8"/>
