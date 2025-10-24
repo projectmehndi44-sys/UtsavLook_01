@@ -42,19 +42,16 @@ export default function AdminLoginPage() {
     const handleLogin = async (data: LoginFormValues) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-            
             const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
             
-            if (memberProfile) {
-                // The redirect is handled by the useAdminAuth hook in the layout
-            } else {
-                await auth.signOut();
-                toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
+            if (!memberProfile) {
+                 await auth.signOut();
+                 toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
             }
         } catch (error: any) {
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                description = 'Invalid credentials. Please check your username and password.';
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                description = 'Invalid credentials. Please check your email and password.';
             }
             toast({ title: 'Authentication Failed', description, variant: 'destructive' });
         }

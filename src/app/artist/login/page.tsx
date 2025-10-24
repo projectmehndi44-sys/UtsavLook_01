@@ -29,29 +29,23 @@ export default function ArtistLoginPage() {
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
-    React.useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // If a user is logged in, attempt to redirect them to the dashboard.
-                // The dashboard layout will handle verification of the artist profile.
-                router.push('/artist/dashboard');
-            }
-        });
-        return () => unsubscribe();
-    }, [auth, router]);
-
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
-            // Redirect is now handled by the useEffect hook above
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+             const artistProfile = await getArtist(userCredential.user.uid);
+             if (!artistProfile) {
+                await auth.signOut();
+                toast({ title: 'Access Denied', description: 'This account is not registered as an artist.', variant: 'destructive' });
+             } else {
+                toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
+             }
         } catch (error: any) {
             console.error("Login error:", error);
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 description = 'Invalid credentials. Please check your email and password.';
             } else if (error.code === 'auth/user-disabled') {
                 description = 'Your account has been suspended by an administrator.';
