@@ -44,7 +44,7 @@ const benefitImageSchema = z.object({
   id: z.string(),
   title: z.string(),
   imageUrl: z.string().url('Must be a valid URL'),
-  description: z.string(), // Added description
+  description: z.string(),
 });
 
 const benefitFormSchema = z.object({
@@ -94,8 +94,8 @@ export default function ImageManagementPage() {
             getBenefitImages(),
             getPromotionalImage()
         ]).then(([placeholderData, benefitData, promoData]) => {
-            placeholderForm.reset({ images: placeholderData });
-            replace(benefitData);
+            placeholderForm.reset({ images: placeholderData || [] });
+            replace(benefitData || []);
             if (promoData) setPromoImage(promoData.imageUrl);
             setIsLoading(false);
         }).catch(err => {

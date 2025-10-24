@@ -175,7 +175,7 @@ export default function ArtistProfilePage() {
         
         try {
             await updateArtist(artist.id, dataToUpdate);
-            await fetchData(artist.id);
+            if (fetchData) await fetchData(artist.id);
             form.reset({ ...data, password: '', confirmPassword: '' });
             toast({
                 title: "Profile Updated",
@@ -187,12 +187,10 @@ export default function ArtistProfilePage() {
         }
     };
 
-    const handleFileUpload = async (file: File, uploadKey: string): Promise<string> => {
-        if (!artist) throw new Error("Artist not found");
-
+    const handleFileUpload = async (file: File, uploadKey: string, artistId: string): Promise<string> => {
         setIsUploading(prev => ({...prev, [uploadKey]: true}));
         try {
-            const uploadPath = `artists/${artist.id}/${uploadKey}`;
+            const uploadPath = `artists/${artistId}/${uploadKey}`;
             const downloadURL = await uploadSiteImage(file, uploadPath, true);
             toast({ title: "Upload successful!", description: "Image has been saved." });
             return downloadURL;
@@ -207,9 +205,9 @@ export default function ArtistProfilePage() {
     
     const handleProfilePicUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file && artist) {
+        if (file && artist && fetchData) {
             try {
-                const url = await handleFileUpload(file, 'profilePicture');
+                const url = await handleFileUpload(file, 'profilePicture', artist.id);
                 await updateArtist(artist.id, { profilePicture: url });
                 await fetchData(artist.id);
             } catch (error) {
@@ -220,9 +218,9 @@ export default function ArtistProfilePage() {
 
     const handleCoverPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file && artist) {
+        if (file && artist && fetchData) {
             try {
-                const url = await handleFileUpload(file, 'coverPhoto');
+                const url = await handleFileUpload(file, 'coverPhoto', artist.id);
                 await updateArtist(artist.id, { coverPhoto: url });
                 await fetchData(artist.id);
             } catch (error) {
@@ -233,13 +231,13 @@ export default function ArtistProfilePage() {
     
     const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        if (!files || files.length === 0 || !artist) return;
+        if (!files || files.length === 0 || !artist || !fetchData) return;
 
         setIsUploading(prev => ({ ...prev, gallery: true }));
         try {
             const currentImages = artist.workImages || [];
             const uploadPromises = Array.from(files).map((file, index) => 
-                handleFileUpload(file, `gallery-${Date.now()}-${index}`)
+                handleFileUpload(file, `gallery-${Date.now()}-${index}`, artist.id)
             );
             
             const newUrls = await Promise.all(uploadPromises);
@@ -274,7 +272,7 @@ export default function ArtistProfilePage() {
     };
 
     const handleImageDelete = async (imageSrc: string) => {
-        if (!artist || !artist.workImages) return;
+        if (!artist || !artist.workImages || !fetchData) return;
         
         if (!window.confirm("Are you sure you want to delete this image?")) return;
 

@@ -330,14 +330,14 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
-    const config = await getConfigDocument<any>('placeholderImages');
+    const config = await getConfigDocument<{ images: ImagePlaceholder[] }>('placeholderImages');
     return config?.images || [];
 };
 export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', { images });
 
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
-    const config = await getConfigDocument<any>('benefitImages');
+    const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
     
     if (config && Array.isArray(config.benefitImages) && config.benefitImages.length > 0) {
         return config.benefitImages;
@@ -426,8 +426,8 @@ export const deleteTeamMember = async (id: string) => {
 
 
 export const getPromotions = async (): Promise<Promotion[]> => {
-    const promos = await getConfigDocument<any>('promotions');
-    return promos?.promos || [];
+    const config = await getConfigDocument<{ promos: Promotion[] }>('promotions');
+    return config?.promos || [];
 };
 export const savePromotions = (promos: Promotion[]) => setConfigDocument('promotions', { promos });
 
@@ -485,7 +485,7 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
-    const config = await getConfigDocument<any>('masterServices');
+    const config = await getConfigDocument<{ packages: MasterServicePackage[] }>('masterServices');
     return config?.packages || [];
 };
 export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
