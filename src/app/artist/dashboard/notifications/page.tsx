@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useArtistPortal } from '../layout';
 import { useRouter } from 'next/navigation';
-import { getBookings } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 
 
@@ -64,14 +63,7 @@ function NotificationCard({ notification, allBookings, onMarkAsRead }: Notificat
 }
 
 export default function ArtistNotificationsPage() {
-    const { artist, notifications, setNotifications } = useArtistPortal();
-    const [allBookings, setAllBookings] = React.useState<Booking[]>([]);
-
-    React.useEffect(() => {
-        getBookings().then((bookings) => {
-            setAllBookings(bookings as any)
-        });
-    }, []);
+    const { artist, notifications, setNotifications, artistBookings } = useArtistPortal();
     
     if (!artist) return null;
 
@@ -120,7 +112,7 @@ export default function ArtistNotificationsPage() {
             <CardContent className="space-y-4">
                 {notifications.length > 0 ? (
                     notifications.map(notif => {
-                        return <NotificationCard key={notif.id} notification={notif} allBookings={allBookings} onMarkAsRead={markOneAsRead} />
+                        return <NotificationCard key={notif.id} notification={notif} allBookings={artistBookings} onMarkAsRead={markOneAsRead} />
                     })
                 ) : (
                     <p className="text-muted-foreground text-center py-8">You have no new notifications.</p>
