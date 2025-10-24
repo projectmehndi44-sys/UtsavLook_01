@@ -98,8 +98,12 @@ export default function ImageManagementPage() {
             replace(benefitData);
             if (promoData) setPromoImage(promoData.imageUrl);
             setIsLoading(false);
+        }).catch(err => {
+            console.error("Error loading image data:", err);
+            toast({ title: "Error", description: "Could not load site image data.", variant: "destructive"});
+            setIsLoading(false);
         });
-    }, [placeholderForm, replace]);
+    }, [placeholderForm, replace, toast]);
 
     const onPlaceholderSubmit = async (data: z.infer<typeof formSchema>) => {
         try {

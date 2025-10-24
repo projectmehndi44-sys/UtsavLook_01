@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -88,7 +89,7 @@ const serviceItems = [
 
 
 export default function ArtistProfilePage() {
-    const { artist, setArtist, fetchData } = useArtistPortal();
+    const { artist, fetchData } = useArtistPortal();
     const router = useRouter();
     const { toast } = useToast();
     const [tagInput, setTagInput] = React.useState('');
@@ -174,7 +175,7 @@ export default function ArtistProfilePage() {
         
         try {
             await updateArtist(artist.id, dataToUpdate);
-            await fetchData();
+            await fetchData(artist.id);
             form.reset({ ...data, password: '', confirmPassword: '' });
             toast({
                 title: "Profile Updated",
@@ -210,7 +211,7 @@ export default function ArtistProfilePage() {
             try {
                 const url = await handleFileUpload(file, 'profilePicture');
                 await updateArtist(artist.id, { profilePicture: url });
-                await fetchData();
+                await fetchData(artist.id);
             } catch (error) {
                 // Error is already toasted in handleFileUpload
             }
@@ -223,7 +224,7 @@ export default function ArtistProfilePage() {
             try {
                 const url = await handleFileUpload(file, 'coverPhoto');
                 await updateArtist(artist.id, { coverPhoto: url });
-                await fetchData();
+                await fetchData(artist.id);
             } catch (error) {
                 // Error is already toasted in handleFileUpload
             }
@@ -246,7 +247,7 @@ export default function ArtistProfilePage() {
             if (newUrls.length > 0) {
                 const updatedImages = [...currentImages, ...newUrls];
                 await updateArtist(artist.id, { workImages: updatedImages });
-                await fetchData();
+                await fetchData(artist.id);
                 toast({ title: `${newUrls.length} image(s) added to your gallery.` });
             }
         } catch (error) {
@@ -281,7 +282,7 @@ export default function ArtistProfilePage() {
             await deleteSiteImage(imageSrc);
             const updatedWorkImages = artist.workImages.filter(src => src !== imageSrc);
             await updateArtist(artist.id, { workImages: updatedWorkImages });
-            await fetchData();
+            await fetchData(artist.id);
             toast({ title: "Image deleted", variant: "destructive" });
         } catch(error) {
             toast({ title: "Deletion failed", description: "Could not delete image.", variant: "destructive" });

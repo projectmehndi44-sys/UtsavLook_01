@@ -92,7 +92,7 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
             operation: 'get',
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
-        return null;
+        throw permissionError;
     }
 }
 
@@ -101,7 +101,10 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
 export async function setConfigDocument(docId: string, configData: any): Promise<void> {
     try {
         // The data is passed directly, and the cloud function handles the structure.
-        await callFirebaseFunction('updateConfig', { docId, configData });
+        const result = await callFirebaseFunction('updateConfig', { docId, configData });
+        if ((result.data as any)?.success === false) {
+             throw new Error((result.data as any).message || 'Unknown function error');
+        }
     } catch (error) {
         console.error(`Failed to update config for ${docId}:`, error);
         // The callable function will throw its own detailed error.
@@ -349,7 +352,7 @@ export const getBenefitImages = async (): Promise<BenefitImage[]> => {
         { id: 'transparent-payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
         { id: 'zero-commission-welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
     ];
-    await setConfigDocument('benefitImages', { benefitImages: defaultBenefits });
+    await saveBenefitImages(defaultBenefits);
     return defaultBenefits;
 };
 export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', { benefitImages: images } );
@@ -391,7 +394,7 @@ export const saveFinancialSettings = (data: any) => setConfigDocument('financial
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
     const querySnapshot = await getDocs(collection(getDb(), 'teamMembers'));
-    if (querySnapshot.empty) {
+    if (querySnapshot.empty && initialTeamMembers.length > 0) {
         // If no members, seed the initial admin
         const seededMembers = await Promise.all(initialTeamMembers.map(async (member) => {
             const memberRef = doc(getDb(), 'teamMembers', member.id);
