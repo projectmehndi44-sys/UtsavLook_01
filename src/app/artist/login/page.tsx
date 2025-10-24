@@ -45,11 +45,9 @@ export default function ArtistLoginPage() {
         setIsLoading(true);
         
         try {
-            // Simply sign in. The dashboard layout's auth listener will handle the rest.
             await signInWithEmailAndPassword(auth, email, password);
             toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
-            router.push('/artist/dashboard');
-
+            // Redirect is now handled by the useEffect hook above
         } catch (error: any) {
             console.error("Login error:", error);
             let description = 'An error occurred during login. Please try again.';

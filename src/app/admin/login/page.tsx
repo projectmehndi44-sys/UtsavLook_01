@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -46,7 +47,7 @@ export default function AdminLoginPage() {
             
             if (memberProfile) {
                 toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
-                router.push('/admin'); 
+                // The redirect is now handled by the useAdminAuth hook in the layout
             } else {
                 await auth.signOut();
                 toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
@@ -139,3 +140,4 @@ export default function AdminLoginPage() {
         </>
     );
 }
+

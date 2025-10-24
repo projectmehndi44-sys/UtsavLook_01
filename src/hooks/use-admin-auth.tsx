@@ -27,21 +27,18 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
-            if (pathname === '/admin/login') {
-                setIsLoading(false);
-                setUser(null);
-                return;
-            }
-
             if (firebaseUser) {
                 try {
                     const memberProfile = await getDocument<TeamMember>('teamMembers', firebaseUser.uid);
                     if (memberProfile) {
                         setUser(memberProfile);
+                        if (pathname === '/admin/login') {
+                            router.push('/admin');
+                        }
                     } else {
                         await auth.signOut();
                         setUser(null);
-                         if (pathname.startsWith('/admin/')) {
+                        if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
                             router.push('/admin/login');
                         }
                     }
@@ -49,13 +46,13 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
                     console.error("Failed to fetch team member profile:", error);
                     await auth.signOut();
                     setUser(null);
-                    if (pathname.startsWith('/admin/')) {
+                    if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
                         router.push('/admin/login');
                     }
                 }
             } else {
                 setUser(null);
-                if (pathname.startsWith('/admin/')) {
+                if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
                     router.push('/admin/login');
                 }
             }
@@ -100,3 +97,4 @@ export const useAdminAuth = () => {
     }
     return context;
 };
+
