@@ -368,3 +368,11 @@ export const getPayoutHistory = functions.https.onCall(async (data, context) => 
     const snapshot = await db.collection('payoutHistory').get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 });
+    
+
+    
+
+    
+
+
+
