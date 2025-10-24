@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -26,36 +27,37 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
 
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
-            // If we are on the login page, we don't need to check for auth,
-            // as this would create a loop. Let the login page handle its own logic.
             if (pathname === '/admin/login') {
                 setIsLoading(false);
-                setUser(null); // Ensure user is null on login page
+                setUser(null);
                 return;
             }
 
             if (firebaseUser) {
                 try {
                     const memberProfile = await getDocument<TeamMember>('teamMembers', firebaseUser.uid);
-                    
                     if (memberProfile) {
                         setUser(memberProfile);
                     } else {
-                        // Firebase user exists but has no team member profile, deny access.
                         await auth.signOut();
                         setUser(null);
-                        router.push('/admin/login');
+                        if (window.location.pathname.startsWith('/admin/')) {
+                            router.push('/admin/login');
+                        }
                     }
                 } catch (error) {
                     console.error("Failed to fetch team member profile:", error);
                     await auth.signOut();
                     setUser(null);
-                    router.push('/admin/login');
+                    if (window.location.pathname.startsWith('/admin/')) {
+                        router.push('/admin/login');
+                    }
                 }
             } else {
-                // No firebase user, not authenticated.
                 setUser(null);
-                router.push('/admin/login');
+                if (window.location.pathname.startsWith('/admin/')) {
+                    router.push('/admin/login');
+                }
             }
             setIsLoading(false);
         });

@@ -30,17 +30,11 @@ export default function ArtistLoginPage() {
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
     React.useEffect(() => {
-        // This effect should ONLY run if we are on the artist login page.
-        if (window.location.pathname !== '/artist/login') {
-            return;
-        }
-
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                const artistProfile = await getArtist(user.uid);
-                if (artistProfile) {
-                    router.push('/artist/dashboard');
-                }
+                // If a user is logged in, attempt to redirect them to the dashboard.
+                // The dashboard layout will handle verification of the artist profile.
+                router.push('/artist/dashboard');
             }
         });
         return () => unsubscribe();
@@ -51,24 +45,10 @@ export default function ArtistLoginPage() {
         setIsLoading(true);
         
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // Verify if the logged-in user is a registered artist
-            const artistProfile = await getArtist(user.uid);
-            
-            if (artistProfile) {
-                toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
-                router.push('/artist/dashboard');
-            } else {
-                // If they have an auth account but no artist profile, deny access
-                await auth.signOut();
-                toast({ 
-                    title: 'Access Denied', 
-                    description: 'This account does not have artist privileges.', 
-                    variant: 'destructive' 
-                });
-            }
+            // Simply sign in. The dashboard layout's auth listener will handle the rest.
+            await signInWithEmailAndPassword(auth, email, password);
+            toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
+            router.push('/artist/dashboard');
 
         } catch (error: any) {
             console.error("Login error:", error);

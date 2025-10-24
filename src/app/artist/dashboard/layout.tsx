@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -40,7 +41,7 @@ interface ArtistPortalContextType {
     unreadCount: number;
     setArtist: React.Dispatch<React.SetStateAction<Artist | null>>;
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
-    fetchData: () => Promise<void>;
+    fetchData: (uid: string) => Promise<void>;
 }
 
 export const ArtistPortalContext = React.createContext<ArtistPortalContextType | null>(null);
@@ -97,7 +98,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
             setIsLoading(true);
             if (user) {
                 try {
-                    await fetchData();
+                    await fetchData(user.uid);
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
                     handleLogout();
@@ -147,24 +148,17 @@ export default function ArtistDashboardLayout({
         router.push('/');
     }, [router]);
     
-     const fetchData = React.useCallback(async () => {
-        const firebaseUser = auth.currentUser;
-        if (!firebaseUser?.uid) {
-             if (window.location.pathname.startsWith('/artist/dashboard')) {
-                router.push('/artist/login');
-            }
-            return;
-        }
-
-        const currentArtist = await getArtist(firebaseUser.uid);
+     const fetchData = React.useCallback(async (uid: string) => {
+        const currentArtist = await getArtist(uid);
         if (currentArtist) {
             setArtist(currentArtist);
         } else {
-             // Handle case where artist doc is not found for an authenticated user
              await signOutUser();
-             router.push('/artist/login');
+             if (window.location.pathname.startsWith('/artist/dashboard')) {
+                router.push('/artist/login');
+             }
         }
-    }, [auth, router]);
+    }, [router]);
 
 
     React.useEffect(() => {
