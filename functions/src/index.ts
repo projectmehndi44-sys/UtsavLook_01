@@ -216,31 +216,41 @@ export const createBooking = functions.https.onCall(async (data, context) => {
 
     // Determine initial booking status and artist assignment
     let finalArtistIds: string[] = [];
-    let bookingStatus: 'Pending Approval' | 'Needs Assignment' | 'Pending Confirmation' = 'Needs Assignment';
+    let bookingStatus: 'Pending Approval' | 'Needs Assignment' | 'Pending Confirmation' = 'Pending Confirmation';
     let completionCode: string | undefined = undefined;
     
+    // Default to 'Pay at Venue' logic
     if (paymentMethod === 'online') {
         bookingStatus = 'Pending Approval';
         completionCode = Math.floor(100000 + Math.random() * 900000).toString();
-    } else {
-        bookingStatus = 'Pending Confirmation';
+    } else { // 'offline' or 'pay at venue'
+        // If an artist is pre-selected (via referral), it still needs admin approval
+        if (appliedReferralCode) {
+            bookingStatus = 'Pending Confirmation';
+        } else {
+            // This is an express booking, open to all artists
+            bookingStatus = 'Needs Assignment';
+        }
     }
 
+    // Artist assignment logic
     if (appliedReferralCode) {
         const artistsCollection = db.collection("artists");
         const artistQuery = await artistsCollection.where('referralCode', '==', appliedReferralCode).limit(1).get();
         if (!artistQuery.empty) {
             const matchedArtist = artistQuery.docs[0];
             finalArtistIds = [matchedArtist.id];
-            if (bookingStatus !== 'Pending Confirmation') {
+            if (paymentMethod === 'online') {
                 bookingStatus = 'Pending Approval';
+            } else {
+                 bookingStatus = 'Pending Confirmation'; // Needs phone confirmation by admin
             }
         }
     } else {
         const preSelectedArtistIds = Array.from(new Set(items.map((item: any) => item.artist?.id).filter(Boolean)));
          if (preSelectedArtistIds.length > 0) {
             finalArtistIds = preSelectedArtistIds as string[];
-             if (bookingStatus !== 'Pending Confirmation') {
+             if (paymentMethod === 'online') {
                 bookingStatus = 'Pending Approval';
             }
         }
@@ -287,7 +297,7 @@ export const createBooking = functions.https.onCall(async (data, context) => {
                 type: 'booking',
             });
         }
-    } else { // 2. Notify all relevant artists if it's an express booking
+    } else if (bookingStatus === 'Needs Assignment') { // 2. Notify all relevant artists if it's an express booking
         const servicesNeeded = items.map((i: any) => i.servicePackage.service);
         const artistsQuery = await db.collection("artists")
             .where("services", "array-contains-any", servicesNeeded)
@@ -320,7 +330,7 @@ export const createBooking = functions.https.onCall(async (data, context) => {
                 artistId: adminId, // Using 'artistId' field to also target admins in notifications collection
                 bookingId: docRef.id,
                 title: `New Booking by ${customerName}`,
-                message: `A new booking for ${eventType} on ${eventDate.toLocaleDateString()} has been created.`,
+                message: `A new booking for ${eventType} on ${eventDate.toLocaleDateString()} has been created. Status: ${bookingStatus}`,
                 timestamp: new Date().toISOString(),
                 isRead: false,
                 type: 'booking',
@@ -363,4 +373,5 @@ export const getPayoutHistory = functions.https.onCall(async (data, context) => 
     
 
     
+
 

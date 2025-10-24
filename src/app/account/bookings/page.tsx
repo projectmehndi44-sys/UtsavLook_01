@@ -141,7 +141,7 @@ export default function BookingsPage() {
                 <TableCell><Badge variant={getStatusVariant(booking.status)}>{booking.status}</Badge></TableCell>
                 <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-1">
-                        {booking.status === 'Completed' && !booking.reviewSubmitted && (
+                        {isUpcoming === false && booking.status === 'Completed' && !booking.reviewSubmitted && (
                             <Button variant="outline" size="sm" onClick={() => setReviewBooking(booking)}>
                                 <Star className="mr-2 h-4 w-4"/> Rate Artist
                             </Button>

@@ -12,21 +12,22 @@ import { useAccount } from './layout';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { getSafeDate } from '@/lib/utils';
+import { Booking } from '@/lib/types';
 
 export default function AccountDashboardPage() {
     const { customer, bookings, artists, upcomingBookings, pastBookings } = useAccount();
 
     const nextBooking = upcomingBookings.length > 0 ? upcomingBookings[0] : null;
-    const lastBooking = pastBookings.length > 0 ? pastBookings[0] : null;
+    const lastCompletedBooking = pastBookings.find(b => b.status === 'Completed' && !b.reviewSubmitted);
 
     const stats = [
         { name: 'Upcoming Bookings', value: upcomingBookings.length, icon: <Clock className="w-6 h-6 text-blue-500" /> },
-        { name: 'Past Bookings', value: pastBookings.length, icon: <Check className="w-6 h-6 text-green-500" /> },
+        { name: 'Completed Bookings', value: pastBookings.filter(b => b.status === 'Completed').length, icon: <Check className="w-6 h-6 text-green-500" /> },
         { name: 'Total Spent', value: `₹${bookings.filter(b => b.status === 'Completed').reduce((sum, b) => sum + b.amount, 0).toLocaleString()}`, icon: <IndianRupee className="w-6 h-6 text-primary" /> },
         { name: 'Reviews Submitted', value: bookings.filter(b => b.reviewSubmitted).length, icon: <Star className="w-6 h-6 text-amber-500" /> },
     ];
     
-     const getStatusVariant = (status: 'Completed' | 'Confirmed' | 'Cancelled' | 'Pending Approval' | 'Needs Assignment' | 'Disputed' | 'Pending Confirmation') => {
+     const getStatusVariant = (status: Booking['status']) => {
         switch (status) {
             case 'Completed': return 'default';
             case 'Confirmed': return 'secondary';
@@ -115,16 +116,16 @@ export default function AccountDashboardPage() {
                 </Card>
             )}
 
-            {lastBooking && !nextBooking && (
+            {lastCompletedBooking && (
                 <Card>
                      <CardHeader>
-                        <CardTitle className="text-xl">Your Last Booking</CardTitle>
-                        <CardDescription>How was your experience? We'd love to hear your feedback.</CardDescription>
+                        <CardTitle className="text-xl">How was your last service?</CardTitle>
+                        <CardDescription>Review your experience for "{lastCompletedBooking.items.map(i => i.servicePackage.name).join(', ')}" to help other customers.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex justify-between items-center">
                         <div>
-                            <p className="font-semibold">{lastBooking.items.map(i => i.servicePackage.name).join(', ')}</p>
-                            <p className="text-sm text-muted-foreground">on {format(getSafeDate(lastBooking.eventDate), "PPP")}</p>
+                            <p className="font-semibold">{lastCompletedBooking.items.map(i => i.servicePackage.name).join(', ')}</p>
+                            <p className="text-sm text-muted-foreground">on {format(getSafeDate(lastCompletedBooking.eventDate), "PPP")}</p>
                         </div>
                         <Button asChild>
                            <Link href="/account/bookings">Rate & Review</Link>
@@ -133,7 +134,7 @@ export default function AccountDashboardPage() {
                 </Card>
             )}
 
-            {!nextBooking && !lastBooking && (
+            {!nextBooking && !lastCompletedBooking && (
                  <Card className="text-center py-12">
                     <CardHeader>
                         <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />

@@ -116,8 +116,8 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
         customer,
         bookings,
         artists,
-        upcomingBookings: bookings.filter(b => getSafeDate(b.eventDate) >= new Date() && (b.status === 'Confirmed' || b.status === 'Pending Approval' || b.status === 'Needs Assignment')),
-        pastBookings: bookings.filter(b => getSafeDate(b.eventDate) < new Date() || b.status === 'Completed' || b.status === 'Cancelled' || b.status === 'Disputed'),
+        upcomingBookings: bookings.filter(b => b.status !== 'Completed' && b.status !== 'Cancelled' && b.status !== 'Disputed'),
+        pastBookings: bookings.filter(b => b.status === 'Completed' || b.status === 'Cancelled' || b.status === 'Disputed'),
         fetchData: () => fetchData(auth.currentUser?.uid || ''),
     };
 
