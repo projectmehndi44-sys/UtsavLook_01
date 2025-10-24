@@ -27,7 +27,7 @@ import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Footer } from '@/components/utsavlook/Footer';
 import { ArtistCard } from '@/components/utsavlook/ArtistCard';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
 import { ClientOnly } from '@/components/ClientOnly';
 
@@ -54,42 +54,41 @@ export default function Home() {
 
   const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
   
-  const handleCustomerLogout = React.useCallback(() => {
-    getAuth(getFirebaseApp()).signOut();
-    setIsCustomerLoggedIn(false);
-    setCustomer(null);
-    setCart([]);
-    localStorage.removeItem('currentCustomerId');
+  const handleCustomerLogout = () => {
+    signOut(getAuth(getFirebaseApp()));
     toast({
       title: 'Logged Out',
       description: 'You have been successfully logged out.',
     });
-  }, [toast]);
-  
-
-  const checkLoggedInCustomer = React.useCallback(async (uid: string) => {
-    const currentCustomer = await getCustomer(uid);
-    if (currentCustomer) {
-        setIsCustomerLoggedIn(true);
-        setCustomer(currentCustomer);
-        const storedCart = localStorage.getItem(`cart_${uid}`);
-        setCart(storedCart ? JSON.parse(storedCart) : []);
-        localStorage.setItem('currentCustomerId', uid);
-    } else {
-         handleCustomerLogout();
-    }
-  }, [handleCustomerLogout]);
+  };
 
   React.useEffect(() => {
     const auth = getAuth(getFirebaseApp());
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        checkLoggedInCustomer(user.uid);
+        const currentCustomer = await getCustomer(user.uid);
+        if (currentCustomer) {
+            setIsCustomerLoggedIn(true);
+            setCustomer(currentCustomer);
+            const storedCart = localStorage.getItem(`cart_${user.uid}`);
+            setCart(storedCart ? JSON.parse(storedCart) : []);
+            localStorage.setItem('currentCustomerId', user.uid);
+        } else {
+            // This case might happen if user is authenticated but not in our 'customers' collection
+            setIsCustomerLoggedIn(false);
+            setCustomer(null);
+            setCart([]);
+            localStorage.removeItem('currentCustomerId');
+        }
       } else {
-        handleCustomerLogout();
+        // User is signed out
+        setIsCustomerLoggedIn(false);
+        setCustomer(null);
+        setCart([]);
+        localStorage.removeItem('currentCustomerId');
       }
     });
-
+    
     const unsubscribeArtists = listenToCollection<Artist>('artists', (fetchedArtists) => {
         setArtists(fetchedArtists);
         // Set initial sorted artists, then shuffle on client
@@ -113,18 +112,16 @@ export default function Home() {
         setBackgroundImages(images.filter(img => img.id.startsWith('hero-background')));
     });
 
-
     const intervalId = setInterval(() => {
       setCurrentBgIndex((prevIndex) => (prevIndex + 1) % (backgroundImages.length || 1));
     }, 5000); 
-
 
     return () => {
         clearInterval(intervalId);
         unsubscribeArtists();
         unsubscribeAuth();
     };
-  }, [checkLoggedInCustomer, backgroundImages.length, handleCustomerLogout]);
+  }, [backgroundImages.length]);
   
    // This effect runs only on the client after mount to prevent hydration errors.
   React.useEffect(() => {
