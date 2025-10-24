@@ -160,7 +160,11 @@ export default function Home() {
   }
   
   const topArtists = React.useMemo(() => {
-      return [...artists].sort((a,b) => b.rating - a.rating).slice(0, 5);
+    // Shuffling on the client side only to prevent hydration errors.
+    if (typeof window === 'undefined') {
+        return [...artists].sort((a, b) => b.rating - a.rating).slice(0, 5);
+    }
+    return [...artists].sort(() => 0.5 - Math.random()).slice(0, 5);
   }, [artists]);
 
   return (
