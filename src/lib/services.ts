@@ -366,9 +366,7 @@ export const getAvailableLocations = async (): Promise<Record<string, string[]>>
     const config = await getConfigDocument<Record<string, string[]>>('availableLocations');
     return config || {};
 };
-export const saveAvailableLocations = async (locations: Record<string, string[]>) => {
-    await setConfigDocument('availableLocations', locations);
-};
+export const saveAvailableLocations = (locations: Record<string, string[]>) => setConfigDocument('availableLocations', locations);
 
 export const getCompanyProfile = async () => {
     return await getConfigDocument<any>('companyProfile') || {
@@ -392,15 +390,27 @@ export const getFinancialSettings = async () => {
 export const saveFinancialSettings = (data: any) => setConfigDocument('financialSettings', data);
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
-    // This now reads from the top-level 'teamMembers' collection
     const querySnapshot = await getDocs(collection(getDb(), 'teamMembers'));
     if (querySnapshot.empty) {
-        return [];
+        // If no members, seed the initial admin
+        const seededMembers = await Promise.all(initialTeamMembers.map(async (member) => {
+            const memberRef = doc(getDb(), 'teamMembers', member.id);
+            await setDoc(memberRef, member);
+            return member;
+        }));
+        return seededMembers;
     }
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as TeamMember);
 };
 export const saveTeamMembers = (members: TeamMember[]) => {
-    // This function is now deprecated in favor of addOrUpdateTeamMember for better security.
+    const db = getDb();
+    const batch = runTransaction(db, async (transaction) => {
+        members.forEach(member => {
+            const memberRef = doc(db, "teamMembers", member.id);
+            transaction.set(memberRef, member);
+        });
+    });
+    return batch;
 };
 export const addOrUpdateTeamMember = async (member: TeamMember) => {
     const memberRef = doc(getDb(), "teamMembers", member.id);

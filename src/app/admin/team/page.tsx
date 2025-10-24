@@ -102,6 +102,10 @@ export default function TeamManagementPage() {
             toast({ title: 'Team Member Updated', description: `${data.name}'s permissions have been updated.` });
         } else {
             try {
+                // If creating a new user, ensure they are also Super Admin if it's the first user
+                const isFirstUser = currentMembers.length === 0;
+                const role = isFirstUser ? 'Super Admin' : data.role;
+                
                 const userCredential = await createUserWithEmailAndPassword(auth, data.username, `temp_password_${Date.now()}`);
                 const authUser = userCredential.user;
                 
@@ -109,7 +113,7 @@ export default function TeamManagementPage() {
                     id: authUser.uid,
                     name: data.name,
                     username: data.username,
-                    role: data.role,
+                    role: role, // Assign Super Admin if first user
                     permissions: data.permissions
                 };
                 await addOrUpdateTeamMember(memberToSave);
