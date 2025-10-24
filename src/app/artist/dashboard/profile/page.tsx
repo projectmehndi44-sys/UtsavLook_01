@@ -232,16 +232,17 @@ export default function ArtistProfilePage() {
     const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files || files.length === 0 || !artist || !fetchData) return;
-
+    
         setIsUploading(prev => ({ ...prev, gallery: true }));
         try {
             const currentImages = artist.workImages || [];
+            
             const uploadPromises = Array.from(files).map((file, index) => 
                 handleFileUpload(file, `gallery-${Date.now()}-${index}`, artist.id)
             );
             
             const newUrls = await Promise.all(uploadPromises);
-
+    
             if (newUrls.length > 0) {
                 const updatedImages = [...currentImages, ...newUrls];
                 await updateArtist(artist.id, { workImages: updatedImages });
@@ -249,11 +250,12 @@ export default function ArtistProfilePage() {
                 toast({ title: `${newUrls.length} image(s) added to your gallery.` });
             }
         } catch (error) {
-            // Errors are handled in handleFileUpload
+            // Error is already toasted in handleFileUpload
         } finally {
             setIsUploading(prev => ({ ...prev, gallery: false }));
         }
     };
+    
 
     const handleAddTag = () => {
         if (tagInput.trim() !== '') {
@@ -612,3 +614,4 @@ export default function ArtistProfilePage() {
 }
 
     
+
