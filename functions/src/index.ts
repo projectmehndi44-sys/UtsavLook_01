@@ -1,5 +1,4 @@
 
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -67,66 +66,75 @@ export const updateConfig = functions.https.onCall(async (data, context) => {
  * It uses a transaction to ensure that only one artist can claim a job.
  */
 export const claimJob = functions.https.onCall(async (data, context) => {
-  // 1. Authentication Check: Ensure the user is a logged-in artist
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "You must be logged in to claim a job.",
-    );
-  }
-  const artistId = context.auth.uid;
-  const bookingId = data.bookingId;
-
-  if (!bookingId) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "The function must be called with a 'bookingId'.",
-    );
-  }
-
-  const bookingRef = db.collection("bookings").doc(bookingId);
-
-  // 2. Firestore Transaction: Atomically claim the job
-  try {
-    await db.runTransaction(async (transaction) => {
-      const bookingDoc = await transaction.get(bookingRef);
-
-      if (!bookingDoc.exists) {
-        throw new functions.https.HttpsError("not-found", "Booking not found.");
-      }
-
-      const bookingData = bookingDoc.data();
-
-      // 3. Check if the job is still available
-      // The status "Needs Assignment" is what we're looking for
-      if (bookingData?.status !== "Needs Assignment") {
+    // 1. Authentication Check: Ensure the user is a logged-in artist
+    if (!context.auth) {
         throw new functions.https.HttpsError(
-          "failed-precondition",
-          "This job has already been claimed or is no longer available.",
+            "unauthenticated",
+            "You must be logged in to claim a job."
         );
-      }
-
-      // 4. Update the booking to assign the artist
-      transaction.update(bookingRef, {
-        status: "Confirmed", // The job is now confirmed for this artist
-        artistIds: [artistId],
-      });
-    });
-
-    // 5. Return a success message
-    return { success: true, message: "Job successfully claimed!" };
-
-  } catch (error) {
-    console.error("Transaction failed: ", error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error; // Re-throw errors we created
     }
-    // Throw a generic error for any other issues
-    throw new functions.https.HttpsError(
-      "internal",
-      "An error occurred while trying to claim the job.",
-    );
-  }
+    const artistId = context.auth.uid;
+    const bookingId = data.bookingId;
+
+    if (!bookingId) {
+        throw new functions.https.HttpsError(
+            "invalid-argument",
+            "The function must be called with a 'bookingId'."
+        );
+    }
+
+    // 2. Verify the user is a registered artist
+    const artistDocRef = db.collection("artists").doc(artistId);
+    const artistDoc = await artistDocRef.get();
+    if (!artistDoc.exists) {
+        throw new functions.https.HttpsError(
+            "permission-denied",
+            "Only registered artists can claim jobs."
+        );
+    }
+
+    const bookingRef = db.collection("bookings").doc(bookingId);
+
+    // 3. Firestore Transaction: Atomically claim the job
+    try {
+        await db.runTransaction(async (transaction) => {
+            const bookingDoc = await transaction.get(bookingRef);
+
+            if (!bookingDoc.exists) {
+                throw new functions.https.HttpsError("not-found", "Booking not found.");
+            }
+
+            const bookingData = bookingDoc.data();
+
+            // 4. Check if the job is still available
+            if (bookingData?.status !== "Needs Assignment") {
+                throw new functions.https.HttpsError(
+                    "failed-precondition",
+                    "This job has already been claimed or is no longer available."
+                );
+            }
+
+            // 5. Update the booking to assign the artist
+            transaction.update(bookingRef, {
+                status: "Confirmed",
+                artistIds: [artistId],
+            });
+        });
+
+        // 6. Return a success message
+        return { success: true, message: "Job successfully claimed!" };
+
+    } catch (error) {
+        console.error("Transaction failed: ", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error; // Re-throw errors we created
+        }
+        // Throw a generic error for any other issues
+        throw new functions.https.HttpsError(
+            "internal",
+            "An error occurred while trying to claim the job."
+        );
+    }
 });
 
 
@@ -286,17 +294,20 @@ export const createBooking = functions.https.onCall(async (data, context) => {
         
         for (const artistDoc of artistsQuery.docs) {
              const artist = artistDoc.data();
-             const servesArea = artist.serviceAreas.some((area: any) => area.district === district && area.state === state);
-             if (servesArea) {
-                 await createNotification({
-                    artistId: artistDoc.id,
-                    bookingId: docRef.id,
-                    title: "New Job Available in Your Area!",
-                    message: `An express booking for ${eventType} in ${district} is available. Claim it now!`,
-                    timestamp: new Date().toISOString(),
-                    isRead: false,
-                    type: 'booking',
-                });
+             // Safe check for serviceAreas
+             if (artist.serviceAreas && Array.isArray(artist.serviceAreas)) {
+                 const servesArea = artist.serviceAreas.some((area: any) => area.district === district && area.state === state);
+                 if (servesArea) {
+                     await createNotification({
+                        artistId: artistDoc.id,
+                        bookingId: docRef.id,
+                        title: "New Job Available in Your Area!",
+                        message: `An express booking for ${eventType} in ${district} is available. Claim it now!`,
+                        timestamp: new Date().toISOString(),
+                        isRead: false,
+                        type: 'booking',
+                    });
+                 }
              }
         }
     }
@@ -318,5 +329,7 @@ export const createBooking = functions.https.onCall(async (data, context) => {
 
     return { success: true, bookingId: docRef.id };
 });
+
+    
 
     
