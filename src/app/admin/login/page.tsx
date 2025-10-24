@@ -46,8 +46,7 @@ export default function AdminLoginPage() {
             const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
             
             if (memberProfile) {
-                toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
-                // The redirect is now handled by the useAdminAuth hook in the layout
+                // The redirect is handled by the useAdminAuth hook in the layout
             } else {
                 await auth.signOut();
                 toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
@@ -140,4 +139,3 @@ export default function AdminLoginPage() {
         </>
     );
 }
-
