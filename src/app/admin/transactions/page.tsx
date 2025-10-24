@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isValid } from 'date-fns';
 import { exportTransactionsToExcel, exportTransactionsToPdf } from '@/lib/export';
-import { listenToCollection } from '@/lib/services';
+import { fetchCompletedBookings, fetchPayoutHistory } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 
 
@@ -24,6 +24,13 @@ function getSafeDate(date: any): Date {
         const parsed = parseISO(date);
         if (isValid(parsed)) return parsed;
     }
+    if (typeof date === 'number') { // Handle seconds from epoch if that's what function returns
+        return new Date(date * 1000);
+    }
+    // Handle the object format from Firebase Functions
+    if (typeof date === 'object' && date.hasOwnProperty('_seconds')) {
+        return new Date(date._seconds * 1000);
+    }
     return new Date();
 }
 
@@ -32,65 +39,61 @@ export default function TransactionsPage() {
     const [transactions, setTransactions] = React.useState<Transaction[]>([]);
     const [filteredTransactions, setFilteredTransactions] = React.useState<Transaction[]>([]);
     const [dateRange, setDateRange] = React.useState<{from: Date | undefined, to: Date | undefined}>({ from: undefined, to: undefined });
+    const [isLoading, setIsLoading] = React.useState(true);
 
-    const updateTransactions = React.useCallback((bookingsData: Booking[] | null, payoutsData: PayoutHistory[] | null) => {
-        setTransactions(prevTransactions => {
-            let newTransactions: Transaction[] = [...prevTransactions];
+    const processTransactions = (bookings: Booking[], payouts: PayoutHistory[]) => {
+        let allTransactions: Transaction[] = [];
 
-            if (bookingsData) {
-                // Remove old booking transactions to prevent duplicates
-                newTransactions = newTransactions.filter(t => t.type !== 'Revenue');
-                bookingsData.filter(b => b.status === 'Completed').forEach(b => {
-                    newTransactions.push({
-                        id: `rev-${b.id}`,
-                        date: getSafeDate(b.eventDate),
-                        type: 'Revenue',
-                        description: `Booking #${b.id.substring(0,7)} for ${b.items.map(i => i.servicePackage.name).join(', ')}`,
-                        amount: b.amount,
-                        relatedId: b.id,
-                    });
-                });
-            }
-
-            if (payoutsData) {
-                // Remove old payout transactions
-                newTransactions = newTransactions.filter(t => t.type !== 'Payout');
-                payoutsData.forEach(p => {
-                    newTransactions.push({
-                        id: `payout-${p.id}`,
-                        date: getSafeDate(p.paymentDate),
-                        type: 'Payout',
-                        description: `Payout to ${p.artistName}`,
-                        amount: -p.netPayout,
-                        relatedId: p.id,
-                    });
-                });
-            }
-
-            newTransactions.sort((a,b) => b.date.getTime() - a.date.getTime());
-            setFilteredTransactions(newTransactions); // Also update filtered view
-            return newTransactions;
+        bookings.forEach(b => {
+            allTransactions.push({
+                id: `rev-${b.id}`,
+                date: getSafeDate(b.eventDate),
+                type: 'Revenue',
+                description: `Booking #${b.id.substring(0,7)} for ${b.items.map(i => i.servicePackage.name).join(', ')}`,
+                amount: b.amount,
+                relatedId: b.id,
+            });
         });
-    }, []);
+
+        payouts.forEach(p => {
+            allTransactions.push({
+                id: `payout-${p.id}`,
+                date: getSafeDate(p.paymentDate),
+                type: 'Payout',
+                description: `Payout to ${p.artistName}`,
+                amount: -p.netPayout,
+                relatedId: p.id,
+            });
+        });
+        
+        allTransactions.sort((a,b) => getSafeDate(b.date).getTime() - getSafeDate(a.date).getTime());
+        setTransactions(allTransactions);
+        setFilteredTransactions(allTransactions);
+    };
 
     React.useEffect(() => {
-        let bookings: Booking[] = [];
-        let payouts: PayoutHistory[] = [];
-
-        const unsubBookings = listenToCollection<Booking>('bookings', (bookingsData) => {
-            bookings = bookingsData;
-            updateTransactions(bookings, payouts);
-        });
-        const unsubPayouts = listenToCollection<PayoutHistory>('payoutHistory', (payoutsData) => {
-            payouts = payoutsData;
-            updateTransactions(bookings, payouts);
-        });
-
-        return () => {
-            unsubBookings();
-            unsubPayouts();
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                const [bookingsData, payoutsData] = await Promise.all([
+                    fetchCompletedBookings(),
+                    fetchPayoutHistory(),
+                ]);
+                processTransactions(bookingsData, payoutsData);
+            } catch (error) {
+                console.error("Failed to fetch transaction data:", error);
+                toast({
+                    title: "Error",
+                    description: "Could not load transaction data.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
         };
-    }, [updateTransactions]);
+
+        loadData();
+    }, [toast]);
 
     const handleTransactionFilter = (filterType: 'all' | 'month' | 'year' | 'custom') => {
         const now = new Date();
@@ -99,13 +102,13 @@ export default function TransactionsPage() {
         if (filterType === 'month') {
             const start = startOfMonth(now);
             const end = endOfMonth(now);
-            filtered = transactions.filter(t => t.date >= start && t.date <= end);
+            filtered = transactions.filter(t => getSafeDate(t.date) >= start && getSafeDate(t.date) <= end);
         } else if (filterType === 'year') {
             const start = startOfYear(now);
             const end = endOfYear(now);
-            filtered = transactions.filter(t => t.date >= start && t.date <= end);
+            filtered = transactions.filter(t => getSafeDate(t.date) >= start && getSafeDate(t.date) <= end);
         } else if (filterType === 'custom' && dateRange.from && dateRange.to) {
-             filtered = transactions.filter(t => t.date >= dateRange.from! && t.date <= dateRange.to!);
+             filtered = transactions.filter(t => getSafeDate(t.date) >= dateRange.from! && getSafeDate(t.date) <= dateRange.to!);
         }
 
         setFilteredTransactions(filtered);
@@ -181,7 +184,7 @@ export default function TransactionsPage() {
                                         setDateRange(range || {from: undefined, to: undefined}); 
                                         // Trigger filter only after selection
                                         if (range?.from && range.to) {
-                                            const filtered = transactions.filter(t => t.date >= range.from! && t.date <= range.to!);
+                                            const filtered = transactions.filter(t => getSafeDate(t.date) >= range.from! && getSafeDate(t.date) <= range.to!);
                                             setFilteredTransactions(filtered);
                                         }
                                     }}
@@ -208,9 +211,13 @@ export default function TransactionsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredTransactions.map(t => (
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center">Loading transactions...</TableCell>
+                                </TableRow>
+                            ) : filteredTransactions.length > 0 ? filteredTransactions.map(t => (
                                 <TableRow key={t.id}>
-                                    <TableCell>{t.date.toLocaleDateString()}</TableCell>
+                                    <TableCell>{getSafeDate(t.date).toLocaleDateString()}</TableCell>
                                     <TableCell>
                                         <Badge variant={t.type === 'Revenue' ? 'default' : 'secondary'}>{t.type}</Badge>
                                     </TableCell>
@@ -219,8 +226,7 @@ export default function TransactionsPage() {
                                         {t.amount > 0 ? `+₹${t.amount.toLocaleString()}` : `-₹${Math.abs(t.amount).toLocaleString()}`}
                                     </TableCell>
                                 </TableRow>
-                            ))}
-                            {filteredTransactions.length === 0 && (
+                            )) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="text-center text-muted-foreground">No transactions found for the selected period.</TableCell>
                                 </TableRow>

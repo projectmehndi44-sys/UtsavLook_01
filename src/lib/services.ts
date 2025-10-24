@@ -443,6 +443,17 @@ export const deletePendingArtist = async (id: string): Promise<void> => {
     await deleteDoc(artistRef);
 };
 
+// New secure data fetching functions
+export const fetchCompletedBookings = async (): Promise<Booking[]> => {
+    const result = await callFirebaseFunction('getCompletedBookings', {});
+    return result.data as Booking[];
+}
+
+export const fetchPayoutHistory = async (): Promise<PayoutHistory[]> => {
+    const result = await callFirebaseFunction('getPayoutHistory', {});
+    return result.data as PayoutHistory[];
+}
+
 
 // To be DEPRECATED. Use listeners instead for performance.
 async function getCollection<T>(collectionName: string): Promise<T[]> {

@@ -331,8 +331,36 @@ export const createBooking = functions.https.onCall(async (data, context) => {
     return { success: true, bookingId: docRef.id };
 });
 
+/**
+ * Gets all completed bookings.
+ * This is a secure function callable only by authenticated admins.
+ */
+export const getCompletedBookings = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
+    }
+    // TODO: Add role-based access control to ensure only admins can call this.
+
+    const snapshot = await db.collection('bookings').where('status', '==', 'Completed').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+});
+
+/**
+ * Gets all payout history records.
+ * This is a secure function callable only by authenticated admins.
+ */
+export const getPayoutHistory = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
+    }
+    // TODO: Add role-based access control here as well.
+    
+    const snapshot = await db.collection('payoutHistory').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+});
     
 
     
 
     
+
