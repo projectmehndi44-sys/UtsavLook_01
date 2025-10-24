@@ -29,6 +29,26 @@ export default function ArtistLoginPage() {
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
+    // This effect will handle redirecting already logged-in users.
+    React.useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is logged in, verify if they are an artist
+                const artistProfile = await getArtist(user.uid);
+                if (artistProfile) {
+                    // If they are an artist, redirect to dashboard
+                    router.push('/artist/dashboard');
+                }
+                // If not an artist, they will be signed out by other layout effects,
+                // so we don't need to do anything here.
+            }
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, [auth, router]);
+
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -41,6 +61,7 @@ export default function ArtistLoginPage() {
                 toast({ title: 'Access Denied', description: 'This account is not registered as an artist.', variant: 'destructive' });
              } else {
                 toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
+                router.push('/artist/dashboard'); // The missing redirect
              }
         } catch (error: any) {
             console.error("Login error:", error);
