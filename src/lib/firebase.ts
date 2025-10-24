@@ -19,6 +19,10 @@ const firebaseConfig = {
 // --- Singleton Pattern for Firebase App Initialization ---
 export const getFirebaseApp = (): FirebaseApp => {
     if (getApps().length === 0) {
+        // In a Vercel production environment, dynamically set the authDomain
+        if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_URL) {
+            firebaseConfig.authDomain = process.env.NEXT_PUBLIC_VERCEL_URL;
+        }
         return initializeApp(firebaseConfig);
     } else {
         return getApp();
