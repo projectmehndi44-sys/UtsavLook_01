@@ -150,7 +150,7 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
                     </div>
                 </header>
                  <div className="w-full px-4 md:px-8 py-8">
-                    <div className="grid md:grid-cols-[240px_1fr] gap-8">
+                    <div className="grid md:grid-cols-[200px_1fr] gap-8">
                         <aside className="hidden md:flex flex-col gap-2">
                             <nav className="flex flex-col gap-1">
                                 {navLinks.map(link => (
