@@ -13,7 +13,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      // Checks if the user's UID exists as a key in the members map.
+      // Securely check for admin role: must be signed in, config must exist, and UID must be a key in the members map.
       return isSignedIn() && 
              exists(/databases/$(database)/documents/config/teamMembers) && 
              (request.auth.uid in get(/databases/$(database)/documents/config/teamMembers).data.members);
@@ -28,13 +28,8 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    match /masterServices/{serviceId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // --- Configuration ---
-    // Configs are readable by all, but only writable by admins.
+    // Config documents are generally readable by all to bootstrap the app.
+    // MasterServices was previously its own collection, now it's under config.
     match /config/{docId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -42,14 +37,14 @@ service cloud.firestore {
     
     // --- User-Specific & Business Logic Collections ---
     
-    // Customers can only manage their own profile.
+    // Customers can only manage their own profile. Admins have oversight.
     match /customers/{userId} {
       allow get, update: if isOwner(userId);
       allow create: if isSignedIn();
       allow list, delete: if isAdmin();
     }
     
-    // Bookings have complex ownership rules.
+    // Bookings have complex ownership rules based on the user's role.
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
       allow read, update: if (isOwner(resource.data.customerId)) ||
@@ -58,7 +53,7 @@ service cloud.firestore {
       allow list, delete: if isAdmin();
     }
     
-    // Anyone can submit an application, only admins can process it.
+    // Anyone can submit an artist application, but only admins can process it.
     match /pendingArtists/{pendingId} {
       allow create: if true;
       allow read, list, delete: if isAdmin();
@@ -70,7 +65,7 @@ service cloud.firestore {
        allow list, write: if isAdmin();
     }
     
-    // Payout history is for admins only.
+    // Payout history is sensitive and for admins only.
     match /payoutHistory/{payoutId} {
       allow read, list, write: if isAdmin();
     }

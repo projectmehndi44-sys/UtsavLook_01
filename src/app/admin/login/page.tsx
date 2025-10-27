@@ -47,24 +47,16 @@ export default function AdminLoginPage() {
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
     React.useEffect(() => {
-        if (isAuthLoading) return;
-        if (isAuthenticated) {
-            router.push('/admin');
-            return;
-        }
-
-        const checkSuperAdmin = async () => {
-            try {
-                const members = await getTeamMembers();
-                const superAdminExists = members.some(m => m.role === 'Super Admin');
-                setPageState(superAdminExists ? 'login' : 'setup');
-            } catch (error) {
-                console.error("Error checking for super admin:", error);
-                setPageState('login'); // Default to login on error
+        const determinePageState = async () => {
+            if (isAuthLoading) return;
+            if (isAuthenticated) {
+                router.push('/admin');
+                return;
             }
+            // By default, show the login page. The setup flow will be triggered by a specific error.
+            setPageState('login');
         };
-
-        checkSuperAdmin();
+        determinePageState();
     }, [isAuthLoading, isAuthenticated, router]);
 
     const loginForm = useForm<LoginFormValues>({
@@ -81,6 +73,15 @@ export default function AdminLoginPage() {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
             const teamMembers = await getTeamMembers();
+            
+            // This is the condition to check if setup is needed.
+            if (teamMembers.length === 0) {
+                toast({ title: 'Setup Required', description: 'No admin accounts found. Please create the first Super Admin account.', variant: 'destructive'});
+                setPageState('setup');
+                await auth.signOut(); // Log out the user to force setup.
+                return;
+            }
+
             const memberProfile = teamMembers.find(m => m.id === userCredential.user.uid);
             
             if (memberProfile) {
@@ -153,25 +154,11 @@ export default function AdminLoginPage() {
 
         } catch (error: any) {
             if (error.code === 'auth/email-already-in-use') {
-                // If the email exists in Auth, but not as a Super Admin in our DB (which we checked for),
-                // we can assume we need to create the DB record and then let them log in.
                 toast({ 
                     title: "Account Exists", 
-                    description: "An auth account with this email already exists. We'll set it up as admin. Please try logging in.",
-                    variant: "default"
+                    description: "An auth account with this email already exists. Please try a different email or log in if you are already an admin.",
+                    variant: "destructive"
                 });
-                
-                // Let's create a placeholder admin to fix the state. The user can then reset password.
-                const superAdminMember: TeamMember = {
-                    id: `placeholder_${Date.now()}`, // Placeholder ID, will be updated on next successful login.
-                    name: data.name,
-                    username: data.email,
-                    role: 'Super Admin',
-                    permissions: initialTeamMembers[0].permissions, // Use default full permissions
-                };
-                 await saveTeamMembers([superAdminMember]);
-                 setPageState('login');
-
             } else {
                 toast({ title: 'Setup Failed', description: error.message, variant: 'destructive' });
             }
@@ -273,5 +260,3 @@ export default function AdminLoginPage() {
         </>
     );
 }
-
-    
