@@ -1,4 +1,5 @@
 
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type ImagePlaceholder = {
@@ -13,6 +14,10 @@ export type BenefitImage = {
   title: string;
   description: string;
   imageUrl: string;
+}
+
+export type HeroSettings = {
+  slideshowText: string;
 }
 
 export type PromotionalImage = {

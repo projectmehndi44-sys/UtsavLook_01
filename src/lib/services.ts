@@ -1,8 +1,9 @@
 
 
+
 import { getDb } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
-import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage } from '@/lib/types';
+import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage, HeroSettings } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getFirebaseApp } from './firebase';
@@ -399,6 +400,14 @@ export const getPromotionalImage = async (): Promise<{ imageUrl: string } | null
 
 export const savePromotionalImage = async (data: { imageUrl: string }): Promise<void> => {
     return setConfigDocument('promotionalImage', data);
+};
+
+export const getHeroSettings = async (): Promise<HeroSettings> => {
+    const settings = await getConfigDocument<HeroSettings>('heroSettings');
+    return settings || { slideshowText: 'Artistry for Every Occasion' };
+};
+export const saveHeroSettings = async (data: HeroSettings): Promise<void> => {
+    await setConfigDocument('heroSettings', data);
 };
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {

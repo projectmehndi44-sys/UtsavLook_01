@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -7,12 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift, Megaphone, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, Save, PlusCircle, Gift, Megaphone, Loader2, Text, SlidersHorizontal } from 'lucide-react';
 import NextImage from 'next/image';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import type { ImagePlaceholder, BenefitImage } from '@/lib/types';
-import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage, uploadSiteImage, deleteSiteImage } from '@/lib/services';
+import type { ImagePlaceholder, BenefitImage, HeroSettings } from '@/lib/types';
+import { getPlaceholderImages, savePlaceholderImages, getBenefitImages, saveBenefitImages, getPromotionalImage, savePromotionalImage, uploadSiteImage, deleteSiteImage, getHeroSettings, saveHeroSettings } from '@/lib/services';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -50,9 +51,14 @@ const benefitFormSchema = z.object({
     benefitImages: z.array(benefitImageSchema)
 });
 
+const heroSettingsSchema = z.object({
+  slideshowText: z.string().min(1, "Slideshow text is required."),
+});
+
 type DeleteDialogState = {
     index: number;
     imageUrl: string;
+    arrayName: 'hero-slideshow' | 'gallery' | 'background';
 } | null;
 
 
@@ -75,11 +81,15 @@ export default function ImageManagementPage() {
         defaultValues: { benefitImages: [] }
     });
 
-    const { fields: placeholderFields, append, remove } = useFieldArray({
-        control: placeholderForm.control,
-        name: "images"
+    const heroSettingsForm = useForm<z.infer<typeof heroSettingsSchema>>({
+        resolver: zodResolver(heroSettingsSchema),
+        defaultValues: { slideshowText: "" }
     });
     
+    const { fields: heroSlideshowFields, append: appendHero, remove: removeHero } = useFieldArray({ control: placeholderForm.control, name: "images" });
+    const { fields: galleryFields, append: appendGallery, remove: removeGallery } = useFieldArray({ control: placeholderForm.control, name: "images" });
+    const { fields: backgroundFields, append: appendBg, remove: removeBg } = useFieldArray({ control: placeholderForm.control, name: "images" });
+
     const { fields: benefitFields, replace } = useFieldArray({
         control: benefitsForm.control,
         name: "benefitImages"
@@ -91,14 +101,21 @@ export default function ImageManagementPage() {
         Promise.all([
             getPlaceholderImages(),
             getBenefitImages(),
-            getPromotionalImage()
-        ]).then(([placeholderData, benefitData, promoData]) => {
+            getPromotionalImage(),
+            getHeroSettings()
+        ]).then(([placeholderData, benefitData, promoData, heroData]) => {
             placeholderForm.reset({ images: placeholderData });
             replace(benefitData);
+            heroSettingsForm.reset(heroData);
             if (promoData) setPromoImage(promoData.imageUrl);
             setIsLoading(false);
         });
-    }, [placeholderForm, replace]);
+    }, [placeholderForm, replace, heroSettingsForm]);
+    
+    const getFieldsForCategory = (category: string) => {
+        const allFields = placeholderForm.getValues('images');
+        return allFields.map((img, index) => ({...img, originalIndex: index})).filter(img => img.id.startsWith(category));
+    };
 
     const onPlaceholderSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
@@ -119,6 +136,16 @@ export default function ImageManagementPage() {
             toast({ title: 'Error Saving Images', description: 'Could not update the benefit images.', variant: 'destructive' });
         }
     };
+
+    const onHeroSettingsSubmit = async (data: z.infer<typeof heroSettingsSchema>) => {
+        try {
+            await saveHeroSettings(data);
+            toast({ title: "Hero Settings Saved", description: "The homepage hero text has been updated."});
+        } catch (error) {
+            console.error("Failed to save hero settings", error);
+            toast({ title: 'Error Saving Settings', variant: 'destructive'});
+        }
+    }
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, uploadPath: string, uploadKey: string, onUploadComplete: (url: string) => void, compress: boolean) => {
         const file = event.target.files?.[0];
@@ -177,11 +204,10 @@ export default function ImageManagementPage() {
         const { index, imageUrl } = imageToDelete;
 
         try {
-            // Delete from storage first
             await deleteSiteImage(imageUrl);
-            
-            // Then remove from the form state
-            remove(index);
+            const allImages = placeholderForm.getValues('images');
+            allImages.splice(index, 1);
+            placeholderForm.reset({ images: allImages });
             
             toast({ title: "Image Deleted", description: "The image has been permanently deleted. Save changes to update the list." });
         } catch (error) {
@@ -191,6 +217,64 @@ export default function ImageManagementPage() {
             setImageToDelete(null);
         }
     };
+    
+    const renderPlaceholderCategory = (category: string, title: string, description: string, appendFn: (img: ImagePlaceholder) => void) => {
+        const fields = getFieldsForCategory(category);
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ImageIcon className="w-6 h-6 text-primary"/> {title}
+                    </CardTitle>
+                    <CardDescription>{description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {fields.map((field) => (
+                        <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                            <div className="md:col-span-1 space-y-2">
+                                <NextImage src={field.imageUrl} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
+                                <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-2 text-center hover:border-accent">
+                                    {isUploading[`placeholder-${field.originalIndex}`] ? <Loader2 className="h-6 w-6 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-6 w-6 text-muted-foreground" />}
+                                     <p className="mt-1 text-xs text-muted-foreground">Click to upload</p>
+                                    <Input 
+                                        id={`placeholder-upload-${field.originalIndex}`} 
+                                        type="file" 
+                                        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                        accept="image/*" 
+                                        onChange={(e) => handlePlaceholderImageUpload(e, field.originalIndex)} 
+                                        disabled={isUploading[`placeholder-${field.originalIndex}`]}
+                                    />
+                                </div>
+                            </div>
+                            <div className="md:col-span-2 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField control={placeholderForm.control} name={`images.${field.originalIndex}.id`} render={({ field }) => (
+                                        <FormItem><FormLabel>Image ID</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
+                                    )} />
+                                    <FormField control={placeholderForm.control} name={`images.${field.originalIndex}.imageHint`} render={({ field }) => (
+                                        <FormItem><FormLabel>AI Hint</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                                    )} />
+                                </div>
+                                 <FormField control={placeholderForm.control} name={`images.${field.originalIndex}.imageUrl`} render={({ field }) => (
+                                    <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
+                                )} />
+                                <FormField control={placeholderForm.control} name={`images.${field.originalIndex}.description`} render={({ field }) => (
+                                    <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
+                                )} />
+                                 <Button type="button" variant="destructive" size="sm" onClick={() => setImageToDelete({index: field.originalIndex, imageUrl: placeholderForm.getValues(`images.${field.originalIndex}.imageUrl`), arrayName: 'gallery' })} disabled={!hasPermission('settings', 'edit')}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </Button>
+                            </div>
+                        </Card>
+                    ))}
+                     <Button type="button" variant="outline" onClick={() => appendFn({ id: `${category}-${Date.now()}`, description: '', imageUrl: 'https://picsum.photos/800/600', imageHint: '' })}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add New Image to {title}
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
 
     if (isLoading) {
         return <p>Loading images...</p>;
@@ -201,6 +285,28 @@ export default function ImageManagementPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-lg font-semibold md:text-2xl">Site Image Management</h1>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><SlidersHorizontal />Homepage Hero Settings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Form {...heroSettingsForm}>
+                        <form onSubmit={heroSettingsForm.handleSubmit(onHeroSettingsSubmit)} className="space-y-4">
+                            <FormField control={heroSettingsForm.control} name="slideshowText" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Slideshow Overlay Text</FormLabel>
+                                    <FormControl><Input placeholder="e.g. Artistry for Every Occasion" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <Button type="submit" disabled={heroSettingsForm.formState.isSubmitting || !hasPermission('settings', 'edit')}>
+                                <Save className="mr-2 h-4 w-4" /> Save Hero Text
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
 
              <Card>
                 <CardHeader>
@@ -299,60 +405,11 @@ export default function ImageManagementPage() {
             
              <Form {...placeholderForm}>
                 <form onSubmit={placeholderForm.handleSubmit(onPlaceholderSubmit)}>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <ImageIcon className="w-6 h-6 text-primary"/> Placeholder Image Library
-                            </CardTitle>
-                            <CardDescription>
-                                Add, edit, or remove the general placeholder and marketing images used throughout the site.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {placeholderFields.map((field, index) => (
-                                <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                    <div className="md:col-span-1 space-y-2">
-                                        <NextImage src={placeholderForm.watch(`images.${index}.imageUrl`)} alt={field.id} width={200} height={150} className="rounded-md object-cover w-full aspect-[4/3]"/>
-                                        <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-2 text-center hover:border-accent">
-                                            {isUploading[`placeholder-${index}`] ? <Loader2 className="h-6 w-6 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-6 w-6 text-muted-foreground" />}
-                                             <p className="mt-1 text-xs text-muted-foreground">Click to upload</p>
-                                            <Input 
-                                                id={`placeholder-upload-${index}`} 
-                                                type="file" 
-                                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
-                                                accept="image/*" 
-                                                onChange={(e) => handlePlaceholderImageUpload(e, index)} 
-                                                disabled={isUploading[`placeholder-${index}`]}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="md:col-span-2 space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={placeholderForm.control} name={`images.${index}.id`} render={({ field }) => (
-                                                <FormItem><FormLabel>Image ID</FormLabel><FormControl><Input {...field} disabled /></FormControl></FormItem>
-                                            )} />
-                                            <FormField control={placeholderForm.control} name={`images.${index}.imageHint`} render={({ field }) => (
-                                                <FormItem><FormLabel>AI Hint</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
-                                            )} />
-                                        </div>
-                                         <FormField control={placeholderForm.control} name={`images.${index}.imageUrl`} render={({ field }) => (
-                                            <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
-                                        )} />
-                                        <FormField control={placeholderForm.control} name={`images.${index}.description`} render={({ field }) => (
-                                            <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage/></FormItem>
-                                        )} />
-                                         <Button type="button" variant="destructive" size="sm" onClick={() => setImageToDelete({index, imageUrl: placeholderForm.getValues(`images.${index}.imageUrl`)})} disabled={!hasPermission('settings', 'edit')}>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                        </Button>
-                                    </div>
-                                </Card>
-                            ))}
-                             <Button type="button" variant="outline" onClick={() => append({ id: `new-image-${Date.now()}`, description: '', imageUrl: 'https://picsum.photos/800/600', imageHint: '' })}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add New Placeholder Image
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    
+                     {renderPlaceholderCategory('hero-slideshow', 'Hero Slideshow Images', 'Images for the main hero section slideshow.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
+                     {renderPlaceholderCategory('our-work', 'Our Works Gallery Images', 'Images for the "Our Works" section.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
+                     {renderPlaceholderlerCategory('hero-background', 'Hero Background Images', 'Images for the hero background.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
+                     
                     <div className="mt-6">
                         <Button type="submit" className="w-full" disabled={placeholderForm.formState.isSubmitting || !hasPermission('settings', 'edit')}>
                             <Save className="mr-2 h-4 w-4" /> Save All Placeholder Changes

@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import * as React from 'react';
-import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder } from '@/lib/types';
-import { getCustomer, getPlaceholderImages, listenToCollection } from '@/lib/services';
+import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder, HeroSettings } from '@/lib/types';
+import { getCustomer, getPlaceholderImages, getHeroSettings, listenToCollection } from '@/lib/services';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -44,13 +45,12 @@ export default function Home() {
   const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
   
   const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
-  const [backgroundImages, setBackgroundImages] = React.useState<ImagePlaceholder[]>([]);
+  const [heroSlideshowImages, setHeroSlideshowImages] = React.useState<ImagePlaceholder[]>([]);
+  const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
 
 
   const { toast } = useToast();
 
-  const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
-  
   const handleCustomerLogout = React.useCallback(() => {
     setIsCustomerLoggedIn(false);
     setCustomer(null);
@@ -103,21 +103,16 @@ export default function Home() {
 
     getPlaceholderImages().then(images => {
         setGalleryImages(images.filter(img => img.id.startsWith('our-work')));
-        setBackgroundImages(images.filter(img => img.id.startsWith('hero-background')));
+        setHeroSlideshowImages(images.filter(img => img.id.startsWith('hero-slideshow')));
     });
 
-
-    const intervalId = setInterval(() => {
-      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % (backgroundImages.length || 1));
-    }, 5000); 
-
+    getHeroSettings().then(setHeroSettings);
 
     return () => {
-        clearInterval(intervalId);
         unsubscribeArtists();
         unsubscribePackages();
     };
-  }, [checkLoggedInCustomer, backgroundImages.length]);
+  }, [checkLoggedInCustomer]);
   
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
@@ -150,22 +145,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
       <div id="recaptcha-container" style={{ position: 'absolute', bottom: 0, right: 0, zIndex: -1 }}></div>
-      <div className="fixed inset-0 -z-10 h-full w-full">
-          {backgroundImages.map((image, index) => (
-              <Image
-                  key={image.id}
-                  src={image.imageUrl}
-                  alt={image.description}
-                  fill
-                  className={cn(
-                      'object-cover transition-opacity duration-1000 ease-in-out',
-                      index === currentBgIndex ? 'opacity-20' : 'opacity-0'
-                  )}
-                  priority={index === 0}
-                  data-ai-hint={image.imageHint}
-              />
-          ))}
-      </div>
+      
       <Header 
         isCustomerLoggedIn={isCustomerLoggedIn}
         onCustomerLogout={handleCustomerLogout}
@@ -173,16 +153,52 @@ export default function Home() {
         cartCount={cart.length}
       />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="text-center py-8">
-            <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
-                Utsav<span className="text-primary">Look</span>
-            </h1>
-            <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
-            <div className="mt-4 font-body text-base text-foreground/80 max-w-3xl mx-auto md:text-lg">
-              <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists,</p>
-              <p>all verified professionals dedicated to making your special day unforgettable.</p>
+         <div className="container mx-auto py-12">
+            <div className="group relative rounded-xl bg-card p-4 shadow-lg transition-shadow hover:shadow-2xl">
+                <div className="grid md:grid-cols-2 gap-4">
+                    {/* Left Box: Text */}
+                    <div className="flex flex-col justify-center p-6 text-center md:text-left">
+                         <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
+                            Utsav<span className="text-primary">Look</span>
+                        </h1>
+                        <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
+                        <div className="mt-4 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
+                          <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists, all verified professionals dedicated to making your special day unforgettable.</p>
+                        </div>
+                    </div>
+                    {/* Right Box: Slideshow */}
+                    <div className="relative aspect-square md:aspect-[4/3] rounded-lg overflow-hidden">
+                        <Carousel
+                            opts={{ align: "start", loop: true }}
+                            plugins={[ Autoplay({ delay: 4000 }) ]}
+                            className="w-full h-full"
+                        >
+                            <CarouselContent>
+                                {heroSlideshowImages.length > 0 ? heroSlideshowImages.map((image, index) => (
+                                    <CarouselItem key={index}>
+                                        <Image src={image.imageUrl} alt={image.description} fill className="object-cover" data-ai-hint={image.imageHint} />
+                                    </CarouselItem>
+                                )) : (
+                                    <CarouselItem>
+                                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                                            <p>Images coming soon</p>
+                                        </div>
+                                    </CarouselItem>
+                                )}
+                            </CarouselContent>
+                        </Carousel>
+                        {heroSettings.slideshowText && (
+                            <div className="absolute bottom-4 left-4 right-4 bg-black/50 text-white p-3 rounded-lg text-center backdrop-blur-sm">
+                                <p className="font-semibold text-lg">{heroSettings.slideshowText}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* Divider Shadow */}
+                <div className="absolute left-1/2 top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-border to-transparent hidden md:block"></div>
             </div>
-        </div>
+         </div>
+
 
         {isCustomerLoggedIn && (
             <div id="style-match" className="py-8">
