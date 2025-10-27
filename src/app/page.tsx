@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -186,21 +185,21 @@ export default function Home() {
                     {/* Left Box: Text */}
                     <div className="flex flex-col justify-center p-6 text-center md:text-left md:col-span-4">
                          <div className="mb-4">
-                            <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
+                            <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
                                 Utsav<span className="text-primary">Look</span>
                             </h1>
                             <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
                         </div>
                         
-                        <div className="mt-6 text-3xl md:text-4xl font-bold text-foreground/80">
-                            Crafting Memories for Your
+                        <div className="mt-6">
+                            <span className="font-bold text-foreground/80 text-2xl md:text-3xl lg:text-4xl whitespace-nowrap">Crafting Memories for Your</span>
                             <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl md:text-6xl">
                                 {currentOccasion}
                             </div>
                             <p className="text-lg font-light text-muted-foreground mt-1">with UtsavLook</p>
                         </div>
                         
-                        <div className="mt-6 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
+                        <div className="mt-8 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
                            <p>Book top-rated & verified professionals for your special day.</p>
                         </div>
                     </div>
