@@ -27,7 +27,20 @@ import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 
-const occasionWords = ["Wedding", "Birthday", "Puja", "Sangeet", "Festival", "Reception", "Party"];
+const occasionWords = [
+  "Wedding", 
+  "Birthday", 
+  "Puja", 
+  "Sangeet", 
+  "Festival", 
+  "Reception", 
+  "Party",
+  "Engagement",
+  "Anniversary",
+  "Baby Shower",
+  "Haldi",
+  "Mehendi"
+];
 
 export default function Home() {
   const router = useRouter();
