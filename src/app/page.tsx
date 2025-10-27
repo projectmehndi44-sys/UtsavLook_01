@@ -192,15 +192,15 @@ export default function Home() {
                         </div>
                         
                         <div className="mt-6">
-                            <span className="font-bold text-foreground/80 text-2xl md:text-3xl lg:text-4xl whitespace-nowrap">Crafting Memories for Your</span>
-                            <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl md:text-6xl font-bold">
+                            <span className="font-bold text-foreground/80 text-2xl md:text-3xl whitespace-nowrap">Crafting Memories for Your</span>
+                            <div key={animationKey} className="animated-gradient-text fade-in-out font-bold text-5xl md:text-6xl">
                                 {currentOccasion}
                             </div>
                             <p className="text-lg font-light text-muted-foreground mt-1">with UtsavLook</p>
                         </div>
                         
                         <div className="mt-8 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
-                           <p>Book top-rated & verified professionals for your special day.</p>
+                           <p>Book top-rated Mehendi, Makeup, and Photography artists.<br/>All verified professionals dedicated to making your special day unforgettable.</p>
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
