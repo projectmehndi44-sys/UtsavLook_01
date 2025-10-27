@@ -23,20 +23,20 @@ service cloud.firestore {
     
     // Artists and MasterServices are public for browsing.
     match /artists/{artistId} {
-      allow read: true;
+      allow read: if true;
       allow create, update: if isOwner(artistId) || isAdmin();
       allow delete: if isAdmin();
     }
     
     match /masterServices/{serviceId} {
-      allow read: true;
+      allow read: if true;
       allow create, update, delete: if isAdmin();
     }
     
     // --- Configuration ---
     // Configs are readable by all, but only writable by admins.
     match /config/{docId} {
-      allow read: true;
+      allow read: if true;
       allow write: if isAdmin();
     }
     
@@ -60,7 +60,7 @@ service cloud.firestore {
     
     // Anyone can submit an application, only admins can process it.
     match /pendingArtists/{pendingId} {
-      allow create: true;
+      allow create: if true;
       allow read, list, delete: if isAdmin();
     }
 
