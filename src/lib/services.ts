@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, whe
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage, HeroSettings } from '@/lib/types';
 import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { getAuth } from 'firebase/auth';
 import { getFirebaseApp } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -79,16 +80,39 @@ async function getDocument<T>(collectionName: string, id: string): Promise<T | n
 async function getConfigDocument<T>(docId: string): Promise<T | null> {
     const db = await getDb();
     const docRef = doc(db, 'config', docId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data && data.hasOwnProperty('packages')) return data.packages as T;
-        if (data && data.hasOwnProperty('members')) return data.members as T;
-        if (data && data.hasOwnProperty('promos')) return data.promos as T;
-        if (data && data.hasOwnProperty('locations')) return data as T; // Locations stored at root
-        if (data && data.hasOwnProperty('images')) return data.images as T;
-        if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
-        return data as T; // Fallback for flat config docs
+
+    // Ensure user is authenticated before trying to access potentially sensitive configs
+    if (docId === 'financialSettings') {
+        const auth = getAuth(getFirebaseApp());
+        if (!auth.currentUser) {
+             const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            return null;
+        }
+    }
+
+    try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            // These checks are for legacy data structures
+            if (data && data.hasOwnProperty('packages')) return data.packages as T;
+            if (data && data.hasOwnProperty('members')) return data.members as T;
+            if (data && data.hasOwnProperty('promos')) return data.promos as T;
+            if (data && data.hasOwnProperty('locations')) return data as T;
+            if (data && data.hasOwnProperty('images')) return data.images as T;
+            if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
+            return data as T; // Fallback for flat config docs
+        }
+    } catch (serverError) {
+         const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
     }
     return null;
 }
@@ -446,9 +470,9 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
         const data = docSnap.data();
         return (data.members || []) as TeamMember[];
     }
-    // If the document doesn't exist or has no members, seed it with initial data.
-    await setConfigDocument('teamMembers', initialTeamMembers);
-    return initialTeamMembers;
+    // If the document doesn't exist or has no members, return an empty array,
+    // The login page will handle seeding.
+    return [];
 };
 export const saveTeamMembers = (members: TeamMember[]) => setConfigDocument('teamMembers', members);
 

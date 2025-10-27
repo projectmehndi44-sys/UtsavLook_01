@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -30,11 +31,13 @@ export default function ArtistPayoutsPage() {
     const [payouts, setPayouts] = React.useState<Booking[]>([]);
     const [payoutHistory, setPayoutHistory] = React.useState<PayoutHistory[]>([]);
     const [pendingAmount, setPendingAmount] = React.useState(0);
-    const platformFeePercentage = React.useRef(0.1);
+    const [platformFeePercentage, setPlatformFeePercentage] = React.useState(0.1);
 
     React.useEffect(() => {
         getFinancialSettings().then(settings => {
-             platformFeePercentage.current = settings.platformFeePercentage / 100;
+             if (settings) {
+                setPlatformFeePercentage(settings.platformFeePercentage / 100);
+             }
         });
     }, []);
 
@@ -64,10 +67,10 @@ export default function ArtistPayoutsPage() {
         }, 0);
         
         const taxableAmount = totalPendingGross / 1.18;
-        const platformFee = taxableAmount * platformFeePercentage.current;
+        const platformFee = taxableAmount * platformFeePercentage;
         setPendingAmount(taxableAmount - platformFee);
 
-    }, [artistBookings, artist]);
+    }, [artistBookings, artist, platformFeePercentage]);
 
     return (
         <Card>

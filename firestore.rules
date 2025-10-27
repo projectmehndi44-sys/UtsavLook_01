@@ -21,7 +21,6 @@ service cloud.firestore {
 
     // --- Publicly Readable Collections ---
     
-    // Artists and MasterServices are public for browsing.
     match /artists/{artistId} {
       allow read: if true;
       allow create, update: if isOwner(artistId) || isAdmin();
@@ -34,30 +33,32 @@ service cloud.firestore {
     }
     
     // --- Configuration ---
-    // All config documents are under a single collection.
-    // Public configs can be read by anyone, but only written by admins.
     match /config/{docId} {
+      // Allow public read ONLY for configs needed for public pages.
       allow read: if docId == 'teamMembers' || 
                      docId == 'availableLocations' || 
-                     docId == 'companyProfile' || 
-                     docId == 'financialSettings' ||
+                     docId == 'companyProfile' ||
                      docId == 'placeholderImages' ||
                      docId == 'benefitImages' ||
                      docId == 'promotionalImage' ||
                      docId == 'heroSettings';
+      
+      // Allow authenticated users (artists/admins) to read other configs.
+      allow read: if isSignedIn() && 
+                    (docId == 'financialSettings');
+
+      // Only admins can write to any config file.
       allow write: if isAdmin();
     }
     
     // --- User-Specific & Business Logic Collections ---
     
-    // Customers can only manage their own profile.
     match /customers/{userId} {
       allow get, update: if isOwner(userId);
       allow create: if isSignedIn();
       allow list, delete: if isAdmin();
     }
     
-    // Bookings have complex ownership rules.
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
       allow read, update: if (isOwner(resource.data.customerId)) ||
