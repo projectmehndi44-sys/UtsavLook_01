@@ -25,6 +25,7 @@ import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
 import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
+import { occasionImages, OccasionImage } from '@/lib/occasion-images';
 
 const occasionWords = [
     "Wedding", 
@@ -58,7 +59,7 @@ export default function Home() {
   const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
   
   const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
-  const [heroSlideshowImages, setHeroSlideshowImages] = React.useState<ImagePlaceholder[]>([]);
+  const [heroSlideshowImages, setHeroSlideshowImages] = React.useState<OccasionImage[]>([]);
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
   const [currentOccasion, setCurrentOccasion] = React.useState(occasionWords[0]);
@@ -130,8 +131,9 @@ export default function Home() {
 
     getPlaceholderImages().then(images => {
         setGalleryImages(images.filter(img => img.id.startsWith('our-work')));
-        setHeroSlideshowImages(images.filter(img => img.id.startsWith('hero-slideshow')));
     });
+
+    setHeroSlideshowImages(occasionImages);
 
     getHeroSettings().then(setHeroSettings);
 
@@ -213,7 +215,7 @@ export default function Home() {
                             <CarouselContent>
                                 {heroSlideshowImages.length > 0 ? heroSlideshowImages.map((image, index) => (
                                     <CarouselItem key={index}>
-                                        <Image src={image.imageUrl} alt={image.description} fill className="object-cover" data-ai-hint={image.imageHint} />
+                                        <Image src={image.imageUrl} alt={image.occasion} fill className="object-cover" />
                                     </CarouselItem>
                                 )) : (
                                     <CarouselItem>

@@ -5,16 +5,17 @@ export type OccasionImage = {
 };
 
 export const occasionImages: OccasionImage[] = [
-  { occasion: 'Wedding', imageUrl: 'https://picsum.photos/seed/wedding/1200/900' },
-  { occasion: 'Birthday', imageUrl: 'https://picsum.photos/seed/birthday/1200/900' },
-  { occasion: 'Puja', imageUrl: 'https://picsum.photos/seed/puja/1200/900' },
-  { occasion: 'Sangeet', imageUrl: 'https://picsum.photos/seed/sangeet/1200/900' },
-  { occasion: 'Festival', imageUrl: 'https://picsum.photos/seed/festival/1200/900' },
-  { occasion: 'Reception', imageUrl: 'https://picsum.photos/seed/reception/1200/900' },
-  { occasion: 'Party', imageUrl: 'https://picsum.photos/seed/party/1200/900' },
-  { occasion: 'Engagement', imageUrl: 'https://picsum.photos/seed/engagement/1200/900' },
-  { occasion: 'Anniversary', imageUrl: 'https://picsum.photos/seed/anniversary/1200/900' },
-  { occasion: 'Baby Shower', imageUrl: 'https://picsum.photos/seed/baby-shower/1200/900' },
-  { occasion: 'Haldi', imageUrl: 'https://picsum.photos/seed/haldi/1200/900' },
-  { occasion: 'Mehendi', imageUrl: 'https://picsum.photos/seed/mehendi/1200/900' },
+  // --- Paste your new URLs below ---
+  { occasion: 'Wedding', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/1%20Wedding.png?alt=media&token=6d646b1a-7b25-44ad-9d19-894cfffbf340' },
+  { occasion: 'Birthday', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/2%20Birthday.png?alt=media&token=225169f4-0eb8-4093-95ac-b807c1d0f0b2' },
+  { occasion: 'Puja', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/3%20Puja%20(2).png?alt=media&token=d186459b-72af-436b-8afe-6ef9afdcb265' },
+  { occasion: 'Sangeet', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/4%20Sangeet.png?alt=media&token=6320a546-3f24-4f2c-8547-8857fd673b84' },
+  { occasion: 'Festival', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/5%20Festival.png?alt=media&token=0ebc82e9-8b57-452d-8e8e-8c935da7f42e' },
+  { occasion: 'Reception', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/6.%20Reciption.png?alt=media&token=c5fce24e-e394-4bcd-9c88-1beed42bcab9' },
+  { occasion: 'Party', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/7%20Party.png?alt=media&token=996f8b88-e5f5-41e7-a54c-27085857c241' },
+  { occasion: 'Engagement', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/8%20engagement.png?alt=media&token=1f0bb27a-334b-4920-88fe-6f19f182edee' },
+  { occasion: 'Anniversary', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/9%20Anniversary.png?alt=media&token=5581ac44-f1a5-4e68-b69b-45dc97635b42' },
+  { occasion: 'Baby Shower', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/10%20Baby%20Shower.png?alt=media&token=a989982e-a6b7-45a6-b731-7964946915d5' },
+  { occasion: 'Haldi', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/11%20Haldi.png?alt=media&token=4c114bb9-ef50-454a-b3b4-edc9036438cd' },
+  { occasion: 'Mehendi', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/12%20Mehendi.png?alt=media&token=db77c8e0-e580-48ae-b8d7-f361145c0e4c' }
 ];
