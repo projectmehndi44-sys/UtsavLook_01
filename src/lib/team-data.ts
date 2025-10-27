@@ -26,24 +26,17 @@ export const PERMISSION_MODULES: { key: keyof Permissions, label: string }[] = [
 ];
 
 
-// This data is used to seed the Firestore database for team members if it's empty.
-// The password is set in the login page's one-time setup effect.
-export const initialTeamMembers: Omit<TeamMember, 'id'>[] = [
-    {
-        name: 'Abhishek Jaiswal',
-        username: 'utsavlook01@gmail.com',
-        role: 'Super Admin',
-        permissions: { // Admin has all rights by default, this is illustrative
-            dashboard: 'edit',
-            bookings: 'edit',
-            artists: 'edit',
-            customers: 'edit',
-            artistDirectory: 'edit',
-            payouts: 'edit',
-            transactions: 'edit',
-            packages: 'edit',
-            settings: 'edit',
-            notifications: 'edit',
-        }
-    }
-];
+// This data is used to define permissions for a new Super Admin.
+// It is no longer used to seed the database directly.
+export const initialSuperAdminPermissions: Permissions = {
+    dashboard: 'edit',
+    bookings: 'edit',
+    artists: 'edit',
+    customers: 'edit',
+    artistDirectory: 'edit',
+    payouts: 'edit',
+    transactions: 'edit',
+    packages: 'edit',
+    settings: 'edit',
+    notifications: 'edit',
+};

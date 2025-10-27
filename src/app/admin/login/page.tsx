@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -14,14 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
-import { getTeamMembers, saveTeamMembers } from '@/lib/services';
+import { getTeamMembers } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { initialTeamMembers } from '@/lib/team-data';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
-import type { TeamMember } from '@/lib/types';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -29,12 +25,6 @@ const loginSchema = z.object({
 });
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-const setupSchema = z.object({
-    name: z.string().min(3, "Name is required."),
-    email: z.string().email("A valid email is required."),
-    password: z.string().min(6, "Password must be at least 6 characters."),
-});
-type SetupFormValues = z.infer<typeof setupSchema>;
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -42,31 +32,13 @@ export default function AdminLoginPage() {
     const auth = getAuth(getFirebaseApp());
     const { isAuthenticated, isLoading: isAuthLoading } = useAdminAuth();
     
-    const [pageState, setPageState] = React.useState<'loading' | 'setup' | 'login'>('loading');
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
     React.useEffect(() => {
-        const determinePageState = async () => {
-            if (isAuthLoading) return;
-            if (isAuthenticated) {
-                router.push('/admin');
-                return;
-            }
-            
-            try {
-                const teamMembers = await getTeamMembers();
-                if (teamMembers.length === 0) {
-                    setPageState('setup');
-                } else {
-                    setPageState('login');
-                }
-            } catch (error) {
-                console.error("Error checking for team members:", error);
-                setPageState('login'); // Default to login on error
-            }
-        };
-        determinePageState();
+        if (!isAuthLoading && isAuthenticated) {
+            router.push('/admin');
+        }
     }, [isAuthLoading, isAuthenticated, router]);
 
     const loginForm = useForm<LoginFormValues>({
@@ -74,11 +46,6 @@ export default function AdminLoginPage() {
         defaultValues: { email: '', password: '' },
     });
     
-    const setupForm = useForm<SetupFormValues>({
-        resolver: zodResolver(setupSchema),
-        defaultValues: { name: '', email: '', password: '' },
-    });
-
     const handleLogin = async (data: LoginFormValues) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
@@ -97,13 +64,6 @@ export default function AdminLoginPage() {
             let description = 'An error occurred during login. Please try again.';
             if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                 description = 'Invalid credentials. Please check your username and password.';
-            } else if (error.code === 'auth/network-request-failed') {
-                 // Check if it's the setup scenario
-                const teamMembers = await getTeamMembers();
-                if (teamMembers.length === 0) {
-                    setPageState('setup');
-                    return;
-                }
             }
             toast({ title: 'Authentication Failed', description, variant: 'destructive' });
         }
@@ -129,39 +89,8 @@ export default function AdminLoginPage() {
             });
         }
     };
-
-    const handleSetup = async (data: SetupFormValues) => {
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const authUser = userCredential.user;
-
-            const superAdminMember: TeamMember = {
-                id: authUser.uid, // Use the actual UID from Firebase Auth
-                name: data.name,
-                username: data.email,
-                role: 'Super Admin',
-                permissions: initialTeamMembers[0].permissions // Use permissions from the template
-            };
-            
-            await saveTeamMembers([superAdminMember]);
-
-            toast({ title: 'Super Admin Created!', description: 'You can now log in with your new credentials.' });
-            setPageState('login');
-
-        } catch (error: any) {
-            if (error.code === 'auth/email-already-in-use') {
-                toast({ 
-                    title: "Account Exists", 
-                    description: "An auth account with this email already exists. Please try a different email or log in if you are already an admin.",
-                    variant: "destructive"
-                });
-            } else {
-                toast({ title: 'Setup Failed', description: error.message, variant: 'destructive' });
-            }
-        }
-    };
     
-    if (pageState === 'loading' || isAuthLoading) {
+    if (isAuthLoading || isAuthenticated) {
         return (
              <div className="w-full flex items-center justify-center min-h-screen bg-muted/30">
                 <p>Loading...</p>
@@ -169,71 +98,42 @@ export default function AdminLoginPage() {
         )
     }
 
-    const renderSetup = () => (
-        <div className="mx-auto grid w-[400px] gap-6">
-            <div className="grid gap-2 text-center">
-                <h1 className="text-3xl font-bold text-primary">Super Admin Setup</h1>
-                <p className="text-balance text-muted-foreground">Create the first administrator account for your platform.</p>
-            </div>
-            <Form {...setupForm}>
-                <form onSubmit={setupForm.handleSubmit(handleSetup)} className="grid gap-4">
-                    <FormField control={setupForm.control} name="name" render={({ field }) => (
-                        <FormItem><FormLabel>Your Name</FormLabel><FormControl><Input placeholder="e.g., Admin User" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={setupForm.control} name="email" render={({ field }) => (
-                        <FormItem><FormLabel>Login Email</FormLabel><FormControl><Input type="email" placeholder="admin@example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={setupForm.control} name="password" render={({ field }) => (
-                        <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <Button type="submit" className="w-full" disabled={setupForm.formState.isSubmitting}>
-                        {setupForm.formState.isSubmitting ? 'Creating Account...' : 'Create Super Admin'}
-                    </Button>
-                </form>
-            </Form>
-        </div>
-    );
-
-    const renderLogin = () => (
-        <div className="mx-auto grid w-[400px] gap-6">
-            <div className="grid gap-2 text-center">
-                <h1 className="text-3xl font-bold text-primary">Admin Portal Login</h1>
-                <p className="text-balance text-muted-foreground">Enter your team credentials to access your dashboard.</p>
-            </div>
-            <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="grid gap-4">
-                    <FormField control={loginForm.control} name="email" render={({ field }) => (
-                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={loginForm.control} name="password" render={({ field }) => (
-                        <FormItem>
-                            <div className="flex items-center">
-                                <FormLabel>Password</FormLabel>
-                                <Button variant="link" type="button" className="ml-auto inline-block text-sm underline" onClick={() => setIsForgotPasswordOpen(true)}>
-                                    Forgot Password?
-                                </Button>
-                            </div>
-                            <FormControl><Input type="password" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
-                        {loginForm.formState.isSubmitting ? 'Logging in...' : 'Login'}
-                    </Button>
-                </form>
-            </Form>
-            <div className="mt-4 text-center text-sm">
-                <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
-                    <Home className="mr-1 h-4 w-4" /> Back to Home
-                </Link>
-            </div>
-        </div>
-    );
-
     return (
         <>
             <div className="w-full flex items-center justify-center min-h-screen bg-muted/30">
-                {pageState === 'setup' ? renderSetup() : renderLogin()}
+                 <div className="mx-auto grid w-[400px] gap-6">
+                    <div className="grid gap-2 text-center">
+                        <h1 className="text-3xl font-bold text-primary">Admin Portal Login</h1>
+                        <p className="text-balance text-muted-foreground">Enter your team credentials to access your dashboard.</p>
+                    </div>
+                    <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(handleLogin)} className="grid gap-4">
+                            <FormField control={loginForm.control} name="email" render={({ field }) => (
+                                <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={loginForm.control} name="password" render={({ field }) => (
+                                <FormItem>
+                                    <div className="flex items-center">
+                                        <FormLabel>Password</FormLabel>
+                                        <Button variant="link" type="button" className="ml-auto inline-block text-sm underline" onClick={() => setIsForgotPasswordOpen(true)}>
+                                            Forgot Password?
+                                        </Button>
+                                    </div>
+                                    <FormControl><Input type="password" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                                {loginForm.formState.isSubmitting ? 'Logging in...' : 'Login'}
+                            </Button>
+                        </form>
+                    </Form>
+                    <div className="mt-4 text-center text-sm">
+                        <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors">
+                            <Home className="mr-1 h-4 w-4" /> Back to Home
+                        </Link>
+                    </div>
+                </div>
             </div>
            
             <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
