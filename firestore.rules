@@ -1,13 +1,20 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Allow public read access for artists and master services, as they are needed for the homepage.
     match /artists/{artistId} {
-      allow read;
+      allow get; // Read single artist
+    }
+    match /artists {
+      allow list; // Read list of artists
     }
 
     match /masterServices/{serviceId} {
-      allow read;
+      allow read; // Allow reading services
     }
+
+    // Other rules will go here. Default deny.
   }
 }
