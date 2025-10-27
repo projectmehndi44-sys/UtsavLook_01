@@ -179,11 +179,12 @@ export default function Home() {
                             <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
                         </div>
                         
-                        <div className="mt-4 text-xl md:text-2xl text-foreground/80">
-                            Artistry for your{" "}
-                            <span key={animationKey} className="animated-gradient-text font-bold fade-in-out">
+                        <div className="mt-6 text-2xl md:text-3xl font-bold text-foreground/80">
+                            Crafting Memories for Your
+                            <div key={animationKey} className="animated-gradient-text fade-in-out text-3xl md:text-4xl">
                                 {currentOccasion}
-                            </span>
+                            </div>
+                            <p className="text-lg font-light text-muted-foreground mt-1">with UtsavLook</p>
                         </div>
                         
                         <div className="mt-6 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
