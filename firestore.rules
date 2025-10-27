@@ -29,14 +29,22 @@ service cloud.firestore {
     }
     
     match /masterServices/{serviceId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
     
     // --- Configuration ---
+    // All config documents are under a single collection.
+    // Public configs can be read by anyone, but only written by admins.
     match /config/{docId} {
-      // Allow public read for essential startup configs.
-      allow read: if docId == 'teamMembers' || docId == 'availableLocations' || docId == 'companyProfile' || docId == 'financialSettings' || docId == 'placeholderImages' || docId == 'benefitImages' || docId == 'promotionalImage' || docId == 'heroSettings';
+      allow read: if docId == 'teamMembers' || 
+                     docId == 'availableLocations' || 
+                     docId == 'companyProfile' || 
+                     docId == 'financialSettings' ||
+                     docId == 'placeholderImages' ||
+                     docId == 'benefitImages' ||
+                     docId == 'promotionalImage' ||
+                     docId == 'heroSettings';
       allow write: if isAdmin();
     }
     
