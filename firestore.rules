@@ -27,7 +27,7 @@ service cloud.firestore {
     // Artists: Anyone can read public artist profiles and list them.
     // Only the artist themselves (owner) or an admin can create or update a profile.
     match /artists/{artistId} {
-      allow read: true;
+      allow read: if true;
       allow create, update: if isOwner(artistId) || isAdmin();
       // Deletion should be an admin-only action, handled by a secure Cloud Function.
       allow delete: if false; 
@@ -36,7 +36,7 @@ service cloud.firestore {
     // Config: Public configuration documents are readable by anyone.
     // Writing to config should only be done by admins, often through the app's admin portal.
     match /config/{docId} {
-      allow read: true;
+      allow read: if true;
       allow write: if isAdmin();
     }
     
@@ -74,7 +74,7 @@ service cloud.firestore {
     // - Create: Anyone can submit a registration.
     // - Read/Delete: Only admins can view and process pending applications.
     match /pendingArtists/{pendingId} {
-      allow create: true;
+      allow create: if true;
       allow read, delete: if isAdmin();
       allow list: if isAdmin();
     }
