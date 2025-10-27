@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -372,7 +373,7 @@ export default function CartPage() {
 
     return (
         <div className="bg-background">
-            <div className="container mx-auto px-4 py-12">
+            <div className="w-full px-4 md:px-8 py-12">
                  <div className="relative mb-4 text-center">
                     <h1 className="font-headline text-6xl md:text-8xl text-primary">
                         My Cart

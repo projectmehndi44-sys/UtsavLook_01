@@ -136,7 +136,7 @@ export default function Home() {
     const relevantPackages = masterServices.filter(p => p.service === serviceType);
     
     return (
-      <div className="space-y-8 mt-8">
+      <div className="space-y-8 mt-8 px-4 md:px-8">
         <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
       </div>
     );
@@ -152,9 +152,9 @@ export default function Home() {
         customer={customer}
         cartCount={cart.length}
       />
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-         <div className="container mx-auto py-12">
-            <div className="group relative rounded-xl bg-card p-4 shadow-lg transition-shadow hover:shadow-2xl">
+      <main className="flex flex-1 flex-col gap-4 md:gap-8">
+         <div className="w-full pt-8 md:pt-12">
+            <div className="group relative bg-card shadow-lg transition-shadow hover:shadow-2xl mx-4 md:mx-8 rounded-xl">
                 <div className="grid md:grid-cols-2 gap-4">
                     {/* Left Box: Text */}
                     <div className="flex flex-col justify-center p-6 text-center md:text-left">
@@ -201,12 +201,12 @@ export default function Home() {
 
 
         {isCustomerLoggedIn && (
-            <div id="style-match" className="py-8">
+            <div id="style-match" className="py-8 px-4 md:px-8">
                 <StyleMatch />
             </div>
         )}
 
-        <div className="mt-8">
+        <div className="mt-8 w-full">
             <h2 className="text-center font-headline text-5xl text-primary mb-8">Our Services</h2>
             <Tabs defaultValue="mehndi" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
@@ -240,7 +240,7 @@ export default function Home() {
                         delay: 3000,
                     }),
                 ]}
-                className="w-full max-w-6xl mx-auto"
+                className="w-full"
             >
                 <CarouselContent>
                     {galleryImages.map((image, index) => (

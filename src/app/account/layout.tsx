@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -129,7 +130,7 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
         <AccountContext.Provider value={contextValue}>
             <div className="min-h-screen bg-muted/40">
                 <header className="bg-background border-b sticky top-0 z-50">
-                    <div className="container mx-auto px-4 md:px-8 flex justify-between items-center py-3">
+                    <div className="w-full px-4 md:px-8 flex justify-between items-center py-3">
                          <div className="flex items-center gap-2 md:gap-4">
                             <Avatar>
                                 <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${customer.name}`} />
@@ -148,7 +149,7 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
                         </div>
                     </div>
                 </header>
-                 <div className="container mx-auto px-4 md:px-8 py-8">
+                 <div className="w-full px-4 md:px-8 py-8">
                     <div className="grid md:grid-cols-[240px_1fr] gap-8">
                         <aside className="hidden md:flex flex-col gap-2">
                             <nav className="flex flex-col gap-1">
