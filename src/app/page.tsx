@@ -28,18 +28,18 @@ import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 
 const occasionWords = [
-  "Wedding", 
-  "Birthday", 
-  "Puja", 
-  "Sangeet", 
-  "Festival", 
-  "Reception", 
-  "Party",
-  "Engagement",
-  "Anniversary",
-  "Baby Shower",
-  "Haldi",
-  "Mehendi"
+    "Wedding", 
+    "Birthday", 
+    "Puja", 
+    "Sangeet", 
+    "Festival", 
+    "Reception", 
+    "Party",
+    "Engagement",
+    "Anniversary",
+    "Baby Shower",
+    "Haldi",
+    "Mehendi"
 ];
 
 export default function Home() {
@@ -192,7 +192,7 @@ export default function Home() {
                             <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
                         </div>
                         
-                        <div className="mt-6 text-2xl md:text-3xl font-bold text-foreground/80">
+                        <div className="mt-6 text-3xl md:text-4xl font-bold text-foreground/80">
                             Crafting Memories for Your
                             <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl md:text-6xl">
                                 {currentOccasion}
@@ -201,7 +201,7 @@ export default function Home() {
                         </div>
                         
                         <div className="mt-6 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
-                          <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists, all verified professionals dedicated to making your special day unforgettable.</p>
+                           <p>Book top-rated & verified professionals for your special day.</p>
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
