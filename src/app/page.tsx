@@ -27,6 +27,8 @@ import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 
+const occasionWords = ["Wedding", "Birthday", "Puja", "Sangeet", "Festival", "Reception", "Party"];
+
 export default function Home() {
   const router = useRouter();
   const [artists, setArtists] = React.useState<Artist[]>([]);
@@ -37,7 +39,6 @@ export default function Home() {
 
   const [cart, setCart] = React.useState<CartItem[]>([]);
 
-  // State for the service selection modal
   const [isServiceModalOpen, setIsServiceModalOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState<MasterServicePackage | null>(null);
 
@@ -47,9 +48,25 @@ export default function Home() {
   const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
   const [heroSlideshowImages, setHeroSlideshowImages] = React.useState<ImagePlaceholder[]>([]);
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
+  
+  const [currentOccasion, setCurrentOccasion] = React.useState(occasionWords[0]);
+  const [animationKey, setAnimationKey] = React.useState(0);
 
 
   const { toast } = useToast();
+  
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentOccasion(prev => {
+        const currentIndex = occasionWords.indexOf(prev);
+        const nextIndex = (currentIndex + 1) % occasionWords.length;
+        return occasionWords[nextIndex];
+      });
+      setAnimationKey(prev => prev + 1); // Reset animation
+    }, 3000); // Change word every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCustomerLogout = React.useCallback(() => {
     setIsCustomerLoggedIn(false);
@@ -74,7 +91,6 @@ export default function Home() {
             const storedCart = localStorage.getItem(`cart_${customerId}`);
             setCart(storedCart ? JSON.parse(storedCart) : []);
         } else {
-             // Clean up if customer ID is invalid
              handleCustomerLogout();
         }
     } else {
@@ -89,7 +105,6 @@ export default function Home() {
 
     const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
     const unsubscribePackages = listenToCollection<MasterServicePackage>('masterServices', (services) => {
-        // Replace placeholder images with actual images from data
         const updatedServices = services.map(service => ({
             ...service,
             image: service.image || `https://picsum.photos/seed/${service.id}/400/300`,
@@ -116,7 +131,6 @@ export default function Home() {
   
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
-        // If user is not logged in, save the item to local storage and redirect
         localStorage.setItem('tempCartItem', JSON.stringify(item));
         router.push('/login');
         toast({ 
@@ -155,19 +169,29 @@ export default function Home() {
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
          <div className="w-full pt-8 md:pt-12">
             <div className="group relative bg-card shadow-lg transition-shadow hover:shadow-2xl mx-4 md:mx-8 rounded-xl">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-10 gap-4">
                     {/* Left Box: Text */}
-                    <div className="flex flex-col justify-center p-6 text-center md:text-left">
-                         <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
-                            Utsav<span className="text-primary">Look</span>
-                        </h1>
-                        <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
-                        <div className="mt-4 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
+                    <div className="flex flex-col justify-center p-6 text-center md:text-left md:col-span-4">
+                         <div className="mb-4">
+                            <h1 className="font-headline text-5xl font-bold text-accent md:text-7xl">
+                                Utsav<span className="text-primary">Look</span>
+                            </h1>
+                            <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
+                        </div>
+                        
+                        <div className="mt-4 text-xl md:text-2xl text-foreground/80">
+                            Artistry for your{" "}
+                            <span key={animationKey} className="animated-gradient-text font-bold fade-in-out">
+                                {currentOccasion}
+                            </span>
+                        </div>
+                        
+                        <div className="mt-6 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
                           <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists, all verified professionals dedicated to making your special day unforgettable.</p>
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
-                    <div className="relative aspect-square md:aspect-[4/3] rounded-lg overflow-hidden">
+                    <div className="relative aspect-square md:aspect-auto rounded-lg overflow-hidden md:col-span-6">
                         <Carousel
                             opts={{ align: "start", loop: true }}
                             plugins={[ Autoplay({ delay: 4000 }) ]}
@@ -194,8 +218,6 @@ export default function Home() {
                         )}
                     </div>
                 </div>
-                {/* Divider Shadow */}
-                <div className="absolute left-1/2 top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-border to-transparent hidden md:block"></div>
             </div>
          </div>
 

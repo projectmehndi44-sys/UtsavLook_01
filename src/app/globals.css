@@ -23,7 +23,6 @@
     --border: 39 10% 88%;
     --input: 39 10% 88%;
     --ring: 25 75% 35%;
-    --radius: 0.5rem;
     
     /* Custom theme colors */
     --brand-rich-henna: 25 75% 32%; /* #8B4513 */
@@ -68,4 +67,43 @@
   .font-dancing-script {
     font-family: var(--font-dancing-script);
   }
+
+  .animated-gradient-text {
+    background-image: linear-gradient(
+      45deg,
+      hsl(var(--primary)),
+      hsl(var(--accent)),
+      hsl(var(--brand-golden-bronze))
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-animation 5s ease infinite;
+    display: inline-block;
+  }
+
+  @keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .fade-in-out {
+    animation: fade-in-out 3s ease-in-out infinite;
+  }
+
+  @keyframes fade-in-out {
+    0%, 100% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    15%, 85% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer components {
+    /* Define any custom components here */
 }
