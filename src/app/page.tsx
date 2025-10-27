@@ -200,7 +200,7 @@ export default function Home() {
                         </div>
                         
                         <div className="mt-8 font-body text-base text-foreground/80 max-w-xl mx-auto md:mx-0">
-                           <p>Book top-rated Mehendi, Makeup, and Photography artists.<br/>All verified professionals dedicated to making your special day unforgettable.</p>
+                           <p>Book top-rated Mehendi, Makeup, and Photography artists, all verified professionals dedicated to making your special day unforgettable.</p>
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
