@@ -1,39 +1,13 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Customers can only manage their own data
-    match /customers/{userId} {
-      allow read, update: if request.auth.uid == userId;
-    }
-
-    // Artists can only manage their own data
     match /artists/{artistId} {
-      allow get, list: if true; // Allow public read access for listings
-      allow update: if request.auth.uid == artistId;
+      allow read;
     }
 
-    // Bookings can be created by authenticated users
-    // and can only be read/updated by the customer or assigned artist
-    match /bookings/{bookingId} {
-      allow create: if request.auth != null;
-      allow read, update: if request.auth.uid == resource.data.customerId || request.auth.uid in resource.data.artistIds;
-    }
-
-    // Publicly readable collections
-    match /config/{configId} {
-      allow get: if true;
-    }
-
-    // Pending artists can be created by anyone
-    match /pendingArtists/{pendingId} {
-        allow create: if true;
-    }
-
-    // Fallback rule: deny all other access
-    match /{document=**} {
-      allow read, write: if false;
+    match /masterServices/{serviceId} {
+      allow read;
     }
   }
 }
