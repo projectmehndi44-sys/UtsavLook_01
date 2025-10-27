@@ -4,6 +4,15 @@ const withPWA = require('next-pwa');
 
 const nextConfig = {
   /* config options here */
+  webpack: (config, { isServer }) => {
+    // This is to fix a bug with genkit where it uses an old version of handlebars
+    // that is not compatible with webpack.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'handlebars': 'handlebars/dist/handlebars.js',
+    }
+    return config
+  },
   experimental: {
     serverActions: {
       maxDuration: 120, // Increase timeout to 2 minutes for AI operations
