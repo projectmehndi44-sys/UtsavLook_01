@@ -53,8 +53,18 @@ export default function AdminLoginPage() {
                 router.push('/admin');
                 return;
             }
-            // By default, show the login page. The setup flow will be triggered by a specific error.
-            setPageState('login');
+            
+            try {
+                const teamMembers = await getTeamMembers();
+                if (teamMembers.length === 0) {
+                    setPageState('setup');
+                } else {
+                    setPageState('login');
+                }
+            } catch (error) {
+                console.error("Error checking for team members:", error);
+                setPageState('login'); // Default to login on error
+            }
         };
         determinePageState();
     }, [isAuthLoading, isAuthenticated, router]);
@@ -74,14 +84,6 @@ export default function AdminLoginPage() {
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
             const teamMembers = await getTeamMembers();
             
-            // This is the condition to check if setup is needed.
-            if (teamMembers.length === 0) {
-                toast({ title: 'Setup Required', description: 'No admin accounts found. Please create the first Super Admin account.', variant: 'destructive'});
-                setPageState('setup');
-                await auth.signOut(); // Log out the user to force setup.
-                return;
-            }
-
             const memberProfile = teamMembers.find(m => m.id === userCredential.user.uid);
             
             if (memberProfile) {
@@ -95,6 +97,13 @@ export default function AdminLoginPage() {
             let description = 'An error occurred during login. Please try again.';
             if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                 description = 'Invalid credentials. Please check your username and password.';
+            } else if (error.code === 'auth/network-request-failed') {
+                 // Check if it's the setup scenario
+                const teamMembers = await getTeamMembers();
+                if (teamMembers.length === 0) {
+                    setPageState('setup');
+                    return;
+                }
             }
             toast({ title: 'Authentication Failed', description, variant: 'destructive' });
         }
@@ -123,28 +132,15 @@ export default function AdminLoginPage() {
 
     const handleSetup = async (data: SetupFormValues) => {
         try {
-            // First, try to create the user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
             const authUser = userCredential.user;
 
-            // If successful, create the Super Admin in the database
             const superAdminMember: TeamMember = {
-                id: authUser.uid,
+                id: authUser.uid, // Use the actual UID from Firebase Auth
                 name: data.name,
                 username: data.email,
                 role: 'Super Admin',
-                permissions: {
-                    dashboard: 'edit',
-                    bookings: 'edit',
-                    artists: 'edit',
-                    customers: 'edit',
-                    artistDirectory: 'edit',
-                    payouts: 'edit',
-                    transactions: 'edit',
-                    packages: 'edit',
-                    settings: 'edit',
-                    notifications: 'edit',
-                }
+                permissions: initialTeamMembers[0].permissions // Use permissions from the template
             };
             
             await saveTeamMembers([superAdminMember]);

@@ -1,4 +1,5 @@
 
+
 import type { Permissions } from '@/lib/types';
 
 export type TeamMember = {
@@ -27,9 +28,8 @@ export const PERMISSION_MODULES: { key: keyof Permissions, label: string }[] = [
 
 // This data is used to seed the Firestore database for team members if it's empty.
 // The password is set in the login page's one-time setup effect.
-export const initialTeamMembers: TeamMember[] = [
+export const initialTeamMembers: Omit<TeamMember, 'id'>[] = [
     {
-        id: 'user_001', // This temporary ID will be replaced by the Firebase UID on first run.
         name: 'Abhishek Jaiswal',
         username: 'utsavlook01@gmail.com',
         role: 'Super Admin',
