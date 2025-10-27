@@ -193,7 +193,7 @@ export default function Home() {
                         
                         <div className="mt-6">
                             <span className="font-bold text-foreground/80 text-2xl md:text-3xl lg:text-4xl whitespace-nowrap">Crafting Memories for Your</span>
-                            <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl md:text-6xl">
+                            <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl md:text-6xl font-bold">
                                 {currentOccasion}
                             </div>
                             <p className="text-lg font-light text-muted-foreground mt-1">with UtsavLook</p>
