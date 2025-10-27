@@ -1,62 +1,47 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
     
     // --- Helper Functions ---
-    // Checks if the user is authenticated.
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Checks if the user is the owner of a document.
-    // Assumes the document ID matches the user's UID.
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Checks if the user is an admin by looking up their role in the 'teamMembers' collection.
     function isAdmin() {
-      // Allow if the user's UID exists as a document in the 'teamMembers' config and their role is 'Super Admin'.
-      return isSignedIn() && exists(/databases/$(database)/documents/config/teamMembers) && 
-             get(/databases/$(database)/documents/config/teamMembers).data.members[request.auth.uid].role == 'Super Admin';
+      // Check if the user's UID exists in the team members config document
+      return isSignedIn() && exists(/databases/$(database)/documents/config/teamMembers) &&
+             get(/databases/$(database)/documents/config/teamMembers).data.members[request.auth.uid] != null;
     }
 
-    // --- Publicly Readable Collections ---
-    
-    // Artists: Anyone can read public artist profiles and list them.
-    // Only the artist themselves (owner) or an admin can create or update a profile.
+    // --- Collection-level Rules ---
+
+    // Artists: Anyone can read and list artists. Only the artist or an admin can update.
     match /artists/{artistId} {
-      allow read: if true;
+      allow get, list: true;
       allow create, update: if isOwner(artistId) || isAdmin();
-      // Deletion should be an admin-only action, handled by a secure Cloud Function.
-      allow delete: if false; 
+      allow delete: if isAdmin();
     }
     
-    // Config: Public configuration documents are readable by anyone.
-    // Writing to config should only be done by admins, often through the app's admin portal.
-    match /config/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    // Master Services: These are public and can be read by anyone.
+    match /masterServices/{serviceId} {
+        allow get, list: true;
+        allow create, update, delete: if isAdmin();
     }
-    
-    // --- User-Specific Collections ---
-    
-    // Customers: Only the authenticated user can access and modify their own customer document.
-    // Admins can view customer profiles for support and management.
+
+    // Customers: A user can only access their own data. Admins have broader access.
     match /customers/{userId} {
-      allow read, update: if isOwner(userId);
-      allow create: if isSignedIn(); // Allow any signed-in user to create their own profile once.
+      allow get, update: if isOwner(userId);
+      allow create: if isSignedIn();
       allow list, delete: if isAdmin();
     }
     
-    // --- Business Logic Collections ---
-    
-    // Bookings:
-    // - Create: A customer can create a booking for themselves.
-    // - Read: The customer who owns the booking, an assigned artist, or an admin can read it.
-    // - Update: The customer (for cancellations), an assigned artist (e.g., to mark complete), or an admin can update.
-    // - List: Admins can list all bookings for management.
+    // Bookings: Complex rules based on role (customer, artist, admin).
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
       allow read: if (isOwner(resource.data.customerId)) || 
@@ -66,34 +51,35 @@ service cloud.firestore {
                        (isSignedIn() && request.auth.uid in resource.data.artistIds) || 
                        isAdmin();
       allow list: if isAdmin();
-      // Deletion should be rare and likely an admin-only task.
       allow delete: if isAdmin();
     }
     
-    // Pending Artists:
-    // - Create: Anyone can submit a registration.
-    // - Read/Delete: Only admins can view and process pending applications.
+    // Pending Artists: Anyone can submit, only admins can read/process.
     match /pendingArtists/{pendingId} {
-      allow create: if true;
-      allow read, delete: if isAdmin();
-      allow list: if isAdmin();
+      allow create: true;
+      allow read, list, delete: if isAdmin();
     }
 
-    // --- Admin-Only Collections ---
-    
-    // Payout History & Notifications:
-    // These collections should generally only be readable by the relevant user or an admin.
-    // A robust implementation would check for ownership on read. For simplicity and admin focus, we restrict list/write to admins.
-    match /payoutHistory/{payoutId} {
-      allow read, list, write: if isAdmin();
-    }
-    
+    // Notifications: Only the recipient (customer/artist) or an admin can read.
     match /notifications/{notificationId} {
        allow read: if (isOwner(resource.data.artistId) || isOwner(resource.data.customerId)) || isAdmin();
        allow list, write: if isAdmin();
     }
+    
+    // Payout History: Admin-only access.
+    match /payoutHistory/{payoutId} {
+      allow read, list, write: if isAdmin();
+    }
 
-    // Default Deny: All other paths are inaccessible by default.
+    // --- Configuration Document ---
+    // All config documents are under a single collection.
+    // Public configs can be read by anyone, but only written by admins.
+    match /config/{docId} {
+      allow read: true;
+      allow write: if isAdmin();
+    }
+
+    // Default Deny: Ensure any path not explicitly matched is denied.
     match /{path=**} {
       allow read, write: if false;
     }
