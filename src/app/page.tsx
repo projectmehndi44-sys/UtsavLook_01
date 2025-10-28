@@ -299,19 +299,8 @@ export default function Home() {
         
         <Separator className="my-8"/>
         
-        <div id="artists" className="py-12 px-4 md:px-8">
-            <h2 className="text-center font-headline text-5xl text-primary mb-8">Meet Our Artists</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {artists.map(artist => (
-                    <ArtistCard key={artist.id} artist={artist} />
-                ))}
-            </div>
-        </div>
-
-        <Separator className="my-8"/>
-
          {topArtists.length > 0 && (
-          <div className="py-8 md:py-12 px-4">
+          <div id="artists" className="py-8 md:py-12 px-4">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-8">Meet Our Top Artists</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
               {topArtists.map((artist) => (
