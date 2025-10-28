@@ -7,6 +7,7 @@ import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { masterServicePackages } from './data';
 
 // Use the singleton instance of Firestore from the central firebase module
 const getDb = () => db;
@@ -483,8 +484,7 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
-    const config = await getConfigDocument<{ packages: MasterServicePackage[] }>('masterServices');
-    return config?.packages || [];
+    return Promise.resolve(masterServicePackages);
 };
 export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
 
