@@ -48,4 +48,3 @@ export const initialTeamMembers: TeamMember[] = [
     // The initial user is now created entirely from the setup form to ensure IDs match.
     // This array is kept for structural reference but should not be relied upon for seeding.
 ];
-

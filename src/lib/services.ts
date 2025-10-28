@@ -484,9 +484,9 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
-    return Promise.resolve(masterServicePackages);
+    const config = await getConfigDocument<{ packages: MasterServicePackage[] }>('masterServices');
+    return config?.packages ?? masterServicePackages;
 };
 export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
 
 export { getDb };
-
