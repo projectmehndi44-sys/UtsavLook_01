@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay"
 import Image from 'next/image';
 import { Packages } from '@/components/utsavlook/Packages';
@@ -28,20 +28,7 @@ import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 
-const occasionWords = [
-    "Wedding", 
-    "Birthday", 
-    "Puja", 
-    "Sangeet", 
-    "Festival", 
-    "Reception", 
-    "Party",
-    "Engagement",
-    "Anniversary",
-    "Baby Shower",
-    "Haldi",
-    "Mehendi"
-];
+const occasionWords = occasionImages.map(img => img.occasion);
 
 export default function Home() {
   const router = useRouter();
@@ -63,24 +50,27 @@ export default function Home() {
   const [heroSlideshowImages, setHeroSlideshowImages] = React.useState<OccasionImage[]>([]);
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
-  const [currentOccasion, setCurrentOccasion] = React.useState(occasionWords[0]);
+  const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
   const [animationKey, setAnimationKey] = React.useState(0);
+  const [carouselApi, setCarouselApi] = React.useState<CarouselApi>();
 
 
   const { toast } = useToast();
   
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentOccasion(prev => {
-        const currentIndex = occasionWords.indexOf(prev);
-        const nextIndex = (currentIndex + 1) % occasionWords.length;
-        return occasionWords[nextIndex];
+      setCurrentOccasionIndex(prev => {
+          const nextIndex = (prev + 1) % occasionWords.length;
+          if (carouselApi) {
+            carouselApi.scrollTo(nextIndex);
+          }
+          return nextIndex;
       });
       setAnimationKey(prev => prev + 1); // Reset animation
     }, 3000); // Change word every 3 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [carouselApi]);
 
   const handleCustomerLogout = React.useCallback(() => {
     setIsCustomerLoggedIn(false);
@@ -197,7 +187,7 @@ export default function Home() {
                         <div className="mt-6">
                             <div className="whitespace-nowrap text-2xl font-bold text-foreground/80 md:text-3xl">Crafting Memories for Your</div>
                             <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
-                                {currentOccasion}
+                                {occasionWords[currentOccasionIndex]}
                             </div>
                             <p className="mt-1 text-lg font-light text-muted-foreground">with UtsavLook</p>
                         </div>
@@ -207,10 +197,11 @@ export default function Home() {
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
-                    <div className="relative aspect-square md:aspect-auto rounded-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
+                    <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
                         <Carousel
+                            setApi={setCarouselApi}
                             opts={{ align: "start", loop: true }}
-                            plugins={[ Autoplay({ delay: 3000 }) ]}
+                            plugins={[ Autoplay({ delay: 3000, stopOnInteraction: false }) ]}
                             className="w-full h-full"
                         >
                             <CarouselContent>
@@ -221,7 +212,7 @@ export default function Home() {
                                 )) : (
                                     <CarouselItem>
                                         <div className="w-full h-full bg-muted flex items-center justify-center">
-                                            <p>Images coming soon</p>
+                                            {/* This will be shown if no images are available */}
                                         </div>
                                     </CarouselItem>
                                 )}
