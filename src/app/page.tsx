@@ -57,7 +57,7 @@ export default function Home() {
     const interval = setInterval(() => {
       setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
       setAnimationKey(prev => prev + 1); // Reset animation
-    }, 5000); // Change word every 5 seconds to match carousel
+    }, 5000); // Change word every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -185,7 +185,7 @@ export default function Home() {
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
-                    <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
+                    <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
                         <Carousel
                             opts={{
                                 align: "start",
