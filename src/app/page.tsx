@@ -193,7 +193,7 @@ export default function Home() {
                     
                     <div className="mt-4">
                         <div className="whitespace-nowrap text-2xl font-bold md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:3s]">Crafting Memories for Your</div>
-                         <div key={currentOccasionIndex} className="animated-gradient-text fade-in text-5xl font-bold md:text-6xl">
+                         <div key={currentOccasionIndex} className="animated-gradient-text fade-and-slide-in text-5xl font-bold md:text-6xl">
                             {occasionWords[currentOccasionIndex]}
                         </div>
                     </div>
