@@ -60,7 +60,7 @@ export default function Home() {
     const interval = setInterval(() => {
       setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
       setAnimationKey(prev => prev + 1); // Reset animation
-    }, 3000); // Change word every 3 seconds
+    }, 4000); // Change word every 4 seconds to match carousel
 
     return () => clearInterval(interval);
   }, []);
@@ -190,10 +190,15 @@ export default function Home() {
                     {/* Right Box: Slideshow */}
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
                         <Carousel
-                            opts={{ align: "start", loop: true, duration: 50 }}
-                            plugins={[ Autoplay({ delay: 4000, stopOnInteraction: false }) ]}
+                            opts={{ align: "start", loop: true }}
+                            plugins={[
+                                Autoplay({
+                                delay: 4000,
+                                stopOnInteraction: false,
+                                }),
+                            ]}
                             className="w-full h-full"
-                        >
+                            >
                             <CarouselContent>
                                 {occasionImages.map((item, index) => (
                                     <CarouselItem key={index} className="fade-in">
