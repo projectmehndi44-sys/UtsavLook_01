@@ -190,14 +190,13 @@ export default function Home() {
                     {/* Right Box: Slideshow */}
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
                         <Carousel
-                            setApi={setCarouselApi}
-                            opts={{ align: "start", loop: true }}
-                            plugins={[ Autoplay({ delay: 3000, stopOnInteraction: false }) ]}
+                            opts={{ align: "start", loop: true, duration: 50 }}
+                            plugins={[ Autoplay({ delay: 4000, stopOnInteraction: false }) ]}
                             className="w-full h-full"
                         >
                             <CarouselContent>
                                 {occasionImages.map((item, index) => (
-                                    <CarouselItem key={index}>
+                                    <CarouselItem key={index} className="fade-in">
                                         <Image src={item.imageUrl} alt={item.occasion} fill className="object-cover" />
                                     </CarouselItem>
                                 ))}
