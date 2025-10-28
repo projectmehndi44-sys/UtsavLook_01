@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay"
 import Image from 'next/image';
+import Link from 'next/link';
 import { Packages } from '@/components/utsavlook/Packages';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -50,11 +51,6 @@ export default function Home() {
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
   const [animationKey, setAnimationKey] = React.useState(0);
-
-  const autoplayPlugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false })
-  );
-
 
   const { toast } = useToast();
   
@@ -154,6 +150,10 @@ export default function Home() {
     );
   }
 
+  const handleScrollToServices = () => {
+    document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
       <div id="recaptcha-container" style={{ position: 'absolute', bottom: 0, right: 0, zIndex: -1 }}></div>
@@ -186,14 +186,27 @@ export default function Home() {
                         </div>
                         
                         <div className="mt-8 max-w-xl font-body text-base text-foreground/80 md:mx-0 mx-auto">
-                           <p>Book top-rated Mehendi, Makeup, and Photography artists, all verified professionals dedicated to making your special day unforgettable.</p>
+                           <p>Book top-rated, verified artists for your special day.</p>
+                        </div>
+
+                         <div className="mt-8 flex flex-col sm:flex-row gap-4 md:justify-start justify-center">
+                            <Button size="lg" className="btn-gradient" onClick={handleScrollToServices}>
+                                Book a Service
+                            </Button>
+                            <Button size="lg" className="btn-gradient" asChild>
+                                <Link href="/artist">Join as an Artist</Link>
+                            </Button>
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
                        <Carousel
                             className="w-full h-full"
-                            plugins={[autoplayPlugin.current]}
+                            plugins={[
+                                Autoplay({
+                                delay: 5000,
+                                }),
+                            ]}
                             opts={{
                                 align: "start",
                                 loop: true,
@@ -220,7 +233,7 @@ export default function Home() {
             </div>
         )}
 
-        <div className="mt-8 w-full">
+        <div id="services" className="mt-8 w-full">
             <h2 className="text-center font-headline text-5xl text-primary mb-8">Our Services</h2>
             <Tabs defaultValue="mehndi" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
