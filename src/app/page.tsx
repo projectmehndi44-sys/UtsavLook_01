@@ -59,18 +59,12 @@ export default function Home() {
   
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentOccasionIndex(prev => {
-          const nextIndex = (prev + 1) % occasionWords.length;
-          if (carouselApi) {
-            carouselApi.scrollTo(nextIndex);
-          }
-          return nextIndex;
-      });
+      setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
       setAnimationKey(prev => prev + 1); // Reset animation
     }, 3000); // Change word every 3 seconds
 
     return () => clearInterval(interval);
-  }, [carouselApi]);
+  }, []);
 
   const handleCustomerLogout = React.useCallback(() => {
     setIsCustomerLoggedIn(false);
