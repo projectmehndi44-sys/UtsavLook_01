@@ -204,11 +204,11 @@ export default function Home() {
                        <p>Book top-rated, verified artists for your special day.</p>
                     </div>
 
-                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                        <Button size="lg" className="btn-gradient rounded-b-lg" onClick={() => handleScrollTo('services')}>
+                     <div className="mt-6 flex flex-row gap-4 justify-center md:justify-start">
+                        <Button size="lg" className="btn-gradient rounded-full" onClick={() => handleScrollTo('services')}>
                             Book a Service
                         </Button>
-                         <Button size="lg" className="btn-gradient rounded-b-lg" onClick={() => handleScrollTo('artists')}>
+                         <Button size="lg" className="btn-gradient rounded-full" onClick={() => handleScrollTo('artists')}>
                             View Artists
                         </Button>
                     </div>
