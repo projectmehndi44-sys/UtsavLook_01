@@ -57,7 +57,7 @@ export default function Home() {
     const interval = setInterval(() => {
       setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
       setAnimationKey(prev => prev + 1); // Reset animation
-    }, 4000); // Change word every 4 seconds to match carousel
+    }, 5000); // Change word every 5 seconds to match carousel
 
     return () => clearInterval(interval);
   }, []);
@@ -193,7 +193,7 @@ export default function Home() {
                             }}
                             plugins={[
                                 Autoplay({
-                                delay: 4000,
+                                delay: 5000,
                                 stopOnInteraction: false,
                                 }),
                             ]}
