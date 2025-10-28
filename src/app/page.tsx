@@ -166,8 +166,8 @@ export default function Home() {
         cartCount={cart.length}
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
-        <div className="w-full pt-8 md:pt-12">
-            <div className="group relative bg-card shadow-lg transition-shadow hover:shadow-2xl mx-4 md:mx-8 rounded-xl overflow-hidden">
+        <div className="w-full">
+            <div className="group relative">
                 <div className="absolute inset-0 w-full h-full">
                     {occasionImages.map((item, index) => (
                         <Image 
@@ -176,7 +176,7 @@ export default function Home() {
                             alt={item.occasion} 
                             fill 
                             className={cn(
-                                "object-cover transition-opacity duration-1000",
+                                "object-cover transition-opacity duration-1000 group-hover:scale-105 transform-gpu duration-500",
                                 index === currentOccasionIndex ? "opacity-100" : "opacity-0"
                             )}
                             priority={index === 0}
