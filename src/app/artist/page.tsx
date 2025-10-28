@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -19,6 +20,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { Parallax } from 'react-scroll-parallax';
 import { ParallaxProvider } from 'react-scroll-parallax';
+import { occasionImages } from '@/lib/occasion-images';
 
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
@@ -29,12 +31,6 @@ const benefitIcons: { [key: string]: React.ReactNode } = {
     "transparent-payouts": <BarChart className="w-8 h-8 text-accent" />,
     "zero-commission-welcome": <Sparkles className="w-8 h-8 text-accent" />,
 };
-
-const artistSpotlightImages = [
-    'https://images.unsplash.com/photo-1596649298418-5c0e1a1f0d1a?q=80&w=1887&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1620912189837-55c9d645f577?q=80&w=1887&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1588147510359-5d3c90731557?q=80&w=1887&auto=format&fit=crop',
-];
 
 export default function ArtistHomePage() {
     const router = useRouter();
@@ -154,9 +150,9 @@ export default function ArtistHomePage() {
                       className="absolute inset-0 w-full h-full z-0"
                     >
                       <CarouselContent>
-                        {artistSpotlightImages.map((src, i) => (
+                        {occasionImages.map((item, i) => (
                           <CarouselItem key={i}>
-                            <Image src={src} alt="Artist background" layout="fill" objectFit="cover" className="brightness-50" />
+                            <Image src={item.imageUrl} alt={item.occasion} layout="fill" objectFit="cover" className="brightness-50" />
                           </CarouselItem>
                         ))}
                       </CarouselContent>
@@ -292,7 +288,7 @@ export default function ArtistHomePage() {
                         <div className="space-y-4">
                              <Image src={shareableImage} alt="UtsavLook Artist Benefits" width={1080} height={1080} className="rounded-lg border w-full"/>
                             <div className="relative">
-                               <Textarea value={shareText} readOnly className="pr-10 h-24"/>
+                               <Textarea value={shareText} readOnly className="h-24"/>
                                <Button size="icon" variant="ghost" className="absolute right-2 top-2 h-8 w-8" onClick={() => { navigator.clipboard.writeText(shareText); toast({ title: 'Copied!' }); }}><Copy className="h-4 w-4"/></Button>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
