@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -193,8 +194,8 @@ export default function Home() {
                             <Button size="lg" className="btn-gradient" onClick={handleScrollToServices}>
                                 Book a Service
                             </Button>
-                            <Button size="lg" className="btn-gradient" asChild>
-                                <Link href="/artist">Join as an Artist</Link>
+                            <Button size="lg" className="btn-gradient" onClick={handleScrollToServices}>
+                                View Artists
                             </Button>
                         </div>
                     </div>
@@ -204,7 +205,7 @@ export default function Home() {
                             className="w-full h-full"
                             plugins={[
                                 Autoplay({
-                                delay: 5000,
+                                    delay: 5000,
                                 }),
                             ]}
                             opts={{
