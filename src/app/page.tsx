@@ -201,27 +201,21 @@ export default function Home() {
                     </div>
                     {/* Right Box: Slideshow */}
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
-                       <Carousel
-                            className="w-full h-full"
-                            plugins={[
-                                Autoplay({
-                                  delay: 5000,
-                                }),
-                              ]}
-                            opts={{
-                                align: "start",
-                                loop: true,
-                            }}
-                        >
-                            <CarouselContent>
-                                {occasionImages.map((item, index) => (
-                                    <CarouselItem key={index}>
-                                        <Image src={item.imageUrl} alt={item.occasion} fill className="object-cover" />
-                                    </CarouselItem>
-                                ))}
-                            </CarouselContent>
-                        </Carousel>
-                        
+                       <div className="w-full h-full">
+                            {occasionImages.map((item, index) => (
+                                <Image 
+                                    key={item.imageUrl}
+                                    src={item.imageUrl} 
+                                    alt={item.occasion} 
+                                    fill 
+                                    className={cn(
+                                        "object-cover transition-opacity duration-1000",
+                                        index === currentOccasionIndex ? "opacity-100" : "opacity-0"
+                                    )}
+                                    priority={index === 0}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
