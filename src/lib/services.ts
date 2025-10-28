@@ -2,14 +2,8 @@
 
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, query, where, deleteDoc, Timestamp, onSnapshot, Unsubscribe, runTransaction } from 'firebase/firestore';
 import type { Artist, Booking, Customer, MasterServicePackage, PayoutHistory, TeamMember, Notification, Promotion, ImagePlaceholder, BenefitImage, HeroSettings } from '@/lib/types';
-import { initialTeamMembers } from './team-data';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-<<<<<<< HEAD
-import { getAuth } from 'firebase/auth';
-import { getFirebaseApp } from './firebase';
-=======
 import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -84,43 +78,6 @@ export async function getDocument<T>(collectionName: string, id: string): Promis
 
 // Generic function to get a config document
 async function getConfigDocument<T>(docId: string): Promise<T | null> {
-<<<<<<< HEAD
-    const db = await getDb();
-    const docRef = doc(db, 'config', docId);
-
-    // Ensure user is authenticated before trying to access potentially sensitive configs
-    if (docId === 'financialSettings') {
-        const auth = getAuth(getFirebaseApp());
-        if (!auth.currentUser) {
-             const permissionError = new FirestorePermissionError({
-                path: docRef.path,
-                operation: 'get',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            return null;
-        }
-    }
-
-    try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            // These checks are for legacy data structures
-            if (data && data.hasOwnProperty('packages')) return data.packages as T;
-            if (data && data.hasOwnProperty('members')) return data.members as T;
-            if (data && data.hasOwnProperty('promos')) return data.promos as T;
-            if (data && data.hasOwnProperty('locations')) return data as T;
-            if (data && data.hasOwnProperty('images')) return data.images as T;
-            if (data && data.hasOwnProperty('benefitImages')) return data.benefitImages as T;
-            return data as T; // Fallback for flat config docs
-        }
-    } catch (serverError) {
-         const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'get',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-=======
     const docRef = doc(getDb(), 'config', docId);
     try {
         const docSnap = await getDoc(docRef);
@@ -135,7 +92,6 @@ async function getConfigDocument<T>(docId: string): Promise<T | null> {
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
         throw permissionError;
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
     }
 }
 
@@ -445,22 +401,7 @@ export const saveFinancialSettings = (data: any) => setConfigDocument('financial
 
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
     const querySnapshot = await getDocs(collection(getDb(), 'teamMembers'));
-    if (querySnapshot.empty && initialTeamMembers.length > 0) {
-        // If no members, seed the initial admin
-        const seededMembers = await Promise.all(initialTeamMembers.map(async (member) => {
-            const memberRef = doc(getDb(), 'teamMembers', member.id);
-            await setDoc(memberRef, member);
-            return member;
-        }));
-        return seededMembers;
-    }
-<<<<<<< HEAD
-    // If the document doesn't exist or has no members, return an empty array,
-    // The login page will handle seeding.
-    return [];
-=======
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as TeamMember);
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 };
 export const saveTeamMembers = (members: TeamMember[]) => {
     const db = getDb();
@@ -548,8 +489,4 @@ export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
 export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
 
 export { getDb };
-<<<<<<< HEAD
 
-    
-=======
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
