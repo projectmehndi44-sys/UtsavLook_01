@@ -51,6 +51,10 @@ export default function Home() {
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
   const [animationKey, setAnimationKey] = React.useState(0);
 
+  const autoplayPlugin = React.useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: false })
+  );
+
 
   const { toast } = useToast();
   
@@ -189,11 +193,7 @@ export default function Home() {
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
                        <Carousel
                             className="w-full h-full"
-                            plugins={[
-                                Autoplay({
-                                  delay: 5000,
-                                }),
-                            ]}
+                            plugins={[autoplayPlugin.current]}
                             opts={{
                                 align: "start",
                                 loop: true,
