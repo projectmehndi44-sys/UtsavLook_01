@@ -26,7 +26,7 @@ import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
 import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
-import { occasionImages, OccasionImage } from '@/lib/occasion-images';
+import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 
 const occasionWords = [
     "Wedding", 
@@ -207,7 +207,7 @@ export default function Home() {
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
-                    <div className="relative aspect-square md:aspect-auto rounded-lg overflow-hidden md:col-span-6 shadow-inner">
+                    <div className="relative aspect-square md:aspect-auto rounded-lg overflow-hidden md:col-span-6">
                         <Carousel
                             opts={{ align: "start", loop: true }}
                             plugins={[ Autoplay({ delay: 4000 }) ]}
