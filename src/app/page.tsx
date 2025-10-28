@@ -47,7 +47,6 @@ export default function Home() {
   const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
   
   const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
-  const [heroSlideshowImages, setHeroSlideshowImages] = React.useState<OccasionImage[]>([]);
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
@@ -117,8 +116,6 @@ export default function Home() {
     getPlaceholderImages().then(images => {
         setGalleryImages(images.filter(img => img.id.startsWith('our-work')));
     });
-
-    setHeroSlideshowImages(occasionImages);
 
     getHeroSettings().then(setHeroSettings);
 
@@ -199,7 +196,7 @@ export default function Home() {
                             className="w-full h-full"
                         >
                             <CarouselContent>
-                                {heroSlideshowImages.length > 0 ? heroSlideshowImages.map((item, index) => (
+                                {occasionImages.length > 0 ? occasionImages.map((item, index) => (
                                     <CarouselItem key={index}>
                                         <Image src={item.imageUrl} alt={item.occasion} fill className="object-cover" />
                                     </CarouselItem>
