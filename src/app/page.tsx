@@ -185,12 +185,12 @@ export default function Home() {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
 
-                 <div className="relative flex flex-col justify-center p-6 md:p-10 text-center items-center md:items-start md:text-left min-h-[500px] md:min-h-[600px] md:w-1/2">
-                    <div className="mb-4">
+                 <div className="relative flex flex-col justify-center p-6 md:p-10 text-center md:text-left min-h-[500px] md:min-h-[600px] md:w-3/5 lg:w-1/2">
+                    <div className="space-y-2">
                     <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
                         Utsav<span className="text-primary">Look</span>
                     </h1>
-                    <p className="mt-2 font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
+                    <p className="font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
                     </div>
                     
                     <div className="mt-4">
@@ -198,14 +198,13 @@ export default function Home() {
                         <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
                             {occasionWords[currentOccasionIndex]}
                         </div>
-                        <p className="text-lg font-light text-muted-foreground">with UtsavLook</p>
                     </div>
                     
-                    <div className="mt-6 max-w-xl font-body text-base">
+                    <div className="mt-4 max-w-xl font-body text-base">
                        <p>Book top-rated, verified artists for your special day.</p>
                     </div>
 
-                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                         <Button size="lg" className="btn-gradient rounded-b-lg" onClick={() => handleScrollTo('services')}>
                             Book a Service
                         </Button>
