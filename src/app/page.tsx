@@ -167,7 +167,7 @@ export default function Home() {
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
         <div className="w-full">
-            <div className="group relative">
+            <div className="group relative rounded-b-2xl overflow-hidden">
                 <div className="absolute inset-0 w-full h-full">
                     {occasionImages.map((item, index) => (
                         <Image 
@@ -193,7 +193,7 @@ export default function Home() {
                     <p className="mt-2 font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
                     </div>
                     
-                    <div className="mt-2">
+                    <div className="mt-4">
                         <div className="whitespace-nowrap text-2xl font-bold md:text-3xl">Crafting Memories for Your</div>
                         <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
                             {occasionWords[currentOccasionIndex]}
@@ -201,15 +201,15 @@ export default function Home() {
                         <p className="text-lg font-light text-muted-foreground">with UtsavLook</p>
                     </div>
                     
-                    <div className="mt-4 max-w-xl font-body text-base">
+                    <div className="mt-6 max-w-xl font-body text-base">
                        <p>Book top-rated, verified artists for your special day.</p>
                     </div>
 
                      <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
+                        <Button size="lg" className="btn-gradient rounded-b-lg" onClick={() => handleScrollTo('services')}>
                             Book a Service
                         </Button>
-                         <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
+                         <Button size="lg" className="btn-gradient rounded-b-lg" onClick={() => handleScrollTo('artists')}>
                             View Artists
                         </Button>
                     </div>
