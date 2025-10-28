@@ -9,6 +9,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { masterServicePackages, promotions } from './data';
 import { INDIA_LOCATIONS } from './india-locations';
+import { PlaceHolderImages } from './placeholder-images';
 
 // Use the singleton instance of Firestore from the central firebase module
 const getDb = () => db;
@@ -331,8 +332,7 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 
 // Config
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
-    const config = await getConfigDocument<{ images: ImagePlaceholder[] }>('placeholderImages');
-    return config?.images || [];
+    return Promise.resolve(PlaceHolderImages);
 };
 export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', { images });
 
@@ -375,12 +375,10 @@ export const saveHeroSettings = async (data: HeroSettings): Promise<void> => {
 };
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
-    // This function is now safe for client-side use because it doesn't fetch from Firestore.
-    // It returns the entire list, and the admin panel filters/saves the selected ones.
-    // On the public side, this list is used to populate dropdowns.
-    return Promise.resolve(INDIA_LOCATIONS);
+    const config = await getConfigDocument<{ locations: Record<string, string[]> }>('availableLocations');
+    return config?.locations || {};
 };
-export const saveAvailableLocations = (locations: Record<string, string[]>) => setConfigDocument('availableLocations', locations);
+export const saveAvailableLocations = (locations: Record<string, string[]>) => setConfigDocument('availableLocations', { locations });
 
 export const getCompanyProfile = async () => {
     return await getConfigDocument<any>('companyProfile') || {

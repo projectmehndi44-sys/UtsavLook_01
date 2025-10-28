@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder, HeroSettings } from '@/lib/types';
-import { getCustomer, getPlaceholderImages, getHeroSettings, listenToCollection, getMasterServices } from '@/lib/services';
+import { getCustomer, getHeroSettings, listenToCollection, getMasterServices } from '@/lib/services';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -33,6 +33,7 @@ import { ClientOnly } from '@/components/ClientOnly';
 import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 import Autoplay from "embla-carousel-autoplay";
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const occasionWords = occasionImages.map(img => img.occasion);
 
@@ -163,9 +164,7 @@ export default function Home() {
         setMasterServices(updatedServices);
     });
 
-    getPlaceholderImages().then(images => {
-        setGalleryImages(images.filter(img => img.id.startsWith('our-work')));
-    });
+    setGalleryImages(PlaceHolderImages.filter(img => img.id.startsWith('our-work')));
 
     getHeroSettings().then(setHeroSettings);
 

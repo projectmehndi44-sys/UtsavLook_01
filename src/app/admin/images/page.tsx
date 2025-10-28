@@ -86,10 +86,7 @@ export default function ImageManagementPage() {
         defaultValues: { slideshowText: "" }
     });
     
-    const { fields: heroSlideshowFields, append: appendHero, remove: removeHero } = useFieldArray({ control: placeholderForm.control, name: "images" });
-    const { fields: galleryFields, append: appendGallery, remove: removeGallery } = useFieldArray({ control: placeholderForm.control, name: "images" });
-    const { fields: backgroundFields, append: appendBg, remove: removeBg } = useFieldArray({ control: placeholderForm.control, name: "images" });
-
+    const { fields: placeholderFields, append: appendPlaceholder, remove: removePlaceholder } = useFieldArray({ control: placeholderForm.control, name: "images" });
     const { fields: benefitFields, replace } = useFieldArray({
         control: benefitsForm.control,
         name: "benefitImages"
@@ -209,9 +206,7 @@ export default function ImageManagementPage() {
 
         try {
             await deleteSiteImage(imageUrl);
-            const allImages = placeholderForm.getValues('images');
-            allImages.splice(index, 1);
-            placeholderForm.reset({ images: allImages });
+            removePlaceholder(index);
             
             toast({ title: "Image Deleted", description: "The image has been permanently deleted. Save changes to update the list." });
         } catch (error) {
@@ -222,7 +217,7 @@ export default function ImageManagementPage() {
         }
     };
     
-    const renderPlaceholderCategory = (category: string, title: string, description: string, appendFn: (img: ImagePlaceholder) => void) => {
+    const renderPlaceholderCategory = (category: string, title: string, description: string) => {
         const fields = getFieldsForCategory(category);
         return (
              <Card>
@@ -271,7 +266,7 @@ export default function ImageManagementPage() {
                             </div>
                         </Card>
                     ))}
-                     <Button type="button" variant="outline" onClick={() => appendFn({ id: `${category}-${Date.now()}`, description: '', imageUrl: 'https://picsum.photos/800/600', imageHint: '' })}>
+                     <Button type="button" variant="outline" onClick={() => appendPlaceholder({ id: `${category}-${Date.now()}`, description: '', imageUrl: 'https://picsum.photos/800/600', imageHint: '' })}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add New Image to {title}
                     </Button>
@@ -368,7 +363,7 @@ export default function ImageManagementPage() {
                         <CardContent className="space-y-6">
                             {benefitFields.map((field, index) => (
                                 <Card key={field.id} className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                    <div className="md:col-span-1 space-y-2">
+                                    <div className="md-col-span-1 space-y-2">
                                         <NextImage src={benefitsForm.watch(`benefitImages.${index}.imageUrl`)} alt={field.id} width={300} height={225} className="rounded-md object-cover w-full aspect-[4/3]"/>
                                         <div className="relative border-2 border-dashed border-muted-foreground/50 rounded-lg p-4 text-center hover:border-accent">
                                             {isUploading[`benefit-${index}`] ? <Loader2 className="h-8 w-8 text-muted-foreground animate-spin"/> : <Upload className="mx-auto h-8 w-8 text-muted-foreground" />}
@@ -410,8 +405,8 @@ export default function ImageManagementPage() {
              <Form {...placeholderForm}>
                 <form onSubmit={placeholderForm.handleSubmit(onPlaceholderSubmit)}>
                     
-                     {renderPlaceholderCategory('hero-slideshow', 'Hero Slideshow Images', 'Images for the main hero section slideshow.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
-                     {renderPlaceholderCategory('our-work', 'Our Works Gallery Images', 'Images for the "Our Works" section.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
+                     {renderPlaceholderCategory('hero-slideshow', 'Hero Slideshow Images', 'Images for the main hero section slideshow.')}
+                     {renderPlaceholderCategory('our-work', 'Our Works Gallery Images', 'Images for the "Our Works" section.')}
                      
                     <div className="mt-6">
                         <Button type="submit" className="w-full" disabled={placeholderForm.formState.isSubmitting || !hasPermission('settings', 'edit')}>
