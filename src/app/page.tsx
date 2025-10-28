@@ -236,61 +236,61 @@ export default function Home() {
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
         {!isCustomerLoggedIn && (
-        <div className="w-full">
-            <div className="group relative rounded-b-2xl overflow-hidden">
-                <div className="absolute inset-0 w-full h-full">
-                     {occasionImages.map((item, index) => (
-                        <Image
-                            key={item.imageUrl}
-                            src={item.imageUrl}
-                            alt={item.occasion}
-                            fill
-                            priority={index === 0}
-                            className={cn(
-                                "object-cover transition-opacity duration-1000",
-                                index === imageIndex ? "opacity-100" : "opacity-0"
-                            )}
-                        />
-                    ))}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
-
-                 <div className="relative flex flex-col justify-center p-6 md:p-10 text-center md:text-left min-h-[500px] md:min-h-[600px] md:w-3/5 lg:w-1/2">
-                    <div className="space-y-2 opacity-0 animate-fade-in [animation-delay:0s] [animation-fill-mode:forwards]">
-                    <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent animate-slide-down opacity-0 [animation-fill-mode:forwards] [animation-delay:0s]">
-                        Utsav<span className="text-primary">Look</span>
-                    </h1>
-                    <p className="font-dancing-script text-2xl md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:1.5s]">Your Perfect Look for Every Utsav.</p>
+            <div className="w-full">
+                <div className="group relative rounded-b-2xl overflow-hidden">
+                    <div className="absolute inset-0 w-full h-full">
+                        {occasionImages.map((item, index) => (
+                            <Image
+                                key={item.imageUrl}
+                                src={item.imageUrl}
+                                alt={item.occasion}
+                                fill
+                                priority={index === 0}
+                                className={cn(
+                                    "object-cover transition-opacity duration-1000",
+                                    index === imageIndex ? "opacity-100" : "opacity-0"
+                                )}
+                            />
+                        ))}
                     </div>
-                    
-                    <div className="mt-4 opacity-0 animate-fade-in [animation-delay:1s] [animation-fill-mode:forwards]">
-                        <div className="whitespace-nowrap text-2xl font-bold md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:3s]">Crafting Memories for Your</div>
-                         <div className="animated-gradient-text text-5xl font-bold md:text-6xl h-20">
-                            {displayedText}
-                            <span className="animate-pulse">|</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
+
+                    <div className="relative flex flex-col justify-center p-6 md:p-10 text-center md:text-left min-h-[500px] md:min-h-[600px] md:w-3/5 lg:w-1/2">
+                        <div className="space-y-2 opacity-0 animate-fade-in [animation-delay:0s] [animation-fill-mode:forwards]">
+                        <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent animate-slide-down opacity-0 [animation-fill-mode:forwards] [animation-delay:0s]">
+                            Utsav<span className="text-primary">Look</span>
+                        </h1>
+                        <p className="font-dancing-script text-2xl md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:1.5s]">Your Perfect Look for Every Utsav.</p>
                         </div>
-                    </div>
-                    
-                    <div className="mt-4 max-w-xl font-body text-base animate-slide-up opacity-0 [animation-fill-mode:forwards] [animation-delay:4.5s]">
-                       <p>Book top-rated, verified artists for your special day.</p>
-                    </div>
+                        
+                        <div className="mt-4 opacity-0 animate-fade-in [animation-delay:1s] [animation-fill-mode:forwards]">
+                            <div className="whitespace-nowrap text-2xl font-bold md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:3s]">Crafting Memories for Your</div>
+                            <div className="animated-gradient-text text-5xl font-bold md:text-6xl h-20">
+                                {displayedText}
+                                <span className="animate-pulse">|</span>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-4 max-w-xl font-body text-base animate-slide-up opacity-0 [animation-fill-mode:forwards] [animation-delay:4.5s]">
+                          <p>Book top-rated, verified artists for your special day.</p>
+                        </div>
 
-                     <div className="mt-6 flex flex-col items-center sm:flex-row gap-4 justify-center md:justify-start opacity-0 animate-fade-in [animation-delay:6s] [animation-fill-mode:forwards]">
-                        <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('services')}>
-                            Book a Service
-                        </Button>
-                         <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('artists')}>
-                            View Artists
-                        </Button>
-                    </div>
-                    <div className="mt-8 text-center md:text-left animate-slide-up opacity-0 [animation-fill-mode:forwards] [animation-delay:7.5s]">
-                       <div className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary-foreground backdrop-blur-sm hover:bg-primary/20 transition-colors">
-                           <Link href="/artist" className="text-sm text-primary font-semibold">Are you an artist? <span className="font-bold underline">Join Us!</span></Link>
+                        <div className="mt-6 flex flex-col items-center sm:flex-row gap-4 justify-center md:justify-start opacity-0 animate-fade-in [animation-delay:6s] [animation-fill-mode:forwards]">
+                            <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('services')}>
+                                Book a Service
+                            </Button>
+                            <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('artists')}>
+                                View Artists
+                            </Button>
+                        </div>
+                        <div className="mt-8 text-center md:text-left animate-slide-up opacity-0 [animation-fill-mode:forwards] [animation-delay:7.5s]">
+                          <div className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary-foreground backdrop-blur-sm hover:bg-primary/20 transition-colors">
+                              <Link href="/artist" className="text-sm text-primary font-semibold">Are you an artist? <span className="font-bold underline">Join Us!</span></Link>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-         </div>
         )}
         
         <ClientOnly>
@@ -338,8 +338,6 @@ export default function Home() {
              </ClientOnly>
         </div>
         
-        <Separator className="my-8"/>
-        
          {topArtists.length > 0 && (
           <div id="artists" className="py-8 md:py-12 px-4">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-8">Meet Our Top Artists</h2>
@@ -351,47 +349,48 @@ export default function Home() {
           </div>
         )}
 
-
-        <Separator className="my-8"/>
-
-        <div className="py-8 md:py-12 px-4">
-            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
-            <Carousel
-                opts={{
-                    align: "start",
-                    loop: true,
-                }}
-                plugins={[
-                    Autoplay({
-                        delay: 5000,
-                    })
-                ]}
-                className="w-full max-w-6xl mx-auto mt-4 md:mt-8"
-            >
-                <CarouselContent>
-                    {galleryImages.map((image, index) => (
-                        <CarouselItem key={index} className="sm:basis-1/2 lg:basis-1/3">
-                            <div className="p-1">
-                                <Card className="overflow-hidden">
-                                    <CardContent className="flex aspect-video items-center justify-center p-0">
-                                        <Image 
-                                            src={image.imageUrl} 
-                                            alt={image.description}
-                                            width={600}
-                                            height={400}
-                                            className="w-full h-full object-cover"
-                                            data-ai-hint={image.imageHint}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-            </Carousel>
-        </div>
-
-        <PwaInstallBanner />
+        {!isCustomerLoggedIn && (
+            <>
+                <Separator className="my-8"/>
+                <div className="py-8 md:py-12 px-4">
+                    <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
+                    <Carousel
+                        opts={{
+                            align: "start",
+                            loop: true,
+                        }}
+                        plugins={[
+                            Autoplay({
+                                delay: 5000,
+                            })
+                        ]}
+                        className="w-full max-w-6xl mx-auto mt-4 md:mt-8"
+                    >
+                        <CarouselContent>
+                            {galleryImages.map((image, index) => (
+                                <CarouselItem key={index} className="sm:basis-1/2 lg:basis-1/3">
+                                    <div className="p-1">
+                                        <Card className="overflow-hidden">
+                                            <CardContent className="flex aspect-video items-center justify-center p-0">
+                                                <Image 
+                                                    src={image.imageUrl} 
+                                                    alt={image.description}
+                                                    width={600}
+                                                    height={400}
+                                                    className="w-full h-full object-cover"
+                                                    data-ai-hint={image.imageHint}
+                                                />
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                    </Carousel>
+                </div>
+                <PwaInstallBanner />
+            </>
+        )}
 
         {selectedService && (
             <ServiceSelectionModal
@@ -410,7 +409,7 @@ export default function Home() {
           />
         )}
       </main>
-      <Footer />
+      {!isCustomerLoggedIn && <Footer />}
     </div>
   );
 }
