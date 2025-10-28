@@ -7,7 +7,7 @@ import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { masterServicePackages, promotions } from './data';
+import { masterServicePackages, promotions, heroSettings } from './data';
 import { INDIA_LOCATIONS } from './india-locations';
 import { PlaceHolderImages } from './placeholder-images';
 
@@ -367,16 +367,14 @@ export const savePromotionalImage = async (data: { imageUrl: string }): Promise<
 };
 
 export const getHeroSettings = async (): Promise<HeroSettings> => {
-    const config = await getConfigDocument<HeroSettings>('heroSettings');
-    return config || { slideshowText: 'Artistry for Every Occasion' };
+    return Promise.resolve(heroSettings);
 };
 export const saveHeroSettings = async (data: HeroSettings): Promise<void> => {
     await setConfigDocument('heroSettings', data);
 };
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
-    const config = await getConfigDocument<{ locations: Record<string, string[]> }>('availableLocations');
-    return config?.locations || {};
+    return Promise.resolve(INDIA_LOCATIONS);
 };
 export const saveAvailableLocations = (locations: Record<string, string[]>) => setConfigDocument('availableLocations', { locations });
 
