@@ -204,7 +204,7 @@ export default function Home() {
                        <p>Book top-rated, verified artists for your special day.</p>
                     </div>
 
-                     <div className="mt-6 flex flex-row gap-4 justify-center md:justify-start">
+                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                         <Button size="lg" className="btn-gradient rounded-full" onClick={() => handleScrollTo('services')}>
                             Book a Service
                         </Button>
@@ -221,31 +221,32 @@ export default function Home() {
             </div>
          </div>
 
+        <div className="py-8 bg-gradient-to-b from-brand-soft-sand/80 to-background">
+          {isCustomerLoggedIn && (
+              <div id="style-match" className="py-8 px-4 md:px-8">
+                  <StyleMatch />
+              </div>
+          )}
 
-        {isCustomerLoggedIn && (
-            <div id="style-match" className="py-8 px-4 md:px-8">
-                <StyleMatch />
-            </div>
-        )}
-
-        <div id="services" className="mt-8 w-full">
-            <h2 className="text-center font-headline text-5xl text-primary mb-8">Our Services</h2>
-            <Tabs defaultValue="mehndi" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
-                    <TabsTrigger value="mehndi" className="py-2.5 flex items-center gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
-                    <TabsTrigger value="makeup" className="py-2.5 flex items-center gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
-                    <TabsTrigger value="photography" className="py-2.5 flex items-center gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
-                </TabsList>
-                <TabsContent value="mehndi">
-                    <CategoryTabContent serviceType="mehndi" />
-                </TabsContent>
-                <TabsContent value="makeup">
-                    <CategoryTabContent serviceType="makeup" />
-                </TabsContent>
-                <TabsContent value="photography">
-                    <CategoryTabContent serviceType="photography" />
-                </TabsContent>
-            </Tabs>
+          <div id="services" className="mt-8 w-full">
+              <h2 className="text-center font-headline text-5xl text-primary mb-8">Our Services</h2>
+              <Tabs defaultValue="mehndi" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-base sm:text-lg py-3">
+                      <TabsTrigger value="mehndi" className="py-2.5 flex items-center gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
+                      <TabsTrigger value="makeup" className="py-2.5 flex items-center gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
+                      <TabsTrigger value="photography" className="py-2.5 flex items-center gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="mehndi">
+                      <CategoryTabContent serviceType="mehndi" />
+                  </TabsContent>
+                  <TabsContent value="makeup">
+                      <CategoryTabContent serviceType="makeup" />
+                  </TabsContent>
+                  <TabsContent value="photography">
+                      <CategoryTabContent serviceType="photography" />
+                  </TabsContent>
+              </Tabs>
+          </div>
         </div>
         
         <Separator className="my-8"/>

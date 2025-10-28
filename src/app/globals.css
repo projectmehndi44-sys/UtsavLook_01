@@ -137,5 +137,9 @@
 }
 
 @layer components {
-    /* Define any custom components here */
+    .from-brand-soft-sand\/80 {
+        --tw-gradient-from: hsla(var(--brand-soft-sand) / 0.8) var(--tw-gradient-from-position);
+        --tw-gradient-to: hsla(var(--brand-soft-sand) / 0) var(--tw-gradient-to-position);
+        --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
 }
