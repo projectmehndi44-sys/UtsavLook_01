@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -20,7 +21,7 @@ import { PERMISSION_MODULES } from '@/lib/team-data';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { getTeamMembers, saveTeamMembers } from '@/lib/services';
+import { getTeamMembers, addOrUpdateTeamMember, deleteTeamMember } from '@/lib/services';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
@@ -76,9 +77,14 @@ export default function TeamManagementPage() {
         },
     });
 
-    React.useEffect(() => {
-       getTeamMembers().then(setTeamMembers);
+    const fetchMembers = React.useCallback(async () => {
+        const members = await getTeamMembers();
+        setTeamMembers(members);
     }, []);
+
+    React.useEffect(() => {
+       fetchMembers();
+    }, [fetchMembers]);
 
     const onSubmit: SubmitHandler<MemberFormValues> = async (data) => {
         const currentMembers = await getTeamMembers();
@@ -88,26 +94,29 @@ export default function TeamManagementPage() {
             return;
         }
 
-        let updatedMembers;
+        let memberToSave: TeamMember;
 
         if (editingMember) {
-             updatedMembers = currentMembers.map(member => 
-                member.id === editingMember.id ? { ...member, name: data.name, permissions: data.permissions, role: data.role } : member
-            );
+            memberToSave = { ...editingMember, name: data.name, permissions: data.permissions, role: data.role };
+            await addOrUpdateTeamMember(memberToSave);
             toast({ title: 'Team Member Updated', description: `${data.name}'s permissions have been updated.` });
         } else {
             try {
+                // If creating a new user, ensure they are also Super Admin if it's the first user
+                const isFirstUser = currentMembers.length === 0;
+                const role = isFirstUser ? 'Super Admin' : data.role;
+                
                 const userCredential = await createUserWithEmailAndPassword(auth, data.username, `temp_password_${Date.now()}`);
                 const authUser = userCredential.user;
                 
-                const newMember: TeamMember = {
-                    id: authUser.uid, // Use the actual UID from Firebase Auth
+                memberToSave = {
+                    id: authUser.uid,
                     name: data.name,
                     username: data.username,
-                    role: data.role,
+                    role: role, // Assign Super Admin if first user
                     permissions: data.permissions
                 };
-                updatedMembers = [...currentMembers, newMember];
+                await addOrUpdateTeamMember(memberToSave);
                 
                 await sendPasswordResetEmail(auth, data.username);
                 
@@ -118,8 +127,7 @@ export default function TeamManagementPage() {
             }
         }
         
-        await saveTeamMembers(updatedMembers);
-        setTeamMembers(updatedMembers);
+        await fetchMembers(); // Refetch all members
         form.reset({ name: '', username: '', role: 'team-member', permissions: form.getValues('permissions')});
         setEditingMember(null);
     };
@@ -134,10 +142,8 @@ export default function TeamManagementPage() {
             });
             return;
         }
-        const currentMembers = await getTeamMembers();
-        const updatedMembers = currentMembers.filter(member => member.id !== memberId);
-        await saveTeamMembers(updatedMembers);
-        setTeamMembers(updatedMembers);
+        await deleteTeamMember(memberId);
+        await fetchMembers();
         
         toast({
             title: 'Member Removed',

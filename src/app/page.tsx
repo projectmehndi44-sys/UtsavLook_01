@@ -2,12 +2,18 @@
 'use client';
 
 import * as React from 'react';
+<<<<<<< HEAD
 import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder, HeroSettings } from '@/lib/types';
 import { getCustomer, getPlaceholderImages, getHeroSettings, listenToCollection } from '@/lib/services';
+=======
+import type { Artist, Customer, CartItem, MasterServicePackage, ImagePlaceholder } from '@/lib/types';
+import { getCustomer, getPlaceholderImages, listenToCollection, getMasterServices } from '@/lib/services';
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Palette,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -19,17 +25,25 @@ import Link from 'next/link';
 import { Packages } from '@/components/utsavlook/Packages';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 import { ServiceSelectionModal } from '@/components/utsavlook/ServiceSelectionModal';
 import { MehndiIcon, MakeupIcon, PhotographyIcon } from '@/components/icons';
 import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
+<<<<<<< HEAD
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 import { ArtistCard } from '@/components/utsavlook/ArtistCard';
 import Autoplay from "embla-carousel-autoplay";
 
 const occasionWords = occasionImages.map(img => img.occasion);
+=======
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Footer } from '@/components/utsavlook/Footer';
+import { ArtistCard } from '@/components/utsavlook/ArtistCard';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getFirebaseApp } from '@/lib/firebase';
+import { ClientOnly } from '@/components/ClientOnly';
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 
 export default function Home() {
   const router = useRouter();
@@ -43,11 +57,9 @@ export default function Home() {
 
   const [isServiceModalOpen, setIsServiceModalOpen] = React.useState(false);
   const [selectedService, setSelectedService] = React.useState<MasterServicePackage | null>(null);
-
-  const [isArtistModalOpen, setIsArtistModalOpen] = React.useState(false);
-  const [selectedArtist, setSelectedArtist] = React.useState<Artist | null>(null);
   
   const [galleryImages, setGalleryImages] = React.useState<ImagePlaceholder[]>([]);
+<<<<<<< HEAD
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
@@ -67,30 +79,52 @@ export default function Home() {
     setCustomer(null);
     setCart([]);
     localStorage.removeItem('currentCustomerId');
+=======
+  const [backgroundImages, setBackgroundImages] = React.useState<ImagePlaceholder[]>([]);
+  const [topArtists, setTopArtists] = React.useState<Artist[]>([]);
+
+
+  const { toast } = useToast();
+
+  const [currentBgIndex, setCurrentBgIndex] = React.useState(0);
+  
+  const handleCustomerLogout = () => {
+    signOut(getAuth(getFirebaseApp()));
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
     toast({
       title: 'Logged Out',
       description: 'You have been successfully logged out.',
     });
-  }, [toast]);
-  
-  useInactivityTimeout(isCustomerLoggedIn ? handleCustomerLogout : () => {});
+  };
 
-  const checkLoggedInCustomer = React.useCallback(async () => {
-    const customerId = localStorage.getItem('currentCustomerId');
-    if (customerId) {
-        const currentCustomer = await getCustomer(customerId);
+  React.useEffect(() => {
+    const auth = getAuth(getFirebaseApp());
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const currentCustomer = await getCustomer(user.uid);
         if (currentCustomer) {
             setIsCustomerLoggedIn(true);
             setCustomer(currentCustomer);
-            const storedCart = localStorage.getItem(`cart_${customerId}`);
+            const storedCart = localStorage.getItem(`cart_${user.uid}`);
             setCart(storedCart ? JSON.parse(storedCart) : []);
+            localStorage.setItem('currentCustomerId', user.uid);
         } else {
+<<<<<<< HEAD
              handleCustomerLogout();
+=======
+            // This case might happen if user is authenticated but not in our 'customers' collection
+            setIsCustomerLoggedIn(false);
+            setCustomer(null);
+            setCart([]);
+            localStorage.removeItem('currentCustomerId');
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
         }
-    } else {
+      } else {
+        // User is signed out
         setIsCustomerLoggedIn(false);
         setCustomer(null);
         setCart([]);
+<<<<<<< HEAD
     }
   }, [handleCustomerLogout]);
 
@@ -99,6 +133,19 @@ export default function Home() {
 
     const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
     const unsubscribePackages = listenToCollection<MasterServicePackage>('masterServices', (services) => {
+=======
+        localStorage.removeItem('currentCustomerId');
+      }
+    });
+    
+    const unsubscribeArtists = listenToCollection<Artist>('artists', (fetchedArtists) => {
+        setArtists(fetchedArtists);
+        // Set initial sorted artists, then shuffle on client
+        setTopArtists([...fetchedArtists].sort((a, b) => b.rating - a.rating).slice(0, 5));
+    });
+    
+    getMasterServices().then((services) => {
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
         const updatedServices = services.map(service => ({
             ...service,
             image: service.image || `https://picsum.photos/seed/${service.id}/400/300`,
@@ -114,14 +161,32 @@ export default function Home() {
         setGalleryImages(images.filter(img => img.id.startsWith('our-work')));
     });
 
+<<<<<<< HEAD
     getHeroSettings().then(setHeroSettings);
+=======
+    const intervalId = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % (backgroundImages.length || 1));
+    }, 5000); 
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 
     return () => {
         unsubscribeArtists();
-        unsubscribePackages();
+        unsubscribeAuth();
     };
+<<<<<<< HEAD
   }, [checkLoggedInCustomer]);
+=======
+  }, [backgroundImages.length]);
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
   
+   // This effect runs only on the client after mount to prevent hydration errors.
+  React.useEffect(() => {
+      if (artists.length > 0) {
+          setTopArtists(prevArtists => [...prevArtists].sort(() => 0.5 - Math.random()));
+      }
+  }, [artists]);
+
+
   const handleAddToCart = (item: Omit<CartItem, 'id'>) => {
     if (!isCustomerLoggedIn || !customer) {
         localStorage.setItem('tempCartItem', JSON.stringify(item));
@@ -143,11 +208,26 @@ export default function Home() {
     const relevantPackages = masterServices.filter(p => p.service === serviceType);
     
     return (
+<<<<<<< HEAD
       <div className="space-y-8 mt-8 px-4 md:px-8">
         <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+=======
+      <div className="space-y-8 mt-4 md:mt-8">
+        <Carousel
+            opts={{
+                align: "start",
+            }}
+            className="w-full"
+        >
+            <CarouselContent>
+                <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+            </CarouselContent>
+        </Carousel>
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
       </div>
     );
   }
+  
 
   const handleScrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -163,6 +243,7 @@ export default function Home() {
         customer={customer}
         cartCount={cart.length}
       />
+<<<<<<< HEAD
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
         <div className="w-full">
             <div className="group relative rounded-b-2xl overflow-hidden">
@@ -245,6 +326,62 @@ export default function Home() {
                   </TabsContent>
               </Tabs>
           </div>
+=======
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <div className="text-center py-4 md:py-8">
+            <h1 className="font-headline text-4xl sm:text-5xl font-bold text-accent md:text-7xl">
+                Utsav<span className="text-primary">Look</span>
+            </h1>
+            <p className="mt-2 font-dancing-script text-xl sm:text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
+            <div className="mt-4 font-body text-sm text-foreground/80 max-w-3xl mx-auto md:text-lg">
+              <p>Get your perfect UtsavLook by booking top-rated Mehendi, Makeup, and Photography artists,</p>
+              <p>all verified professionals dedicated to making your special day unforgettable.</p>
+            </div>
+        </div>
+        <ClientOnly>
+        {isCustomerLoggedIn && (
+            <div id="style-match" className="py-8 max-w-4xl mx-auto w-full">
+               <Accordion type="single" collapsible className="w-full bg-card rounded-lg shadow-lg border-accent/20">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="p-4 md:p-6 text-left">
+                    <div className="flex items-center gap-4">
+                        <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-accent flex-shrink-0" />
+                        <div>
+                            <h3 className="text-xl md:text-2xl font-bold font-headline text-primary">AI Style Match</h3>
+                            <p className="text-sm text-muted-foreground mt-1">Get personalized recommendations by uploading a photo of your outfit.</p>
+                        </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-0">
+                    <StyleMatch />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+        )}
+        </ClientOnly>
+
+        <div className="mt-4 md:mt-8">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-4 md:mb-8">Our Services</h2>
+             <ClientOnly>
+                <Tabs defaultValue="mehndi" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-sm sm:text-lg py-2 md:py-3">
+                        <TabsTrigger value="mehndi" className="py-2 flex items-center gap-1 sm:gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
+                        <TabsTrigger value="makeup" className="py-2 flex items-center gap-1 sm:gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
+                        <TabsTrigger value="photography" className="py-2 flex items-center gap-1 sm:gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="mehndi">
+                        <CategoryTabContent serviceType="mehndi" />
+                    </TabsContent>
+                    <TabsContent value="makeup">
+                        <CategoryTabContent serviceType="makeup" />
+                    </TabsContent>
+                    <TabsContent value="photography">
+                        <CategoryTabContent serviceType="photography" />
+                    </TabsContent>
+                </Tabs>
+             </ClientOnly>
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
         </div>
         
         <Separator className="my-8"/>
@@ -260,8 +397,22 @@ export default function Home() {
 
         <Separator className="my-8"/>
 
-        <div className="py-12">
-            <h2 className="text-center font-headline text-5xl text-primary">Our Works</h2>
+         {topArtists.length > 0 && (
+          <div className="py-8 md:py-12">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-8">Meet Our Top Artists</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+              {topArtists.map((artist) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
+            </div>
+          </div>
+        )}
+
+
+        <Separator className="my-8"/>
+
+        <div className="py-8 md:py-12">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
             <Carousel
                 opts={{
                     align: "start",
@@ -272,11 +423,15 @@ export default function Home() {
                         delay: 5000,
                     })
                 ]}
+<<<<<<< HEAD
                 className="w-full"
+=======
+                className="w-full max-w-6xl mx-auto mt-4 md:mt-8"
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
             >
                 <CarouselContent>
                     {galleryImages.map((image, index) => (
-                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                        <CarouselItem key={index} className="sm:basis-1/2 lg:basis-1/3">
                             <div className="p-1">
                                 <Card className="overflow-hidden">
                                     <CardContent className="flex aspect-video items-center justify-center p-0">
@@ -308,14 +463,8 @@ export default function Home() {
                 onAddToCart={handleAddToCart}
             />
         )}
-        {selectedArtist && (
-            <ArtistProfileModal 
-                artist={selectedArtist}
-                isOpen={isArtistModalOpen}
-                onOpenChange={setIsArtistModalOpen}
-            />
-        )}
       </main>
+      <Footer />
     </div>
   );
 }

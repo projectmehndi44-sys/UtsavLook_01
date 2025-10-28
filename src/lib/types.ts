@@ -62,6 +62,7 @@ export type Artist = {
   phone: string;
   fcmToken?: string;
   profilePicture: string;
+  coverPhoto?: string; // New field for the cover photo
   workImages: string[];
   services: ('mehndi' | 'makeup' | 'photography')[];
   serviceOfferings?: ArtistServiceOffering[];
@@ -80,6 +81,7 @@ export type Artist = {
   referralCode?: string;
   referralDiscount?: number; // Percentage, e.g., 10 for 10%
   status?: 'active' | 'suspended';
+  showContactInfo?: boolean; // New privacy field
   // New fields for one-time password setup
   firstTimeLoginCode?: string;
   firstTimeLoginCodeUsed?: boolean;
@@ -110,6 +112,7 @@ export type CartItem = {
 export type Booking = {
   id: string;
   artistIds: string[];
+  adminIds?: string[];
   customerId: string; // Link to customer
   customerName: string;
   customerContact?: string;

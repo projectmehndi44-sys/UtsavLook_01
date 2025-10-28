@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MakeupIcon, MehndiIcon, PhotographyIcon } from '@/components/icons';
 import type { MasterServicePackage } from '@/lib/types';
-import { PackageSearch } from 'lucide-react';
+import { PackageSearch, IndianRupee } from 'lucide-react';
+import { CarouselItem } from '@/components/ui/carousel';
 
 interface PackagesProps {
     packages: MasterServicePackage[];
@@ -35,44 +37,68 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <>
             {packages.map((service) => {
                 const lowestPrice = Math.min(...service.categories.map(c => c.basePrice));
                 return (
-                    <div key={service.id} className="p-1 h-full">
-                        <Card className="overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow">
-                            <CardHeader className="p-0">
-                                 <Image src={service.image} alt={service.name} width={400} height={250} className="w-full object-cover aspect-video" data-ai-hint="mehndi design"/>
-                            </CardHeader>
-                            <CardContent className="p-4 flex-grow">
-                                <CardTitle className="text-xl font-semibold text-primary mb-2">{service.name}</CardTitle>
-                                <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
-                                <div className="flex flex-wrap gap-1">
-                                    {service.tags.map(tag => (
-                                        <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
-                                            {getServiceIcon(service.service)}
-                                            <span className="capitalize">{tag}</span>
-                                        </Badge>
-                                    ))}
+                    <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                        <div className="p-1 h-full">
+                            <Card className="overflow-hidden flex flex-col group h-full">
+                                <CardContent className="p-0 relative">
+                                    <div className="aspect-[4/3] relative">
+                                    <Image
+                                        src={service.image}
+                                        alt={service.name}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint="mehndi makeup"
+                                    />
+                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-[-50%] z-20">
+                                        <div className="w-16 h-16 bg-background rounded-full border-4 border-white object-cover shadow-lg aspect-square flex items-center justify-center">
+                                             {getServiceIcon(service.service)}
+                                        </div>
+                                    </div>
+                                    </div>
+                                </CardContent>
+
+                                <div className="pt-10 p-4 flex flex-col flex-grow text-center">
+                                    <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1 flex-grow">
+                                    {service.description}
+                                    </p>
+
+                                    <div className="flex flex-wrap gap-1 justify-center my-3">
+                                        {service.tags.map(tag => (
+                                            <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
+                                                <span className="capitalize">{tag}</span>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                    
                                 </div>
-                            </CardContent>
-                            <CardFooter className="p-4 bg-background/50 flex justify-between items-center mt-auto">
-                                <div className="text-lg font-bold text-primary">
-                                    <span className="text-xs font-normal text-muted-foreground">Starts from</span><br/>
-                                    ₹{lowestPrice.toLocaleString()}
-                                </div>
-                                <Button 
-                                    onClick={() => onServiceSelect(service)} 
-                                    className="bg-accent hover:bg-accent/90"
-                                >
-                                    <PackageSearch className="mr-2 h-4 w-4"/>
-                                    View Options
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
+                                <CardFooter className="p-2 bg-background/50 border-t mt-auto">
+                                   <div className="flex justify-between items-center w-full">
+                                        <div className="text-lg font-bold text-primary flex flex-col items-start">
+                                            <span className="text-xs font-normal text-muted-foreground">From</span>
+                                            <div className="flex items-center">
+                                                <IndianRupee className="w-4 h-4 mr-0.5"/>
+                                                {lowestPrice.toLocaleString()}
+                                            </div>
+                                        </div>
+                                        <Button 
+                                            onClick={() => onServiceSelect(service)} 
+                                            className="bg-accent hover:bg-accent/90"
+                                        >
+                                            <PackageSearch className="mr-2 h-4 w-4"/>
+                                            View Options
+                                        </Button>
+                                    </div>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    </CarouselItem>
                 )
             })}
-        </div>
+        </>
     );
 }

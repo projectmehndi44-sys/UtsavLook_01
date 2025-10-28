@@ -1,15 +1,15 @@
+
 import type { Artist } from '@/lib/types';
 import Image from 'next/image';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { IndianRupee, MapPin, Star, CheckCircle } from 'lucide-react';
+import { IndianRupee, Star, CheckCircle } from 'lucide-react';
 import { MakeupIcon, MehndiIcon, PhotographyIcon } from '@/components/icons';
+import Link from 'next/link';
 
 interface ArtistCardProps {
   artist: Artist;
-  onViewProfile: (artist: Artist) => void;
 }
 
 const getServiceIcon = (service: Artist['services'][number]) => {
@@ -25,12 +25,13 @@ const getServiceIcon = (service: Artist['services'][number]) => {
     }
 }
 
-export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
+export function ArtistCard({ artist }: ArtistCardProps) {
   const primaryService = artist.services?.[0];
   const baseCharge = (primaryService && artist.charges?.[primaryService]) || artist.charge || 0;
-
+  const primaryWorkImage = artist.workImages?.[0] || 'https://picsum.photos/seed/placeholder/800/600';
 
   return (
+<<<<<<< HEAD
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
       <CardHeader className="p-0 relative">
         <div className="aspect-[2/3] w-full relative">
@@ -43,21 +44,54 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
             />
         </div>
          <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+=======
+    <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent">
+      <CardContent className="p-0 relative">
+        <Link href={`/artist/${artist.id}`} className="aspect-[4/3] relative block">
+          <Image
+            src={primaryWorkImage}
+            alt={`${artist.name}'s work`}
+            fill
+            className="object-cover"
+            data-ai-hint="mehndi makeup"
+          />
+           <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
             {artist.verified && (
-                <Badge className="bg-green-600 text-white pl-2">
+                <Badge className="bg-green-600 text-white pl-2 border-green-700 shadow-md">
                     <CheckCircle className="w-3.5 h-3.5 mr-1"/>
                     Verified
+<<<<<<< HEAD
+=======
                 </Badge>
             )}
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-xl font-bold text-primary mb-2">{artist.name}</CardTitle>
-        <div className="flex items-center text-sm text-muted-foreground mb-3">
-          <MapPin className="w-4 h-4 mr-1.5 text-accent" />
-          <span>{artist.location}</span>
-        </div>
-        <div className="flex flex-wrap gap-2 mb-4">
+            {artist.isFoundersClubMember && (
+                <Badge className="bg-amber-500 text-white pl-2 border-amber-600 shadow-md">
+                    <Star className="w-3.5 h-3.5 mr-1 fill-current"/>
+                    Founder's Club
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
+                </Badge>
+            )}
+          </div>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
+             <Image
+                src={artist.profilePicture}
+                alt={artist.name}
+                width={80}
+                height={80}
+                className="rounded-full border-4 border-white object-cover shadow-lg aspect-square"
+            />
+          </div>
+        </Link>
+      </CardContent>
+
+      <div className="pt-12 p-4 flex flex-col flex-grow text-center">
+        <h3 className="text-xl font-headline text-primary font-bold">{artist.name}</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          {artist.location}
+        </p>
+
+        <div className="flex flex-wrap gap-2 justify-center my-3">
           {(artist.services || []).map((service) => (
             <Badge key={service} variant="secondary" className="gap-1.5 pl-2">
               {getServiceIcon(service)}
@@ -65,19 +99,29 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
             </Badge>
           ))}
         </div>
-      </CardContent>
-      <CardFooter className="p-4 bg-background/50 flex justify-between items-center">
-        <div className="flex flex-col">
-            <div className="flex items-center text-lg font-bold text-primary">
-                <IndianRupee className="w-4 h-4 mr-1" />
+        
+        <div className="flex justify-around items-center mt-auto pt-3 border-t">
+           <div className="flex flex-col items-center">
+             <span className="text-xs text-muted-foreground">Rating</span>
+             <div className="flex items-center font-bold text-amber-500">
+                <Star className="w-4 h-4 mr-1 fill-current" />
+                <span>{artist.rating.toFixed(1)}</span>
+            </div>
+           </div>
+           <div className="flex flex-col items-center">
+             <span className="text-xs text-muted-foreground">Starts From</span>
+             <div className="flex items-center font-bold text-primary">
+                <IndianRupee className="w-4 h-4" />
                 <span>{baseCharge.toLocaleString()}</span>
             </div>
-            <div className="flex items-center text-amber-500">
-                <Star className="w-4 h-4 mr-1 fill-current" />
-                <span className="font-bold text-sm">{artist.rating}</span>
-            </div>
+           </div>
         </div>
-        <Button onClick={() => onViewProfile(artist)} className="bg-accent hover:bg-accent/90">View Profile</Button>
+      </div>
+      
+      <CardFooter className="p-2 bg-background/50">
+        <Button asChild className="w-full bg-accent hover:bg-accent/90" size="lg">
+            <Link href={`/artist/${artist.id}`}>View Profile</Link>
+        </Button>
       </CardFooter>
     </Card>
   );

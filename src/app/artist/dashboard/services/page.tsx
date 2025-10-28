@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import type { Artist, MasterServicePackage, ArtistServiceOffering } from '@/lib/types';
-import { listenToCollection, updateArtist } from '@/lib/services';
+import { getMasterServices, updateArtist } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +24,7 @@ export default function ArtistServicesPage() {
     const form = useForm<{ offerings: ArtistServiceOffering[] }>();
 
     React.useEffect(() => {
-        const unsubscribe = listenToCollection<MasterServicePackage>('masterServices', setMasterServices);
-        return () => unsubscribe();
+        getMasterServices().then(setMasterServices);
     }, []);
 
     React.useEffect(() => {

@@ -15,8 +15,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
+<<<<<<< HEAD
 import { getTeamMembers } from '@/lib/services';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
+=======
+import { getDocument } from '@/lib/services';
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 import Link from 'next/link';
 
 const loginSchema = z.object({
@@ -25,16 +29,19 @@ const loginSchema = z.object({
 });
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 export default function AdminLoginPage() {
     const router = useRouter();
     const { toast } = useToast();
     const auth = getAuth(getFirebaseApp());
-    const { isAuthenticated, isLoading: isAuthLoading } = useAdminAuth();
     
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
+<<<<<<< HEAD
     React.useEffect(() => {
         if (!isAuthLoading && isAuthenticated) {
             router.push('/admin');
@@ -52,18 +59,26 @@ export default function AdminLoginPage() {
             const teamMembers = await getTeamMembers();
             
             const memberProfile = teamMembers.find(m => m.id === userCredential.user.uid);
+=======
+    const form = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: { email: '', password: '' },
+    });
+
+    const handleLogin = async (data: LoginFormValues) => {
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+            const memberProfile = await getDocument<TeamMember>('teamMembers', userCredential.user.uid);
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
             
-            if (memberProfile) {
-                toast({ title: 'Login Successful', description: `Welcome, ${memberProfile.name}! Redirecting...` });
-                router.push('/admin'); 
-            } else {
-                await auth.signOut();
-                toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
+            if (!memberProfile) {
+                 await auth.signOut();
+                 toast({ title: 'Access Denied', description: 'This user account does not have admin privileges.', variant: 'destructive' });
             }
         } catch (error: any) {
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                description = 'Invalid credentials. Please check your username and password.';
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                description = 'Invalid credentials. Please check your email and password.';
             }
             toast({ title: 'Authentication Failed', description, variant: 'destructive' });
         }
@@ -89,6 +104,7 @@ export default function AdminLoginPage() {
             });
         }
     };
+<<<<<<< HEAD
     
     if (isAuthLoading || isAuthenticated) {
         return (
@@ -97,21 +113,36 @@ export default function AdminLoginPage() {
              </div>
         )
     }
+=======
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 
     return (
         <>
             <div className="w-full flex items-center justify-center min-h-screen bg-muted/30">
+<<<<<<< HEAD
                  <div className="mx-auto grid w-[400px] gap-6">
+=======
+                <div className="mx-auto grid w-[400px] gap-6">
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
                     <div className="grid gap-2 text-center">
                         <h1 className="text-3xl font-bold text-primary">Admin Portal Login</h1>
                         <p className="text-balance text-muted-foreground">Enter your team credentials to access your dashboard.</p>
                     </div>
+<<<<<<< HEAD
                     <Form {...loginForm}>
                         <form onSubmit={loginForm.handleSubmit(handleLogin)} className="grid gap-4">
                             <FormField control={loginForm.control} name="email" render={({ field }) => (
                                 <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                             <FormField control={loginForm.control} name="password" render={({ field }) => (
+=======
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleLogin)} className="grid gap-4">
+                            <FormField control={form.control} name="email" render={({ field }) => (
+                                <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="your.email@example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="password" render={({ field }) => (
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
                                 <FormItem>
                                     <div className="flex items-center">
                                         <FormLabel>Password</FormLabel>
@@ -123,8 +154,13 @@ export default function AdminLoginPage() {
                                     <FormMessage />
                                 </FormItem>
                             )} />
+<<<<<<< HEAD
                             <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
                                 {loginForm.formState.isSubmitting ? 'Logging in...' : 'Login'}
+=======
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
                             </Button>
                         </form>
                     </Form>
@@ -140,7 +176,7 @@ export default function AdminLoginPage() {
                  <DialogContent className="sm:max-w-md">
                     <form onSubmit={handlePasswordReset}>
                         <DialogHeader>
-                            <DialogTitle>Forgot Password</DialogTitle>
+                            <DialogTitle>Forgot Your Password?</DialogTitle>
                             <DialogDescription>Enter your registered login email to receive a password reset link.</DialogDescription>
                         </DialogHeader>
                         <div className="py-4">

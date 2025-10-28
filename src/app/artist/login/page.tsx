@@ -29,17 +29,25 @@ export default function ArtistLoginPage() {
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
     const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState('');
 
+    // This effect will handle redirecting already logged-in users.
     React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // User is logged in, verify if they are an artist
                 const artistProfile = await getArtist(user.uid);
                 if (artistProfile) {
+                    // If they are an artist, redirect to dashboard
                     router.push('/artist/dashboard');
                 }
+                // If not an artist, they will be signed out by other layout effects,
+                // so we don't need to do anything here.
             }
         });
+
+        // Cleanup subscription on unmount
         return () => unsubscribe();
     }, [auth, router]);
+
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,29 +55,19 @@ export default function ArtistLoginPage() {
         
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // Verify if the logged-in user is a registered artist
-            const artistProfile = await getArtist(user.uid);
-            
-            if (artistProfile) {
-                toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
-                router.push('/artist/dashboard');
-            } else {
-                // If they have an auth account but no artist profile, deny access
+             const artistProfile = await getArtist(userCredential.user.uid);
+             if (!artistProfile) {
                 await auth.signOut();
-                toast({ 
-                    title: 'Access Denied', 
-                    description: 'This account does not have artist privileges.', 
-                    variant: 'destructive' 
-                });
-            }
-
+                toast({ title: 'Access Denied', description: 'This account is not registered as an artist.', variant: 'destructive' });
+             } else {
+                toast({ title: 'Login Successful', description: `Welcome back! Redirecting...` });
+                router.push('/artist/dashboard'); // The missing redirect
+             }
         } catch (error: any) {
             console.error("Login error:", error);
             let description = 'An error occurred during login. Please try again.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
-                description = 'Invalid credentials. Please check your email and password.';
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                description = 'Invalid email or password. Please check your credentials and try again.';
             } else if (error.code === 'auth/user-disabled') {
                 description = 'Your account has been suspended by an administrator.';
             }
@@ -190,3 +188,7 @@ export default function ArtistLoginPage() {
         </>
     );
 }
+
+    
+
+    

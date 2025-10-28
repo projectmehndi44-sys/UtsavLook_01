@@ -1,71 +1,46 @@
 
+'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, User, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updatePassword } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
+import { getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signOut, isSignInWithEmailLink as isFbSignInWithEmailLink, signInWithEmailLink as fbSignInWithEmailLink } from 'firebase/auth';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getFunctions, httpsCallable, FunctionsError } from "firebase/functions";
+import { getStorage } from "firebase/storage";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const firebaseConfig = {
   "projectId": "studio-163529036-f9a8c",
-  "appId": "1:240526745218:web:807f89ba03731495cf9e9b",
+  "appId": "1:240526745218:web:bf45387565e48cb9cf9e9b",
   "storageBucket": "studio-163529036-f9a8c.appspot.com",
-  "apiKey": "AIzaSyBLauxXUk2zR5VBRrl2_9PBpDJLMB9gGOI",
+  "apiKey": "AIzaSyD8DvhHJ3nzHmBXRFNDVzxgWcb7Nx5qkrY",
   "authDomain": "studio-163529036-f9a8c.firebaseapp.com",
   "messagingSenderId": "240526745218"
 };
 
+
 // --- Singleton Pattern for Firebase App Initialization ---
-let app: FirebaseApp;
-const getFirebaseApp = (): FirebaseApp => {
+export const getFirebaseApp = (): FirebaseApp => {
     if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
-    } else {
-        app = getApp();
-    }
-    return app;
-}
-
-// Initialize on first call
-getFirebaseApp();
-
-const auth = getAuth(getFirebaseApp());
-const googleProvider = new GoogleAuthProvider();
-
-// --- Firestore Initialization with Offline Persistence ---
-let dbInstance: Firestore | null = null;
-let dbInitializationPromise: Promise<Firestore> | null = null;
-
-const initializeDb = (): Promise<Firestore> => {
-    if (dbInitializationPromise) {
-        return dbInitializationPromise;
-    }
-    
-    dbInitializationPromise = new Promise(async (resolve, reject) => {
-        try {
-            const db = getFirestore(getFirebaseApp());
-            if (typeof window !== 'undefined') {
-                await enableIndexedDbPersistence(db).catch((err: any) => {
-                    console.warn("Firebase Persistence Error:", err.code);
-                });
-            }
-            dbInstance = db;
-            resolve(dbInstance);
-        } catch (error) {
-            console.error("Firestore initialization failed", error);
-            dbInitializationPromise = null;
-            reject(error);
+        // In a Vercel production environment, dynamically set the authDomain
+        if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+            firebaseConfig.authDomain = window.location.hostname;
         }
-    });
-
-    return dbInitializationPromise;
-};
-
-export const getDb = async (): Promise<Firestore> => {
-    if (dbInstance) {
-        return dbInstance;
+        return initializeApp(firebaseConfig);
+    } else {
+        return getApp();
     }
-    return initializeDb();
 }
+
+const app = getFirebaseApp();
+const auth = getAuth(app);
+
+// Initialize Firestore with offline persistence enabled.
+// This is the SINGLE source of truth for the Firestore instance.
+const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
+
 
 const sendOtp = (phoneNumber: string, appVerifier: RecaptchaVerifier): Promise<ConfirmationResult> => {
     const fullPhoneNumber = `+91${phoneNumber}`;
@@ -76,7 +51,37 @@ const signOutUser = () => {
     return signOut(auth);
 }
 
-export { app, auth, sendOtp, signOutUser, getFirebaseApp, getFirestore };
+const isSignInWithEmailLink = (auth: any, link: any) => isFbSignInWithEmailLink(auth, link);
+const signInWithEmailLink = (auth: any, email: any, link: any) => fbSignInWithEmailLink(auth, email, link);
+
+// --- Firebase Functions ---
+const functions = getFunctions(getFirebaseApp());
+export const callFirebaseFunction = async (functionName: string, data: any) => {
+    const callable = httpsCallable(functions, functionName);
+    
+    try {
+        const result = await callable(data);
+        return result;
+    } catch (error: any) {
+        // Check if it's a permission-denied error from the function
+        if (error.code === 'permission-denied' || error.code === 'unauthenticated' || error.code === 'failed-precondition' || error.code === 'invalid-argument') {
+             const permissionError = new FirestorePermissionError({
+                path: `Cloud Function: ${functionName}`,
+                operation: 'write', // Functions that modify data are 'write' operations
+                requestResourceData: data,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+        }
+        // Instead of re-throwing, return an object indicating failure
+        // This allows the caller to handle UI without crashing on an unhandled promise rejection
+        return { data: { success: false, message: error.message } };
+    }
+};
+
+
+export { app, auth, db, sendOtp, signOutUser, getStorage, isSignInWithEmailLink, signInWithEmailLink };
+
+// This is required for the window.confirmationResult to be accessible
 declare global {
     interface Window {
         recaptchaVerifier?: RecaptchaVerifier;

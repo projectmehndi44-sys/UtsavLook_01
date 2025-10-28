@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import * as React from 'react';
@@ -5,17 +7,19 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Briefcase, MoreHorizontal, AlertOctagon, CheckSquare } from 'lucide-react';
+import { Briefcase, MoreHorizontal, AlertOctagon, CheckSquare, FileText } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import type { Booking, Artist } from '@/lib/types';
-import { listenToCollection, updateBooking } from '@/lib/services';
+import { listenToCollection, updateBooking, getFinancialSettings } from '@/lib/services';
 import { AssignArtistModal } from '@/components/utsavlook/AssignArtistModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format, parseISO, isValid } from 'date-fns';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { Timestamp } from 'firebase/firestore';
+import { BookingDetailsModal } from '@/components/utsavlook/BookingDetailsModal';
+import { callFirebaseFunction } from '@/lib/firebase';
 
 
 function getSafeDate(date: any): Date {
@@ -38,8 +42,13 @@ export default function BookingManagementPage() {
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
     const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = React.useState(false);
+    const [platformFee, setPlatformFee] = React.useState(0.1);
 
-    React.useEffect(() => {
+     React.useEffect(() => {
+        getFinancialSettings().then(settings => {
+            setPlatformFee(settings.platformFeePercentage / 100);
+        });
         const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
         const unsubscribeBookings = listenToCollection<Booking>('bookings', (data) => {
             setBookings(data.sort((a, b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime()));
@@ -51,11 +60,6 @@ export default function BookingManagementPage() {
         };
     }, []);
     
-    const sendNotification = (artistId: string, booking: Booking, title: string, message: string) => {
-        // In a real app, this would be a server-side function to send a push notification
-        console.log(`Sending notification to ${artistId}: ${title} - ${message}`);
-    };
-
     const handleUpdateBookingStatus = async (bookingId: string, status: Booking['status'], artistIds?: string[]) => {
         const bookingToUpdate = bookings.find(b => b.id === bookingId);
         if (!bookingToUpdate) return;
@@ -87,16 +91,7 @@ export default function BookingManagementPage() {
 
         await handleUpdateBookingStatus(bookingId, 'Confirmed');
         
-        booking.artistIds.forEach(artistId => {
-            if (artistId) {
-                sendNotification(
-                    artistId,
-                    booking,
-                    'Booking Approved!',
-                    `Your booking for ${booking.items.map(i => i.servicePackage.name).join(', ')} with ${booking.customerName} has been approved by the admin.`
-                );
-            }
-        });
+        // This will now be handled by a Cloud Function Trigger
         
         toast({
             title: "Booking Approved",
@@ -111,16 +106,7 @@ export default function BookingManagementPage() {
         await handleUpdateBookingStatus(bookingId, 'Cancelled');
 
         if(booking.artistIds && booking.artistIds.length > 0) {
-            booking.artistIds.forEach(artistId => {
-                if (artistId) {
-                     sendNotification(
-                        artistId,
-                        booking,
-                        'Booking Cancelled',
-                        `Your booking for ${booking.items.map(i => i.servicePackage.name).join(', ')} with ${booking.customerName} has been cancelled by the admin.`
-                    );
-                }
-            });
+           // Cloud function will handle this notification
         }
         
         toast({
@@ -137,16 +123,7 @@ export default function BookingManagementPage() {
         await handleUpdateBookingStatus(bookingId, 'Disputed');
         
         if (booking.artistIds && booking.artistIds.length > 0) {
-             booking.artistIds.forEach(artistId => {
-                if (artistId) {
-                     sendNotification(
-                        artistId,
-                        booking,
-                        'Booking Disputed',
-                        `A dispute has been raised for your booking with ${booking.customerName}. Please contact admin.`
-                    );
-                }
-            });
+            // Cloud function will handle this notification
         }
 
         toast({
@@ -161,26 +138,19 @@ export default function BookingManagementPage() {
         setIsAssignModalOpen(true);
     };
     
+    const handleOpenDetailsModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setIsDetailsModalOpen(true);
+    }
+    
     const handleAssignArtist = async (bookingId: string, assignedArtistIds: string[]) => {
         const booking = bookings.find(b => b.id === bookingId);
         if (!booking) return;
         
-        const originalArtistIds = booking.artistIds || [];
         const newStatus = booking.paymentMethod === 'offline' ? 'Pending Approval' : 'Confirmed';
         await handleUpdateBookingStatus(bookingId, newStatus, assignedArtistIds);
         
-        assignedArtistIds.forEach(artistId => {
-            const artist = artists.find(a => a.id === artistId);
-            if (!artist) return;
-
-            const isNewAssignment = !originalArtistIds.includes(artistId);
-            const title = isNewAssignment ? 'New Booking Assigned!' : 'Booking Updated';
-            const message = isNewAssignment
-                ? `You have been assigned a new booking for ${booking.items.map(i => i.servicePackage.name).join(', ')} with ${booking.customerName}.`
-                : `The details for booking #${bookingId} have been updated.`;
-
-            sendNotification(artistId, booking, title, message);
-        });
+        // This will be handled by a cloud function now
 
         toast({
             title: `Artists Assigned`,
@@ -277,6 +247,9 @@ export default function BookingManagementPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                             <DropdownMenuItem onSelect={() => handleOpenDetailsModal(booking)}>
+                                                <FileText className="mr-2 h-4 w-4"/> View Full Details
+                                            </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             {booking.status === 'Pending Confirmation' && (
                                                 <DropdownMenuItem onSelect={() => handleOfflineConfirm(booking.id)}>
@@ -355,7 +328,7 @@ export default function BookingManagementPage() {
                     </Tabs>
                 </CardContent>
             </Card>
-            {selectedBooking && (
+            {selectedBooking && hasPermission('bookings', 'edit') && (
                 <AssignArtistModal
                     isOpen={isAssignModalOpen}
                     onOpenChange={setIsAssignModalOpen}
@@ -363,6 +336,15 @@ export default function BookingManagementPage() {
                     artists={artists}
                     allBookings={bookings}
                     onAssign={handleAssignArtist}
+                />
+            )}
+             {selectedBooking && (
+                <BookingDetailsModal
+                    booking={selectedBooking}
+                    isOpen={isDetailsModalOpen}
+                    onOpenChange={setIsDetailsModalOpen}
+                    platformFeePercentage={platformFee}
+                    isAdminView={true}
                 />
             )}
         </>

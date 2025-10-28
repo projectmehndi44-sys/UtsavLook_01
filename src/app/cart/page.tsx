@@ -13,26 +13,29 @@ import { CartItemsList } from "@/components/cart/cart-items-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { CartItem, Customer, Artist, Promotion } from '@/lib/types';
+import type { CartItem, Customer, Artist, Promotion, TeamMember, Booking } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCustomer, createBooking, getAvailableLocations, listenToCollection, getPromotions } from '@/lib/services';
+import { getCustomer, getAvailableLocations, listenToCollection, getPromotions, getTeamMembers } from '@/lib/services';
 import { Timestamp } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home } from 'lucide-react';
+import { IndianRupee, ShieldCheck, Info, AlertCircle, CheckCircle, X, Tag, Home, Loader2, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { callFirebaseFunction } from '@/lib/firebase';
 
 const OrderSummary = ({
   items,
   form,
   onConfirm,
-  artists
+  artists,
+  isProcessing,
 }: {
   items: CartItem[],
   form: any,
   onConfirm: (paymentMethod: 'online' | 'offline', finalAmount: number, appliedCode?: string) => void,
-  artists: Artist[]
+  artists: Artist[],
+  isProcessing: boolean,
 }) => {
     const [promoCode, setPromoCode] = React.useState('');
     const [appliedDiscount, setAppliedDiscount] = React.useState<{ type: 'artist' | 'admin', discount: number, code: string, artist?: Artist } | null>(null);
@@ -115,14 +118,14 @@ const OrderSummary = ({
                             placeholder="Enter Code"
                             value={promoCode}
                             onChange={(e) => setPromoCode(e.target.value)}
-                            disabled={!!appliedDiscount}
+                            disabled={!!appliedDiscount || isProcessing}
                         />
                          {appliedDiscount ? (
-                            <Button variant="ghost" size="icon" onClick={handleRemoveCode}>
+                            <Button variant="ghost" size="icon" onClick={handleRemoveCode} disabled={isProcessing}>
                                 <X className="h-4 w-4 text-red-500" />
                             </Button>
                         ) : (
-                            <Button onClick={handleApplyCode} variant="secondary">Apply</Button>
+                            <Button onClick={handleApplyCode} variant="secondary" disabled={isProcessing}>Apply</Button>
                         )}
                     </div>
                      {promoError && <p className="text-sm text-destructive">{promoError}</p>}
@@ -187,10 +190,12 @@ const OrderSummary = ({
                         </AlertDescription>
                     </Alert>
 
-                    <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online', discountedTotal, appliedDiscount?.code)}>
+                    <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => onConfirm('online', discountedTotal, appliedDiscount?.code)} disabled={isProcessing}>
+                       {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
                        Pay 60% Advance & Confirm (₹{advanceAmount.toLocaleString(undefined, {maximumFractionDigits: 0})})
                     </Button>
-                    <Button size="lg" variant="outline" className="w-full" onClick={() => onConfirm('offline', discountedTotal, appliedDiscount?.code)}>
+                    <Button size="lg" variant="outline" className="w-full" onClick={() => onConfirm('offline', discountedTotal, appliedDiscount?.code)} disabled={isProcessing}>
+                       {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
                        Pay at Venue (Requires Phone Confirmation)
                     </Button>
                 </div>
@@ -207,6 +212,8 @@ export default function CartPage() {
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [availableLocations, setAvailableLocations] = React.useState<Record<string, string[]>>({});
     const [artists, setArtists] = React.useState<Artist[]>([]);
+    const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([]);
+    const [isProcessing, setIsProcessing] = React.useState(false);
 
 
     const form = useForm<BookingFormValues>({
@@ -254,6 +261,7 @@ export default function CartPage() {
         }
         
         getAvailableLocations().then(setAvailableLocations);
+        getTeamMembers().then(setTeamMembers);
 
         const unsubscribeArtists = listenToCollection<Artist>('artists', setArtists);
         return () => unsubscribeArtists();
@@ -274,6 +282,7 @@ export default function CartPage() {
     };
 
     const handleConfirmAndBook = async (paymentMethod: 'online' | 'offline', finalAmount: number, appliedCode?: string) => {
+        setIsProcessing(true);
         const bookingDetails = form.getValues();
         const isValid = await form.trigger();
 
@@ -283,6 +292,7 @@ export default function CartPage() {
                 description: "Please fill out all the required booking details before proceeding.",
                 variant: "destructive"
             });
+            setIsProcessing(false);
             return;
         }
 
@@ -292,39 +302,17 @@ export default function CartPage() {
                 description: "Please add services to your cart before booking.",
                 variant: "destructive"
             });
+             setIsProcessing(false);
             return;
         }
 
-        let finalArtistIds: string[] = [];
-        let bookingStatus: Booking['status'] = 'Needs Assignment';
-
-        if (paymentMethod === 'offline') {
-            bookingStatus = 'Pending Confirmation';
-        }
-
-        if (appliedCode) {
-            const matchedArtist = artists.find(a => a.referralCode?.toUpperCase() === appliedCode.toUpperCase());
-            if (matchedArtist) {
-                finalArtistIds = [matchedArtist.id];
-                bookingStatus = 'Pending Approval';
-            }
-        } else {
-            const preSelectedArtistIds = Array.from(new Set(cartItems.map(item => item.artist?.id).filter(Boolean)));
-            if (preSelectedArtistIds.length > 0) {
-                finalArtistIds = preSelectedArtistIds;
-                bookingStatus = 'Pending Approval';
-            }
-        }
-
-        const bookingData: Partial<Booking> = {
+        const bookingData = {
             customerId: customer.id,
             customerName: bookingDetails.name,
             customerContact: bookingDetails.contact,
             alternateContact: bookingDetails.alternateContact,
-            artistIds: finalArtistIds,
             items: cartItems,
             amount: finalAmount,
-            status: bookingStatus,
             eventType: bookingDetails.eventType,
             eventDate: Timestamp.fromDate(bookingDetails.eventDate),
             serviceDates: bookingDetails.serviceDates.map(d => Timestamp.fromDate(d)),
@@ -333,37 +321,36 @@ export default function CartPage() {
             district: bookingDetails.district,
             locality: bookingDetails.locality,
             mapLink: bookingDetails.mapLink,
-            guestMehndi: bookingDetails.guestMehndi,
-            guestMakeup: bookingDetails.guestMakeup,
             note: bookingDetails.notes,
             paymentMethod: paymentMethod,
-            paidOut: false,
-            travelCharges: bookingDetails.travelCharges,
+            appliedReferralCode: appliedCode,
+            guestMehndi: bookingDetails.guestMehndi,
+            guestMakeup: bookingDetails.guestMakeup,
         };
 
-        if (appliedCode) {
-            bookingData.appliedReferralCode = appliedCode;
-        }
+        const result: any = await callFirebaseFunction('createBooking', { bookingData });
 
-        try {
-            await createBooking(bookingData as Omit<Booking, 'id'>);
-
+        if (result.data.success) {
+            const successMessage = paymentMethod === 'online'
+                ? "Your booking request has been sent for approval."
+                : "Your booking request has been sent. Our team will call you shortly to confirm.";
             toast({
                 title: "Booking Request Sent!",
-                description: "Your booking is being processed. You can view its status in your dashboard.",
+                description: successMessage,
             });
-            
             localStorage.removeItem(`cart_${customer.id}`);
-            router.push('/account');
-
-        } catch (error) {
-            console.error("Booking creation failed: ", error);
-            toast({
+            router.push('/account/bookings');
+        } else {
+            // Error is handled by the listener, but we might get non-permission errors
+            // which are now returned in result.data
+             toast({
                 title: "Booking Failed",
-                description: "There was an error placing your booking. Please try again.",
+                description: result.data.message || "There was an error placing your booking. Please try again.",
                 variant: "destructive"
             });
         }
+        
+        setIsProcessing(false);
     };
     
     const showGuestFields = {
@@ -373,16 +360,23 @@ export default function CartPage() {
 
     return (
         <div className="bg-background">
+<<<<<<< HEAD
             <div className="w-full px-4 md:px-8 py-12">
                  <div className="relative mb-4 text-center">
                     <h1 className="font-headline text-6xl md:text-8xl text-primary">
+=======
+            <div className="container mx-auto px-4 py-12">
+                 <div className="flex justify-between items-center mb-4">
+                    <Button onClick={() => router.back()} variant="outline">
+                        <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                    </Button>
+                    <h1 className="font-headline text-5xl md:text-7xl text-primary text-center">
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
                         My Cart
                     </h1>
-                     <div className="absolute top-0 right-0">
-                        <Button asChild variant="outline">
-                            <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
-                        </Button>
-                    </div>
+                     <Button asChild variant="outline">
+                        <Link href="/"><Home className="mr-2 h-4 w-4"/> Back to Home</Link>
+                    </Button>
                 </div>
                 <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
                     Finalize your service selections and provide booking details to confirm your appointments.
@@ -395,7 +389,7 @@ export default function CartPage() {
                             <BookingForm form={form} availableLocations={availableLocations} showGuestFields={showGuestFields} artists={artists} />
                         </div>
                         <div className="lg:col-span-1">
-                           <OrderSummary items={cartItems} form={form} onConfirm={handleConfirmAndBook} artists={artists} />
+                           <OrderSummary items={cartItems} form={form} onConfirm={handleConfirmAndBook} artists={artists} isProcessing={isProcessing}/>
                         </div>
                     </div>
                 ) : (

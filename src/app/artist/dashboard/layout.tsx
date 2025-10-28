@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { LayoutDashboard, Briefcase, Bell, User, LogOut, Palette, CalendarOff, IndianRupee, Package, Star, PanelLeft, Megaphone } from 'lucide-react';
 import type { Artist, Booking, Notification } from '@/lib/types';
-import { getArtist, listenToCollection, getDb } from '@/lib/services';
+import { getArtist, listenToCollection } from '@/lib/services';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -40,7 +41,7 @@ interface ArtistPortalContextType {
     unreadCount: number;
     setArtist: React.Dispatch<React.SetStateAction<Artist | null>>;
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
-    fetchData: () => Promise<void>;
+    fetchData: (uid: string) => Promise<void>;
 }
 
 export const ArtistPortalContext = React.createContext<ArtistPortalContextType | null>(null);
@@ -79,6 +80,7 @@ const BottomNavLink = ({ href, pathname, icon: Icon, label, children }: { href: 
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
+    const pathname = usePathname();
     const { toast } = useToast();
     const auth = getAuth(getFirebaseApp());
     const { artist, fetchData } = useArtistPortal();
@@ -97,28 +99,25 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
             setIsLoading(true);
             if (user) {
                 try {
-                    await fetchData();
+                    await fetchData(user.uid);
                 } catch (error) {
                     console.error("Error fetching artist profile:", error);
-                    handleLogout();
+                    await handleLogout();
                 }
-            } else if (window.location.pathname.startsWith('/artist/dashboard')) {
+            } else if (pathname.startsWith('/artist/dashboard')) { // Only redirect if trying to access protected routes
                 router.push('/artist/login');
             }
             setIsLoading(false);
         });
         return () => unsubscribe();
-    }, [auth, router, fetchData, handleLogout]);
+    }, [auth, router, fetchData, handleLogout, pathname]);
     
 
     if (isLoading) {
         return <div className="flex items-center justify-center min-h-screen">Loading Artist Portal...</div>;
     }
     
-    if (!artist) {
-        if(window.location.pathname.startsWith('/artist/dashboard')) {
-            router.push('/artist/login');
-        }
+    if (!artist && pathname.startsWith('/artist/dashboard')) {
         return <div className="flex items-center justify-center min-h-screen">Redirecting to login...</div>;
     }
 
@@ -147,49 +146,41 @@ export default function ArtistDashboardLayout({
         router.push('/');
     }, [router]);
     
-     const fetchData = React.useCallback(async () => {
-        const firebaseUser = auth.currentUser;
-        if (!firebaseUser?.uid) {
-             if (window.location.pathname.startsWith('/artist/dashboard')) {
-                router.push('/artist/login');
-            }
-            return;
-        }
-
-        const currentArtist = await getArtist(firebaseUser.uid);
+     const fetchData = React.useCallback(async (uid: string) => {
+        const currentArtist = await getArtist(uid);
         if (currentArtist) {
             setArtist(currentArtist);
         } else {
-             // Handle case where artist doc is not found for an authenticated user
              await signOutUser();
-             router.push('/artist/login');
+             if (window.location.pathname.startsWith('/artist/dashboard')) {
+                router.push('/artist/login');
+             }
         }
-    }, [auth, router]);
+    }, [router]);
 
 
     React.useEffect(() => {
         if (!artist?.id) return;
         
-        getDb().then(db => {
-            const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
-            const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
-                const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
-                setArtistBookings(sortedBookings);
-            }, bookingsQuery);
+        const db = getFirestore(getFirebaseApp());
+        
+        const bookingsQuery = query(collection(db, 'bookings'), where('artistIds', 'array-contains', artist.id));
+        const unsubscribeBookings = listenToCollection<Booking>('bookings', (artistSpecificBookings) => {
+            const sortedBookings = artistSpecificBookings.sort((a,b) => getSafeDate(b.eventDate).getTime() - getSafeDate(a.eventDate).getTime());
+            setArtistBookings(sortedBookings);
+        }, bookingsQuery);
 
-
-            const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
-            const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
-                const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-                setNotifications(sortedNotifications);
-                setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
-            }, notificationsQuery);
-            
-            return () => {
-                unsubscribeBookings();
-                unsubscribeNotifications();
-            };
-        });
+        const notificationsQuery = query(collection(db, 'notifications'), where('artistId', '==', artist.id));
+        const unsubscribeNotifications = listenToCollection<Notification>('notifications', (artistNotifications) => {
+            const sortedNotifications = artistNotifications.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            setNotifications(sortedNotifications);
+            setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
+        }, notificationsQuery);
+        
+        return () => {
+            unsubscribeBookings();
+            unsubscribeNotifications();
+        };
 
     }, [artist?.id]);
 

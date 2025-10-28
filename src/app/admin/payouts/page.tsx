@@ -16,7 +16,7 @@ import { Terminal } from 'lucide-react';
 import { exportPayoutToPdf, generateGstInvoiceForPlatformFee } from '@/lib/export';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { addDoc, collection } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
+import { getDb } from '@/lib/services';
 
 
 export default function PayoutManagementPage() {
@@ -111,7 +111,7 @@ export default function PayoutManagementPage() {
     }, [calculatePayouts]);
     
     const handleMarkAsPaid = async (payout: Payout) => {
-        const db = await getDb();
+        const db = getDb();
         const newHistoryRecord: Omit<PayoutHistory, 'id'> = {
             paymentDate: new Date().toISOString(),
             ...payout
@@ -213,60 +213,68 @@ export default function PayoutManagementPage() {
                             )}
                         </TabsContent>
                             <TabsContent value="history" className="mt-4">
-                                {payoutHistory.length > 0 ? (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Payment Date</TableHead>
-                                            <TableHead>Artist</TableHead>
-                                            <TableHead>Payout (from Online)</TableHead>
-                                            <TableHead>Commission (from Offline)</TableHead>
-                                            <TableHead>Net Amount Paid</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {payoutHistory.map(history => (
-                                            <TableRow key={history.id}>
-                                                <TableCell>{new Date(history.paymentDate).toLocaleDateString()}</TableCell>
-                                                <TableCell className="font-medium">{history.artistName}</TableCell>
-                                                <TableCell>₹{history.payoutDue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
-                                                <TableCell>- ₹{history.commissionOwed.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
-                                                <TableCell className="font-bold">₹{history.netPayout.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                                <span className="sr-only">Toggle menu</span>
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onSelect={() => exportPayoutToPdf(history)}>
-                                                                <Download className="mr-2 h-4 w-4" />
-                                                                Download Payout PDF
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onSelect={() => generateGstInvoiceForPlatformFee(history)}>
-                                                                <FileText className="mr-2 h-4 w-4" />
-                                                                Generate Commission Invoice
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                ) : (
-                                <Alert>
-                                    <Terminal className="h-4 w-4" />
-                                    <AlertTitle>No History</AlertTitle>
-                                    <AlertDescription>
-                                        No payouts have been recorded yet.
-                                    </AlertDescription>
-                                </Alert>
-                                )}
-                        </TabsContent>
+                               <Card>
+                                    <CardHeader>
+                                        <CardTitle>Payout History</CardTitle>
+                                        <CardDescription>A record of all payouts you have received from the platform.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                         {payoutHistory.length > 0 ? (
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Payment Date</TableHead>
+                                                        <TableHead>Artist</TableHead>
+                                                        <TableHead>Payout (from Online)</TableHead>
+                                                        <TableHead>Commission (from Offline)</TableHead>
+                                                        <TableHead>Net Amount Paid</TableHead>
+                                                        <TableHead className="text-right">Actions</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {payoutHistory.map(history => (
+                                                        <TableRow key={history.id}>
+                                                            <TableCell>{new Date(history.paymentDate).toLocaleDateString()}</TableCell>
+                                                            <TableCell className="font-medium">{history.artistName}</TableCell>
+                                                            <TableCell>₹{history.payoutDue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
+                                                            <TableCell>- ₹{history.commissionOwed.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
+                                                            <TableCell className="font-bold">₹{history.netPayout.toLocaleString(undefined, { maximumFractionDigits: 2 })}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                            <span className="sr-only">Toggle menu</span>
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem onSelect={() => exportPayoutToPdf(history)}>
+                                                                            <Download className="mr-2 h-4 w-4" />
+                                                                            Download Payout PDF
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onSelect={() => generateGstInvoiceForPlatformFee(history)}>
+                                                                            <FileText className="mr-2 h-4 w-4" />
+                                                                            Generate Commission Invoice
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                         ) : (
+                                             <Alert>
+                                                <Terminal className="h-4 w-4" />
+                                                <AlertTitle>No History</AlertTitle>
+                                                <AlertDescription>
+                                                    You have not received any payouts yet.
+                                                </AlertDescription>
+                                            </Alert>
+                                         )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
                     </Tabs>
                 </CardContent>
             </Card>

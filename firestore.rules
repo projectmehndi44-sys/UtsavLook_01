@@ -1,7 +1,12 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+<<<<<<< HEAD
     
     // --- Helper Functions ---
     function isSignedIn() {
@@ -89,3 +94,84 @@ service cloud.firestore {
     }
   }
 }
+=======
+
+    // --- HELPER FUNCTIONS ---
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isTeamMember() {
+      return request.auth != null && exists(/databases/$(database)/documents/teamMembers/$(request.auth.uid));
+    }
+    
+    function getRole() {
+      return get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role;
+    }
+
+    function isRole(role) {
+      return isTeamMember() && getRole() == role;
+    }
+    
+    // --- DATA COLLECTIONS ---
+
+    match /artists/{artistId} {
+      // Anyone can view an artist's public profile.
+      allow read: if true;
+      // An artist can write to their own profile, or a Super Admin can.
+      allow write: if isOwner(artistId) || isRole('Super Admin');
+    }
+    
+    match /customers/{userId} {
+      // A customer can only read or write their own document. A Super Admin can also manage it.
+      allow read, write: if isOwner(userId) || isRole('Super Admin');
+    }
+
+    match /teamMembers/{userId} {
+        // A user can read their own team member document. Other Super Admins can also read it.
+        allow read: if isOwner(userId) || isRole('Super Admin');
+        // Only a Super Admin can create, update, or delete team members.
+        allow write: if isRole('Super Admin');
+    }
+
+    match /bookings/{bookingId} {
+      // A team member, the customer who owns the booking, or an assigned artist can read it.
+      allow read: if isTeamMember() || isOwner(resource.data.customerId) || (request.auth != null && request.auth.uid in resource.data.artistIds);
+      // Only the customer can create a booking for themselves.
+      allow create: if request.auth != null && isOwner(request.resource.data.customerId);
+      // A team member can update it, or an artist can mark it as complete.
+      allow update: if isTeamMember() || (request.auth != null && request.auth.uid in resource.data.artistIds && request.resource.data.status == 'Completed');
+      // Only an admin can delete a booking.
+      allow delete: if isRole('Super Admin');
+    }
+
+    match /payoutHistory/{payoutId} {
+      // Only team members can manage payout history.
+      allow read, create, update, delete: if isTeamMember();
+    }
+
+    match /pendingArtists/{pendingId} {
+      // Anyone can submit an application to become an artist.
+      allow create: if true;
+      // Only a Super Admin can read or delete pending applications.
+      allow read, delete: if isRole('Super Admin');
+    }
+    
+    match /notifications/{notificationId} {
+        // A user can only access their own notifications.
+        allow read, write: if request.auth != null && (isOwner(resource.data.artistId) || isOwner(resource.data.customerId));
+    }
+    
+    // --- CONFIGURATION COLLECTION ---
+    // All configuration documents are publicly readable for the site to function,
+    // but only a Super Admin can change them.
+    match /config/{docId} {
+        allow read: if true;
+        // This is the critical fix: writes are allowed if the user is a Super Admin.
+        allow write: if isRole('Super Admin');
+    }
+  }
+}
+
+    
+>>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -58,19 +59,19 @@ export function PwaInstallBanner() {
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-50">
-        <div className="bg-background/90 backdrop-blur-sm rounded-lg shadow-2xl border border-primary/20 p-4 flex items-center gap-4 animate-in slide-in-from-bottom-10 fade-in duration-500">
-            <Sparkles className="w-10 h-10 text-accent hidden sm:block"/>
-            <div className="flex-grow">
-                <h3 className="font-bold text-primary">Get the Full App Experience!</h3>
-                <p className="text-sm text-muted-foreground">Add UtsavLook to your home screen for faster access and offline use.</p>
+    <div className="fixed top-0 left-0 right-0 w-full z-50 animate-in slide-in-from-top-10 fade-in duration-500">
+        <div className="bg-primary/95 backdrop-blur-sm text-primary-foreground p-3 flex items-center justify-center gap-4">
+            <Sparkles className="w-8 h-8 text-amber-300 hidden sm:block flex-shrink-0"/>
+            <div className="flex-grow text-center">
+                <h3 className="font-bold">Get the Full App Experience!</h3>
+                <p className="text-sm text-primary-foreground/80 hidden md:block">Add UtsavLook to your home screen for faster access and offline use.</p>
             </div>
-             <Button onClick={handleInstallClick}>
+             <Button onClick={handleInstallClick} variant="secondary" className="bg-amber-400 text-amber-900 hover:bg-amber-500">
                 <Download className="mr-2 h-4 w-4"/>
                 Install
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setIsVisible(false)} className="h-8 w-8">
-                <X className="h-4 w-4"/>
+            <Button variant="ghost" size="icon" onClick={() => setIsVisible(false)} className="h-8 w-8 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground">
+                <X className="h-5 w-5"/>
                 <span className="sr-only">Dismiss</span>
             </Button>
         </div>

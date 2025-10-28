@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import * as React from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { getFirebaseApp } from '@/lib/firebase';
-import { getTeamMembers } from '@/lib/services';
+import { getDocument } from '@/lib/services';
 import type { TeamMember, Permissions } from '@/lib/types';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -28,29 +29,32 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
             if (firebaseUser) {
                 try {
-                    const teamMembers = await getTeamMembers();
-                    // Find the user profile in the database by their unique Firebase UID.
-                    const memberProfile = teamMembers.find(m => m.id === firebaseUser.uid);
-                    
+                    const memberProfile = await getDocument<TeamMember>('teamMembers', firebaseUser.uid);
                     if (memberProfile) {
-                        // If found, they are a valid admin.
                         setUser(memberProfile);
+                        if (pathname === '/admin/login') {
+                            router.push('/admin');
+                        }
                     } else {
-                        // If not found, they are not an authorized admin. Log them out.
                         await auth.signOut();
                         setUser(null);
-                        if (pathname !== '/admin/login') {
+                        if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
                             router.push('/admin/login');
                         }
                     }
                 } catch (error) {
-                    console.error("Failed to fetch team members:", error);
+                    console.error("Failed to fetch team member profile:", error);
                     await auth.signOut();
                     setUser(null);
+                    if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
+                        router.push('/admin/login');
+                    }
                 }
             } else {
-                // No Firebase user is logged in.
                 setUser(null);
+                if (pathname.startsWith('/admin/') && pathname !== '/admin/login') {
+                    router.push('/admin/login');
+                }
             }
             setIsLoading(false);
         });
@@ -93,3 +97,4 @@ export const useAdminAuth = () => {
     }
     return context;
 };
+

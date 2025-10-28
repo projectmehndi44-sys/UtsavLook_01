@@ -14,7 +14,7 @@ import { getFirebaseApp } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 
-export default function SetPasswordPage() {
+function SetPasswordComponent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -141,4 +141,12 @@ export default function SetPasswordPage() {
             </div>
         </div>
     );
+}
+
+export default function SetPasswordPage() {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <SetPasswordComponent />
+        </React.Suspense>
+    )
 }
