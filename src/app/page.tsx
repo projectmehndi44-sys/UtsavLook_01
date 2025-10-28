@@ -212,6 +212,11 @@ export default function Home() {
                             View Artists
                         </Button>
                     </div>
+                    <div className="mt-8 text-center md:text-left">
+                        <Link href="/artist" className="text-sm text-primary hover:underline">
+                            Are you an artist? <span className="font-bold">Join Us!</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
          </div>

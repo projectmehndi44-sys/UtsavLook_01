@@ -99,11 +99,6 @@ export function Header({
                 <LogIn className="mr-2 h-4 w-4" />
                 Login / Sign Up
               </Button>
-              <Button variant="outline" asChild>
-                <Link href="/artist">
-                  <Palette className="mr-2 h-4 w-4"/> For Artists
-                </Link>
-              </Button>
               <Link href="/admin/login">
                 <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
                     <ShieldCheck className="h-5 w-5" />
