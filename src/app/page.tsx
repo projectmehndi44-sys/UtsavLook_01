@@ -196,17 +196,11 @@ export default function Home() {
                             className="w-full h-full"
                         >
                             <CarouselContent>
-                                {occasionImages.length > 0 ? occasionImages.map((item, index) => (
+                                {occasionImages.map((item, index) => (
                                     <CarouselItem key={index}>
                                         <Image src={item.imageUrl} alt={item.occasion} fill className="object-cover" />
                                     </CarouselItem>
-                                )) : (
-                                    <CarouselItem>
-                                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                                            {/* This will be shown if no images are available */}
-                                        </div>
-                                    </CarouselItem>
-                                )}
+                                ))}
                             </CarouselContent>
                         </Carousel>
                         
