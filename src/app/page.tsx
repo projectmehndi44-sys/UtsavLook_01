@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -53,8 +52,6 @@ export default function Home() {
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
   const [animationKey, setAnimationKey] = React.useState(0);
-
-  const autoplay = React.useRef(Autoplay({ delay: 5000 }));
 
   const { toast } = useToast();
   
@@ -197,7 +194,7 @@ export default function Home() {
                             <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
                                 Book a Service
                             </Button>
-                            <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
+                             <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
                                 View Artists
                             </Button>
                         </div>
@@ -206,7 +203,11 @@ export default function Home() {
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
                        <Carousel
                             className="w-full h-full"
-                            plugins={[autoplay.current]}
+                            plugins={[
+                                Autoplay({
+                                  delay: 5000,
+                                }),
+                              ]}
                             opts={{
                                 align: "start",
                                 loop: true,
