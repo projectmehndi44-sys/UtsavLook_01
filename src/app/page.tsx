@@ -59,17 +59,58 @@ export default function Home() {
 
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
-  const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
+  // State for typing animation
+  const [occasionIndex, setOccasionIndex] = React.useState(0);
+  const [imageIndex, setImageIndex] = React.useState(0);
+  const [displayedText, setDisplayedText] = React.useState('');
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [imageOpacity, setImageOpacity] = React.useState(1);
+  const typingSpeed = 150;
+  const deletingSpeed = 100;
+  const pauseDuration = 2000;
   
   const { toast } = useToast();
 
   React.useEffect(() => {
-    const wordInterval = setInterval(() => {
-        setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
-    }, 3000); // Change word every 3 seconds
+    let timeout: NodeJS.Timeout;
 
-    return () => clearInterval(wordInterval);
-  }, []);
+    const handleTyping = () => {
+      const currentWord = occasionWords[occasionIndex];
+      
+      if (isDeleting) {
+        // Handle deleting
+        if (displayedText.length > 0) {
+          timeout = setTimeout(() => {
+            setDisplayedText(currentWord.substring(0, displayedText.length - 1));
+          }, deletingSpeed);
+        } else {
+          // Finished deleting
+          setIsDeleting(false);
+          setOccasionIndex((prev) => (prev + 1) % occasionWords.length);
+          // When we switch to the next word, we also switch the image
+          setImageIndex((prev) => (prev + 1) % occasionImages.length);
+          setImageOpacity(1); // Fade in the new image
+        }
+      } else {
+        // Handle typing
+        if (displayedText.length < currentWord.length) {
+          timeout = setTimeout(() => {
+            setDisplayedText(currentWord.substring(0, displayedText.length + 1));
+          }, typingSpeed);
+        } else {
+          // Finished typing, pause and then start deleting
+          timeout = setTimeout(() => {
+            setIsDeleting(true);
+            setImageOpacity(0); // Start fading out the image
+          }, pauseDuration);
+        }
+      }
+    };
+
+    handleTyping();
+
+    return () => clearTimeout(timeout);
+  }, [displayedText, isDeleting, occasionIndex]);
   
   const handleCustomerLogout = () => {
     signOut(getAuth(getFirebaseApp()));
@@ -198,17 +239,17 @@ export default function Home() {
         <div className="w-full">
             <div className="group relative rounded-b-2xl overflow-hidden">
                 <div className="absolute inset-0 w-full h-full">
-                    {occasionImages.map((item, index) => (
-                        <Image 
+                     {occasionImages.map((item, index) => (
+                        <Image
                             key={item.imageUrl}
-                            src={item.imageUrl} 
-                            alt={item.occasion} 
-                            fill 
-                            className={cn(
-                                "object-cover transition-opacity duration-1000 group-hover:scale-105 transform-gpu duration-500",
-                                index === currentOccasionIndex ? "opacity-100" : "opacity-0"
-                            )}
+                            src={item.imageUrl}
+                            alt={item.occasion}
+                            fill
                             priority={index === 0}
+                            className={cn(
+                                "object-cover transition-opacity duration-1000",
+                                index === imageIndex ? "opacity-100" : "opacity-0"
+                            )}
                         />
                     ))}
                 </div>
@@ -224,11 +265,9 @@ export default function Home() {
                     
                     <div className="mt-4 opacity-0 animate-fade-in [animation-delay:1s] [animation-fill-mode:forwards]">
                         <div className="whitespace-nowrap text-2xl font-bold md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:3s]">Crafting Memories for Your</div>
-                         <div 
-                            key={currentOccasionIndex} 
-                            className={cn("animated-gradient-text fade-and-slide-in text-5xl font-bold md:text-6xl")}
-                         >
-                            {occasionWords[currentOccasionIndex]}
+                         <div className="animated-gradient-text text-5xl font-bold md:text-6xl h-20">
+                            {displayedText}
+                            <span className="animate-pulse">|</span>
                         </div>
                     </div>
                     
