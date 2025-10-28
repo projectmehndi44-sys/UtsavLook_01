@@ -69,7 +69,7 @@ export default function PromotionsPage() {
             setPromotions([newPromotion, ...promotions]);
             form.reset({ code: '', discount: 10, usageLimit: 1, expiryDate: undefined });
         } catch (error) {
-            toast({ title: 'Creation Failed', description: 'Could not create the promotion.', variant: 'destructive' });
+            toast({ title: 'Creation Failed', description: 'Could not create the promotion. Your changes are local and will be overwritten on page refresh.', variant: 'destructive' });
         }
     };
 
@@ -94,7 +94,7 @@ export default function PromotionsPage() {
             setPromotions(updated);
             toast({ title: 'Status Updated' });
         } catch (error) {
-            toast({ title: 'Update Failed', description: 'Could not update the promotion status.', variant: 'destructive' });
+            toast({ title: 'Update Failed', description: 'Could not update the promotion status. Your changes are local and will be overwritten on page refresh.', variant: 'destructive' });
         }
     };
 
@@ -105,7 +105,7 @@ export default function PromotionsPage() {
             setPromotions(updated);
             toast({ title: 'Promotion Deleted', variant: 'destructive' });
         } catch (error) {
-            toast({ title: 'Deletion Failed', description: 'Could not delete the promotion.', variant: 'destructive' });
+            toast({ title: 'Deletion Failed', description: 'Could not delete the promotion. Your changes are local and will be overwritten on page refresh.', variant: 'destructive' });
         }
     };
 

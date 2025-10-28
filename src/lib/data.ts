@@ -1,4 +1,4 @@
-import type { MasterServicePackage, Booking, Customer } from './types';
+import type { MasterServicePackage, Promotion } from './types';
 
 export const masterServicePackages: MasterServicePackage[] = [
   {
@@ -79,4 +79,24 @@ export const masterServicePackages: MasterServicePackage[] = [
       { name: 'Ultra Premium', description: 'Full event coverage, cinematic video, luxury album.', basePrice: 150000, image: 'https://picsum.photos/seed/spw-ultra/200/200' },
     ],
   },
+];
+
+
+export const promotions: Promotion[] = [
+    {
+        "id": "promo_1721210080000",
+        "code": "WELCOME10",
+        "discount": 10,
+        "usageLimit": 1,
+        "isActive": true,
+        "expiryDate": "2025-12-31"
+    },
+    {
+        "id": "promo_1721210140000",
+        "code": "UTSAV20",
+        "discount": 20,
+        "usageLimit": 0,
+        "isActive": true,
+        "expiryDate": "2024-12-31"
+    }
 ];
