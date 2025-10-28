@@ -18,4 +18,3 @@ export const occasionImages: OccasionImage[] = [
   { occasion: 'Haldi', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/11%20Haldi.png?alt=media&token=4c114bb9-ef50-454a-b3b4-edc9036438cd' },
   { occasion: 'Mehendi', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/12%20Mehendi.png?alt=media&token=db77c8e0-e580-48ae-b8d7-f361145c0e4c' },
 ];
-
