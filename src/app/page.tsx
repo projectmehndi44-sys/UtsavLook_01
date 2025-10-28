@@ -51,14 +51,17 @@ export default function Home() {
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
-  const [animationKey, setAnimationKey] = React.useState(0);
+  const [isTextVisible, setIsTextVisible] = React.useState(true);
 
   const { toast } = useToast();
   
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
-      setAnimationKey(prev => prev + 1); // Reset animation
+      setIsTextVisible(false);
+      setTimeout(() => {
+        setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
+        setIsTextVisible(true);
+      }, 500); // fade-out time
     }, 5000); // Change word every 5 seconds
 
     return () => clearInterval(interval);
@@ -187,24 +190,24 @@ export default function Home() {
 
                  <div className="relative flex flex-col justify-center p-6 md:p-10 text-center md:text-left min-h-[500px] md:min-h-[600px] md:w-3/5 lg:w-1/2">
                     <div className="space-y-2">
-                    <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
+                    <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent animate-slide-down">
                         Utsav<span className="text-primary">Look</span>
                     </h1>
-                    <p className="font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
+                    <p className="font-dancing-script text-2xl md:text-3xl animate-slide-in-left [animation-delay:1.5s]">Your Perfect Look for Every Utsav.</p>
                     </div>
                     
                     <div className="mt-4">
-                        <div className="whitespace-nowrap text-2xl font-bold md:text-3xl">Crafting Memories for Your</div>
-                        <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
+                        <div className="whitespace-nowrap text-2xl font-bold md:text-3xl animate-slide-in-left [animation-delay:3s]">Crafting Memories for Your</div>
+                         <div className={cn("animated-gradient-text fade-and-slide-in text-5xl font-bold md:text-6xl", isTextVisible ? "opacity-100" : "opacity-0")}>
                             {occasionWords[currentOccasionIndex]}
                         </div>
                     </div>
                     
-                    <div className="mt-4 max-w-xl font-body text-base">
+                    <div className="mt-4 max-w-xl font-body text-base animate-slide-up [animation-delay:4.5s]">
                        <p>Book top-rated, verified artists for your special day.</p>
                     </div>
 
-                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start animate-fade-in [animation-delay:6s]">
                         <Button size="lg" className="btn-gradient rounded-full" onClick={() => handleScrollTo('services')}>
                             Book a Service
                         </Button>
@@ -212,10 +215,10 @@ export default function Home() {
                             View Artists
                         </Button>
                     </div>
-                    <div className="mt-8 text-center md:text-left">
-                        <Link href="/artist" className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary-foreground backdrop-blur-sm hover:bg-primary/20 transition-colors">
-                            <span className="text-sm text-primary font-semibold">Are you an artist? <span className="font-bold underline">Join Us!</span></span>
-                        </Link>
+                    <div className="mt-8 text-center md:text-left animate-slide-up [animation-delay:7.5s]">
+                       <div className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary-foreground backdrop-blur-sm hover:bg-primary/20 transition-colors">
+                           <Link href="/artist" className="text-sm text-primary font-semibold">Are you an artist? <span className="font-bold underline">Join Us!</span></Link>
+                        </div>
                     </div>
                 </div>
             </div>
