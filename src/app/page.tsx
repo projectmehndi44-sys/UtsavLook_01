@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -14,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay"
 import Image from 'next/image';
 import { Packages } from '@/components/utsavlook/Packages';
@@ -51,8 +50,6 @@ export default function Home() {
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
   const [animationKey, setAnimationKey] = React.useState(0);
-  const [carouselApi, setCarouselApi] = React.useState<CarouselApi>();
-
 
   const { toast } = useToast();
   
@@ -190,7 +187,10 @@ export default function Home() {
                     {/* Right Box: Slideshow */}
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
                         <Carousel
-                            opts={{ align: "start", loop: true }}
+                            opts={{
+                                align: "start",
+                                loop: true,
+                            }}
                             plugins={[
                                 Autoplay({
                                 delay: 4000,
