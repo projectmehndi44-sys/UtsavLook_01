@@ -28,6 +28,7 @@ import { PwaInstallBanner } from '@/components/utsavlook/PwaInstallBanner';
 import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
+import { ArtistCard } from '@/components/utsavlook/ArtistCard';
 
 const occasionWords = occasionImages.map(img => img.occasion);
 
@@ -52,6 +53,8 @@ export default function Home() {
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
   const [animationKey, setAnimationKey] = React.useState(0);
+
+  const autoplay = React.useRef(Autoplay({ delay: 5000 }));
 
   const { toast } = useToast();
   
@@ -151,8 +154,8 @@ export default function Home() {
     );
   }
 
-  const handleScrollToServices = () => {
-    document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+  const handleScrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -191,10 +194,10 @@ export default function Home() {
                         </div>
 
                          <div className="mt-8 flex flex-col sm:flex-row gap-4 md:justify-start justify-center">
-                            <Button size="lg" className="btn-gradient" onClick={handleScrollToServices}>
+                            <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
                                 Book a Service
                             </Button>
-                            <Button size="lg" className="btn-gradient" onClick={handleScrollToServices}>
+                            <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
                                 View Artists
                             </Button>
                         </div>
@@ -203,11 +206,7 @@ export default function Home() {
                     <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
                        <Carousel
                             className="w-full h-full"
-                            plugins={[
-                                Autoplay({
-                                    delay: 5000,
-                                }),
-                            ]}
+                            plugins={[autoplay.current]}
                             opts={{
                                 align: "start",
                                 loop: true,
@@ -254,6 +253,17 @@ export default function Home() {
             </Tabs>
         </div>
         
+        <Separator className="my-8"/>
+        
+        <div id="artists" className="py-12 px-4 md:px-8">
+            <h2 className="text-center font-headline text-5xl text-primary mb-8">Meet Our Artists</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {artists.map(artist => (
+                    <ArtistCard key={artist.id} artist={artist} onViewProfile={(artist) => { setSelectedArtist(artist); setIsArtistModalOpen(true); }} />
+                ))}
+            </div>
+        </div>
+
         <Separator className="my-8"/>
 
         <div className="py-12">

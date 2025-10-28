@@ -33,37 +33,20 @@ export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   return (
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
       <CardHeader className="p-0 relative">
-        <Carousel className="w-full">
-          <CarouselContent>
-            {(artist.workImages || []).map((src, index) => (
-              <CarouselItem key={index}>
-                <div className="aspect-[4/3]">
-                   <Image
-                      src={src}
-                      alt={`${artist.name}'s work ${index + 1}`}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-full"
-                      data-ai-hint="mehndi makeup"
-                    />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Carousel>
+        <div className="aspect-[2/3] w-full relative">
+            <Image
+                src={artist.profilePicture}
+                alt={artist.name}
+                fill
+                className="object-cover"
+                data-ai-hint="artist portrait"
+            />
+        </div>
          <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
             {artist.verified && (
                 <Badge className="bg-green-600 text-white pl-2">
                     <CheckCircle className="w-3.5 h-3.5 mr-1"/>
-                    UtsavLook Verified
-                </Badge>
-            )}
-            {artist.isFoundersClubMember && (
-                <Badge className="bg-amber-500 text-white pl-2">
-                    <Star className="w-3.5 h-3.5 mr-1 fill-current"/>
-                    Founder's Club
+                    Verified
                 </Badge>
             )}
         </div>
