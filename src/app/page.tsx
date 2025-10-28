@@ -227,11 +227,7 @@ export default function Home() {
                                 )}
                             </CarouselContent>
                         </Carousel>
-                        {heroSettings.slideshowText && (
-                            <div className="absolute bottom-4 left-4 right-4 bg-black/50 text-white p-3 rounded-lg text-center backdrop-blur-sm">
-                                <p className="font-semibold text-lg">{heroSettings.slideshowText}</p>
-                            </div>
-                        )}
+                        
                     </div>
                 </div>
             </div>
