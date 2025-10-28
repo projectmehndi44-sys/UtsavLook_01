@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -236,6 +235,7 @@ export default function Home() {
         cartCount={cart.length}
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
+        {!isCustomerLoggedIn && (
         <div className="w-full">
             <div className="group relative rounded-b-2xl overflow-hidden">
                 <div className="absolute inset-0 w-full h-full">
@@ -291,6 +291,7 @@ export default function Home() {
                 </div>
             </div>
          </div>
+        )}
         
         <ClientOnly>
         {isCustomerLoggedIn && (
