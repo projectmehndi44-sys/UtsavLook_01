@@ -1,52 +1,65 @@
-
 'use client';
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/utsavlook/Header';
-import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Palette, Copy, Download, X } from 'lucide-react';
+import { Award, BarChart, CalendarCheck, IndianRupee, Sparkles, UserPlus, Share2, Loader2, Copy, Download, X, Quote } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getPromotionalImage, getBenefitImages } from '@/lib/services';
-import type { BenefitImage, Customer } from '@/lib/types';
+import { getPromotionalImage, getBenefitImages, getArtists } from '@/lib/services';
+import type { BenefitImage, Customer, Artist } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { ClientOnly } from '@/components/ClientOnly';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
+import { cn } from '@/lib/utils';
+import { Parallax } from 'react-scroll-parallax';
+import { ParallaxProvider } from 'react-scroll-parallax';
+
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
-    "set-your-own-price": <IndianRupee className="w-8 h-8 text-primary" />,
-    "verified-badge": <Award className="w-8 h-8 text-primary" />,
-    "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
-    "referral-code": <UserPlus className="w-8 h-8 text-primary" />,
-    "transparent-payouts": <BarChart className="w-8 h-8 text-primary" />,
-    "zero-commission-welcome": <Sparkles className="w-8 h-8 text-primary" />,
+    "set-your-own-price": <IndianRupee className="w-8 h-8 text-accent" />,
+    "verified-badge": <Award className="w-8 h-8 text-accent" />,
+    "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-accent" />,
+    "referral-code": <UserPlus className="w-8 h-8 text-accent" />,
+    "transparent-payouts": <BarChart className="w-8 h-8 text-accent" />,
+    "zero-commission-welcome": <Sparkles className="w-8 h-8 text-accent" />,
 };
 
+const artistSpotlightImages = [
+    'https://images.unsplash.com/photo-1596649298418-5c0e1a1f0d1a?q=80&w=1887&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1620912189837-55c9d645f577?q=80&w=1887&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1588147510359-5d3c90731557?q=80&w=1887&auto=format&fit=crop',
+];
 
 export default function ArtistHomePage() {
     const router = useRouter();
     const { toast } = useToast();
     const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
+    const [artists, setArtists] = React.useState<Artist[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
 
     const [isSharing, setIsSharing] = React.useState(false);
     const [isGenerating, setIsGenerating] = React.useState(false);
     const [shareableImage, setShareableImage] = React.useState<string | null>(null);
     
-
-    // These states are added for header compatibility, but the main logic is for non-logged-in artists.
+    // Header compatibility states
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [cartCount, setCartCount] = React.useState(0);
     
     React.useEffect(() => {
         setIsLoading(true);
-        getBenefitImages().then(data => {
-            setBenefits(data);
+        Promise.all([
+            getBenefitImages(),
+            getArtists()
+        ]).then(([benefitData, artistData]) => {
+            setBenefits(benefitData);
+            setArtists(artistData.filter(a => a.rating > 4.5).slice(0, 3)); // Get top 3 artists
             setIsLoading(false);
         }).catch(() => {
             setIsLoading(false);
@@ -91,12 +104,10 @@ export default function ArtistHomePage() {
         if (!shareableImage) return;
         
         try {
-            // Fetch the image as a blob
             const response = await fetch(shareableImage);
             const blob = await response.blob();
             const file = new File([blob], 'utsavlook-promo.png', { type: blob.type });
 
-            // Use the Web Share API
             if (navigator.share && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
@@ -104,7 +115,6 @@ export default function ArtistHomePage() {
                     text: shareText,
                 });
             } else {
-                // Fallback for desktop or unsupported browsers
                 navigator.clipboard.writeText(shareText);
                 handleDownload();
                 toast({
@@ -125,7 +135,8 @@ export default function ArtistHomePage() {
     };
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-secondary">
+        <ParallaxProvider>
+        <div className="flex min-h-screen w-full flex-col bg-background">
              <ClientOnly>
                 <Header
                     isCustomerLoggedIn={isCustomerLoggedIn}
@@ -136,89 +147,115 @@ export default function ArtistHomePage() {
              </ClientOnly>
             <main className="flex-1">
                 {/* Hero Section */}
-                <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10 text-center">
-                    <div className="container px-4 md:px-6">
-                        <div className="grid gap-6 lg:grid-cols-1 items-center">
-                            <div className="flex flex-col justify-center space-y-4">
-                                <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline text-primary">
-                                    Join UtsavLook & Grow Your Artistry Business
-                                </h1>
-                                <p className="max-w-[600px] text-foreground/80 md:text-xl mx-auto">
-                                    We provide the tools, you provide the talent. Get discovered by more customers, manage your business professionally, and increase your earnings.
-                                </p>
-                                <div className="w-full max-w-sm mx-auto space-y-2 sm:space-y-0 sm:flex sm:gap-4">
-                                     <Link href="/artist/register" className="w-full">
-                                        <Button size="lg" className="bg-accent hover:bg-accent/90 w-full">
-                                            Register Now
-                                        </Button>
-                                    </Link>
-                                    <Link href="/artist/login" className="w-full">
-                                        <Button size="lg" variant="outline" className="w-full">
-                                            Artist Login
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </div>
+                <section className="relative w-full h-[70vh] md:h-screen text-white overflow-hidden">
+                    <Carousel
+                      opts={{ loop: true }}
+                      plugins={[Autoplay({ delay: 5000, stopOnInteraction: false })]}
+                      className="absolute inset-0 w-full h-full z-0"
+                    >
+                      <CarouselContent>
+                        {artistSpotlightImages.map((src, i) => (
+                          <CarouselItem key={i}>
+                            <Image src={src} alt="Artist background" layout="fill" objectFit="cover" className="brightness-50" />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full text-center p-4">
+                        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight font-headline animate-fade-in [animation-delay:0.5s]">
+                            Your Art. Your Business.
+                        </h1>
+                        <p className="max-w-2xl mt-4 text-lg md:text-xl text-white/80 animate-fade-in [animation-delay:1s]">
+                           Join a community that celebrates your talent. We give you the tools to get discovered, manage bookings, and grow your brand—all in one place.
+                        </p>
+                        <div className="mt-8 flex gap-4 animate-fade-in [animation-delay:1.5s]">
+                             <Link href="/artist/register">
+                                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full text-lg px-8 py-6">
+                                    Register Now
+                                </Button>
+                            </Link>
+                            <Link href="/artist/login">
+                                <Button size="lg" variant="outline" className="bg-transparent hover:bg-white/10 text-white border-white rounded-full text-lg px-8 py-6">
+                                    Artist Login
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </section>
 
                 {/* Benefits Section */}
-                <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+                <section className="w-full py-16 md:py-24 lg:py-32 bg-secondary">
                      <div className="container px-4 md:px-6">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">
-                                Why Artists Love UtsavLook
+                                A Platform Built for You
                             </h2>
                              <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed mx-auto">
-                                A platform designed for your growth, giving you the tools to succeed and the freedom to create.
+                                We handle the business, so you can focus on your art. Discover the UtsavLook difference.
                             </p>
                         </div>
-                        <div className="grid gap-16">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {isLoading ? (
                                 Array.from({length: 6}).map((_, index) => (
-                                    <div key={index} className="grid gap-8 md:gap-12 items-center md:grid-cols-2">
-                                        <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
-                                            <Skeleton className="h-16 w-16 rounded-full" />
-                                            <Skeleton className="h-8 w-3/4" />
-                                            <Skeleton className="h-4 w-full" />
-                                            <Skeleton className="h-4 w-5/6" />
-                                        </div>
-                                        <Skeleton className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${index % 2 === 1 ? 'md:order-1' : ''}`} />
+                                    <div key={index} className="space-y-4">
+                                        <Skeleton className="h-16 w-16 rounded-full" />
+                                        <Skeleton className="h-8 w-3/4" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-5/6" />
                                     </div>
                                 ))
                             ) : benefits.map((benefit, index) => (
-                                <div key={benefit.id} className={`grid gap-8 md:gap-12 items-center md:grid-cols-2`}>
-                                    <div className={`flex flex-col justify-center space-y-4 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
-                                        <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
-                                           {benefitIcons[benefit.id] || <Sparkles className="w-8 h-8 text-primary" />}
-                                        </div>
-                                        <h3 className="text-2xl md:text-3xl font-bold text-primary">{benefit.title}</h3>
-                                        <p className="text-muted-foreground text-lg">
-                                            {benefit.description}
-                                        </p>
-                                    </div>
-                                    <Image
-                                        src={benefit.imageUrl}
-                                        alt={benefit.title}
-                                        width={800}
-                                        height={600}
-                                        className={`mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full ${index % 2 === 1 ? 'md:order-1' : ''}`}
-                                        crossOrigin="anonymous"
-                                    />
+                                <div key={benefit.id} className="bg-background p-6 rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2">
+                                     <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
+                                        {benefitIcons[benefit.id] || <Sparkles className="w-8 h-8 text-primary" />}
+                                     </div>
+                                     <h3 className="text-xl font-bold text-primary mb-2">{benefit.title}</h3>
+                                     <p className="text-muted-foreground">
+                                         {benefit.description}
+                                     </p>
                                 </div>
                             ))}
                         </div>
                     </div>
-                     <div className="container px-4 md:px-6 mt-12 text-center">
-                        <Button size="lg" onClick={handleShareClick} disabled={isLoading}>
-                             <Share2 className="mr-2 h-5 w-5" /> Share The Benefits
-                        </Button>
+                </section>
+                
+                {/* Artist Spotlight */}
+                {artists.length > 0 && (
+                <section className="py-16 md:py-24 lg:py-32 bg-background">
+                    <div className="container px-4 md:px-6">
+                        <h2 className="text-3xl font-bold tracking-tighter text-center sm:text-5xl text-primary font-headline mb-12">
+                            Success Stories
+                        </h2>
+                        <Carousel
+                            opts={{ align: "start" }}
+                            className="w-full"
+                            plugins={[Autoplay({ delay: 6000 })]}
+                        >
+                            <CarouselContent>
+                                {artists.map((artist, index) => (
+                                    <CarouselItem key={artist.id} className="md:basis-1/2 lg:basis-1/3">
+                                        <div className="p-4">
+                                            <div className="bg-secondary p-8 rounded-lg text-center h-full flex flex-col items-center">
+                                                <Image src={artist.profilePicture} alt={artist.name} width={120} height={120} className="rounded-full border-4 border-white shadow-lg -mt-20 mb-4" />
+                                                <h3 className="text-xl font-bold text-primary">{artist.name}</h3>
+                                                <p className="text-sm text-muted-foreground">{artist.services.join(', ')} Artist</p>
+                                                <Quote className="w-10 h-10 text-accent my-4" />
+                                                <p className="text-muted-foreground italic flex-grow">"Joining UtsavLook was a game-changer for my business. I'm getting more bookings than ever and can finally focus on what I love."</p>
+                                            </div>
+                                        </div>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                        </Carousel>
                     </div>
                 </section>
+                )}
+
 
                  {/* Call to Action Section */}
-                <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
+                <section className="w-full py-16 md:py-24 lg:py-32 bg-primary/10">
+                    <Parallax speed={-10}>
                     <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
                         <div className="space-y-3">
                         <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight text-primary font-headline">
@@ -228,18 +265,18 @@ export default function ArtistHomePage() {
                             Stop waiting for clients to find you. Join a platform that actively works to grow your business.
                         </p>
                         </div>
-                        <div className="mx-auto w-full max-w-sm space-y-2">
+                        <div className="mx-auto w-full max-w-sm space-y-2 mt-4">
                             <Link href="/artist/register">
-                                <Button size="lg" className="w-full bg-accent hover:bg-accent/90">
+                                <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-lg py-6 rounded-full">
                                     Become a UtsavLook Artist Today
                                 </Button>
                             </Link>
                         </div>
                     </div>
+                    </Parallax>
                 </section>
             </main>
             
-            {/* Share Dialog */}
             <Dialog open={isSharing} onOpenChange={handleCloseDialog}>
                 <DialogContent className="sm:max-w-xl">
                     <DialogHeader>
@@ -276,5 +313,6 @@ export default function ArtistHomePage() {
                 </DialogContent>
             </Dialog>
         </div>
+        </ParallaxProvider>
     );
 }
