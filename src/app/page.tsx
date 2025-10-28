@@ -166,7 +166,7 @@ export default function Home() {
         cartCount={cart.length}
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
-         <div className="w-full pt-8 md:pt-12">
+        <div className="w-full pt-8 md:pt-12">
             <div className="group relative bg-card shadow-lg transition-shadow hover:shadow-2xl mx-4 md:mx-8 rounded-xl overflow-hidden">
                 <div className="absolute inset-0 w-full h-full">
                     {occasionImages.map((item, index) => (
@@ -183,35 +183,35 @@ export default function Home() {
                         />
                     ))}
                 </div>
-                 <div className="relative flex flex-col justify-center p-6 md:p-10 text-center items-center bg-black/50 min-h-[500px] md:min-h-[600px] text-white">
-                    <div className="bg-background/80 backdrop-blur-sm p-8 rounded-lg shadow-2xl text-foreground">
-                        <div className="mb-4">
-                        <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
-                            Utsav<span className="text-primary">Look</span>
-                        </h1>
-                        <p className="mt-2 font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
-                        </div>
-                        
-                        <div className="mt-6">
-                            <div className="whitespace-nowrap text-2xl font-bold md:text-3xl">Crafting Memories for Your</div>
-                            <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
-                                {occasionWords[currentOccasionIndex]}
-                            </div>
-                            <p className="text-lg font-light text-muted-foreground">with UtsavLook</p>
-                        </div>
-                        
-                        <div className="mt-4 max-w-xl font-body text-base mx-auto">
-                           <p>Book top-rated, verified artists for your special day.</p>
-                        </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
 
-                         <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
-                                Book a Service
-                            </Button>
-                             <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
-                                View Artists
-                            </Button>
+                 <div className="relative flex flex-col justify-center p-6 md:p-10 text-center items-center md:items-start md:text-left min-h-[500px] md:min-h-[600px] md:w-1/2">
+                    <div className="mb-4">
+                    <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
+                        Utsav<span className="text-primary">Look</span>
+                    </h1>
+                    <p className="mt-2 font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
+                    </div>
+                    
+                    <div className="mt-2">
+                        <div className="whitespace-nowrap text-2xl font-bold md:text-3xl">Crafting Memories for Your</div>
+                        <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
+                            {occasionWords[currentOccasionIndex]}
                         </div>
+                        <p className="text-lg font-light text-muted-foreground">with UtsavLook</p>
+                    </div>
+                    
+                    <div className="mt-4 max-w-xl font-body text-base">
+                       <p>Book top-rated, verified artists for your special day.</p>
+                    </div>
+
+                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                        <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
+                            Book a Service
+                        </Button>
+                         <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
+                            View Artists
+                        </Button>
                     </div>
                 </div>
             </div>
