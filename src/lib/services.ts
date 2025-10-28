@@ -7,7 +7,7 @@ import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { masterServicePackages, promotions, heroSettings } from './data';
+import { masterServicePackages, promotions, heroSettings, benefitImages as localBenefitImages } from './data';
 import { INDIA_LOCATIONS } from './india-locations';
 import { PlaceHolderImages } from './placeholder-images';
 
@@ -334,27 +334,12 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 export const getPlaceholderImages = async (): Promise<ImagePlaceholder[]> => {
     return Promise.resolve(PlaceHolderImages);
 };
-export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', { images });
+export const savePlaceholderImages = (images: ImagePlaceholder[]) => setConfigDocument('placeholderImages', { placeholderImages: images });
 
 
 export const getBenefitImages = async (): Promise<BenefitImage[]> => {
-    const config = await getConfigDocument<{ benefitImages: BenefitImage[] }>('benefitImages');
-    
-    if (config && Array.isArray(config.benefitImages) && config.benefitImages.length > 0) {
-        return config.benefitImages;
-    }
-    
-    // If not, create and save the default set, then return it.
-    const defaultBenefits: BenefitImage[] = [
-        { id: 'set-your-own-price', title: "Set Your Own Price", description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.", imageUrl: 'https://picsum.photos/seed/artist-price/800/600' },
-        { id: 'verified-badge', title: "'UtsavLook Verified' Badge", description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.", imageUrl: 'https://picsum.photos/seed/artist-verified/800/600' },
-        { id: 'intelligent-scheduling', title: "Intelligent Scheduling", description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.", imageUrl: 'https://picsum.photos/seed/artist-schedule/800/600' },
-        { id: 'referral-code', title: "Your Own Referral Code", description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.", imageUrl: 'https://picsum.photos/seed/artist-referral/800/600' },
-        { id: 'transparent-payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
-        { id: 'zero-commission-welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
-    ];
-    await saveBenefitImages(defaultBenefits);
-    return defaultBenefits;
+    // This now reads from the local data file instead of Firestore.
+    return Promise.resolve(localBenefitImages);
 };
 export const saveBenefitImages = (images: BenefitImage[]) => setConfigDocument('benefitImages', { benefitImages: images } );
 
@@ -374,7 +359,8 @@ export const saveHeroSettings = async (data: HeroSettings): Promise<void> => {
 };
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
-    return Promise.resolve(INDIA_LOCATIONS);
+    const config = await getConfigDocument<{ locations: Record<string, string[]> }>('availableLocations');
+    return config?.locations || INDIA_LOCATIONS; // Fallback to full list if not configured
 };
 export const saveAvailableLocations = (locations: Record<string, string[]>) => setConfigDocument('availableLocations', { locations });
 

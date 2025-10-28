@@ -1,4 +1,4 @@
-import type { MasterServicePackage, Promotion, HeroSettings } from './types';
+import type { MasterServicePackage, Promotion, HeroSettings, BenefitImage } from './types';
 
 export const masterServicePackages: MasterServicePackage[] = [
   {
@@ -105,3 +105,12 @@ export const promotions: Promotion[] = [
 export const heroSettings: HeroSettings = {
     slideshowText: "Artistry for Every Occasion"
 };
+
+export const benefitImages: BenefitImage[] = [
+    { id: 'set-your-own-price', title: "Set Your Own Price", description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.", imageUrl: 'https://picsum.photos/seed/artist-price/800/600' },
+    { id: 'verified-badge', title: "'UtsavLook Verified' Badge", description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings and better clients.", imageUrl: 'https://picsum.photos/seed/artist-verified/800/600' },
+    { id: 'intelligent-scheduling', title: "Intelligent Scheduling", description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.", imageUrl: 'https://picsum.photos/seed/artist-schedule/800/600' },
+    { id: 'referral-code', title: "Your Own Referral Code", description: "Turn your happy clients into your sales team. We provide a unique referral code. When a new customer uses it, they get a discount, and you get another confirmed booking.", imageUrl: 'https://picsum.photos/seed/artist-referral/800/600' },
+    { id: 'transparent-payouts', title: "Transparent Payouts", description: "Get a professional dashboard to track all your bookings, earnings, and reviews in one place. With our clear and timely payouts, the accounting is always clean and simple.", imageUrl: 'https://picsum.photos/seed/artist-payout/800/600' },
+    { id: 'zero-commission-welcome', title: "0% Commission Welcome", description: "We're invested in your success from day one. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.", imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600' },
+];
