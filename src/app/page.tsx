@@ -213,8 +213,8 @@ export default function Home() {
                         </Button>
                     </div>
                     <div className="mt-8 text-center md:text-left">
-                        <Link href="/artist" className="text-sm text-primary hover:underline">
-                            Are you an artist? <span className="font-bold">Join Us!</span>
+                        <Link href="/artist" className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary-foreground backdrop-blur-sm hover:bg-primary/20 transition-colors">
+                            <span className="text-sm text-primary font-semibold">Are you an artist? <span className="font-bold underline">Join Us!</span></span>
                         </Link>
                     </div>
                 </div>
