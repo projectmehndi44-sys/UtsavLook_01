@@ -65,7 +65,7 @@ export default function Home() {
   React.useEffect(() => {
     const wordInterval = setInterval(() => {
         setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
-    }, 5000); // Change word every 5 seconds
+    }, 1000); // Change word every 1 second
 
     return () => clearInterval(wordInterval);
   }, []);
