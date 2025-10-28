@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -235,11 +236,11 @@ export default function Home() {
                        <p>Book top-rated, verified artists for your special day.</p>
                     </div>
 
-                     <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center md:justify-start opacity-0 animate-fade-in [animation-fill-mode:forwards] [animation-delay:6s]">
-                        <Button size="lg" className="btn-gradient rounded-full" onClick={() => handleScrollTo('services')}>
+                     <div className="mt-6 flex flex-col items-center sm:flex-row gap-4 justify-center md:justify-start opacity-0 animate-fade-in [animation-delay:6s] [animation-fill-mode:forwards]">
+                        <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('services')}>
                             Book a Service
                         </Button>
-                         <Button size="lg" className="btn-gradient rounded-full" onClick={() => handleScrollTo('artists')}>
+                         <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('artists')}>
                             View Artists
                         </Button>
                     </div>
