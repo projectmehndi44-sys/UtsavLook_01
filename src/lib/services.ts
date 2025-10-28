@@ -8,6 +8,7 @@ import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { masterServicePackages, promotions } from './data';
+import { INDIA_LOCATIONS } from './india-locations';
 
 // Use the singleton instance of Firestore from the central firebase module
 const getDb = () => db;
@@ -374,8 +375,10 @@ export const saveHeroSettings = async (data: HeroSettings): Promise<void> => {
 };
 
 export const getAvailableLocations = async (): Promise<Record<string, string[]>> => {
-    const config = await getConfigDocument<Record<string, string[]>>('availableLocations');
-    return config || {};
+    // This function is now safe for client-side use because it doesn't fetch from Firestore.
+    // It returns the entire list, and the admin panel filters/saves the selected ones.
+    // On the public side, this list is used to populate dropdowns.
+    return Promise.resolve(INDIA_LOCATIONS);
 };
 export const saveAvailableLocations = (locations: Record<string, string[]>) => setConfigDocument('availableLocations', locations);
 

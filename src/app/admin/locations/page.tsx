@@ -11,17 +11,29 @@ import { MapPin, Save } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { INDIA_LOCATIONS } from '@/lib/india-locations';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
-import { getAvailableLocations, saveAvailableLocations } from '@/lib/services';
+import { getDocument, setConfigDocument } from '@/lib/services';
+
+async function getSavedLocations(): Promise<Record<string, string[]>> {
+    const config = await getDocument<{ locations: Record<string, string[]> }>('config', 'availableLocations');
+    return config?.locations || {};
+}
+
+async function saveAvailableLocations(locations: Record<string, string[]>): Promise<void> {
+    await setConfigDocument('availableLocations', { locations });
+}
+
 
 export default function LocationManagementPage() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
     const [selectedLocations, setSelectedLocations] = React.useState<Record<string, string[]>>({});
     const [isLoading, setIsLoading] = React.useState(false);
+    const [isLoadingData, setIsLoadingData] = React.useState(true);
 
      React.useEffect(() => {
-        getAvailableLocations().then(locations => {
+        getSavedLocations().then(locations => {
             setSelectedLocations(locations);
+            setIsLoadingData(false);
         });
     }, []);
     
@@ -96,6 +108,9 @@ export default function LocationManagementPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
+                        {isLoadingData ? (
+                            <p>Loading saved locations...</p>
+                        ) : (
                         <Accordion type="multiple" className="w-full">
                             {allStates.map(state => {
                                 const allDistrictsInState = INDIA_LOCATIONS[state];
@@ -136,6 +151,7 @@ export default function LocationManagementPage() {
                                 )
                             })}
                         </Accordion>
+                        )}
                         <Button onClick={handleSave} disabled={isLoading || !hasPermission('settings', 'edit')} className="w-full">
                             {isLoading ? 'Saving...' : <><Save className="mr-2 h-4 w-4"/> Save Changes</>}
                         </Button>
