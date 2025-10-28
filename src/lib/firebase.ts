@@ -22,10 +22,6 @@ const firebaseConfig = {
 // --- Singleton Pattern for Firebase App Initialization ---
 export const getFirebaseApp = (): FirebaseApp => {
     if (getApps().length === 0) {
-        // In a Vercel production environment, dynamically set the authDomain
-        if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-            firebaseConfig.authDomain = window.location.hostname;
-        }
         return initializeApp(firebaseConfig);
     } else {
         return getApp();
@@ -33,7 +29,14 @@ export const getFirebaseApp = (): FirebaseApp => {
 }
 
 const app = getFirebaseApp();
+
+// Dynamically set authDomain for Vercel environments
+if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+  getAuth(app).settings.authDomain = window.location.hostname;
+}
+
 const auth = getAuth(app);
+
 
 // Initialize Firestore with offline persistence enabled.
 // This is the SINGLE source of truth for the Firestore instance.
