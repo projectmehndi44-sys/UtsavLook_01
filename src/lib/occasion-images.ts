@@ -4,7 +4,6 @@ export type OccasionImage = {
   imageUrl: string;
 };
 
-// IMPORTANT: Replace these placeholder URLs with your actual Firebase Storage image URLs.
 export const occasionImages: OccasionImage[] = [
   { occasion: 'Wedding', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/1%20Wedding.png?alt=media&token=6d646b1a-7b25-44ad-9d19-894cfffbf340' },
   { occasion: 'Birthday', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/2%20Birthday.png?alt=media&token=225169f4-0eb8-4093-95ac-b807c1d0f0b2' },
