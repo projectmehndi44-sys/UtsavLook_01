@@ -1,4 +1,4 @@
-import type { MasterServicePackage, Promotion } from './types';
+import type { MasterServicePackage, Promotion, HeroSettings } from './types';
 
 export const masterServicePackages: MasterServicePackage[] = [
   {
@@ -100,3 +100,8 @@ export const promotions: Promotion[] = [
         "expiryDate": "2024-12-31"
     }
 ];
+
+
+export const heroSettings: HeroSettings = {
+    slideshowText: "Artistry for Every Occasion"
+};

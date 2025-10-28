@@ -367,8 +367,8 @@ export const savePromotionalImage = async (data: { imageUrl: string }): Promise<
 };
 
 export const getHeroSettings = async (): Promise<HeroSettings> => {
-    const settings = await getConfigDocument<HeroSettings>('heroSettings');
-    return settings || { slideshowText: 'Artistry for Every Occasion' };
+    const config = await getConfigDocument<HeroSettings>('heroSettings');
+    return config || { slideshowText: 'Artistry for Every Occasion' };
 };
 export const saveHeroSettings = async (data: HeroSettings): Promise<void> => {
     await setConfigDocument('heroSettings', data);

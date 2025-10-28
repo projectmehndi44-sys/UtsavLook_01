@@ -142,9 +142,9 @@ export default function ImageManagementPage() {
         try {
             await saveHeroSettings(data);
             toast({ title: "Hero Settings Saved", description: "The homepage hero text has been updated."});
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to save hero settings", error);
-            toast({ title: 'Error Saving Settings', variant: 'destructive'});
+            toast({ title: 'Error Saving Settings', description: error.message || "Could not save settings.", variant: 'destructive'});
         }
     }
 
