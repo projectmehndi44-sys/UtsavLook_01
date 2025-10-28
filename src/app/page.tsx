@@ -14,7 +14,6 @@ import { Header } from '@/components/utsavlook/Header';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import Autoplay from "embla-carousel-autoplay"
 import Image from 'next/image';
 import Link from 'next/link';
 import { Packages } from '@/components/utsavlook/Packages';
@@ -178,19 +177,19 @@ export default function Home() {
                             <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
                         </div>
                         
-                        <div className="mt-6">
+                        <div className="mt-4">
                             <div className="whitespace-nowrap text-2xl font-bold text-foreground/80 md:text-3xl">Crafting Memories for Your</div>
                             <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
                                 {occasionWords[currentOccasionIndex]}
                             </div>
-                            <p className="mt-1 text-lg font-light text-muted-foreground">with UtsavLook</p>
+                            <p className="text-lg font-light text-muted-foreground">with UtsavLook</p>
                         </div>
                         
-                        <div className="mt-8 max-w-xl font-body text-base text-foreground/80 md:mx-0 mx-auto">
+                        <div className="mt-4 max-w-xl font-body text-base text-foreground/80 md:mx-0 mx-auto">
                            <p>Book top-rated, verified artists for your special day.</p>
                         </div>
 
-                         <div className="mt-8 flex flex-col sm:flex-row gap-4 md:justify-start justify-center">
+                         <div className="mt-6 flex flex-col sm:flex-row gap-4 md:justify-start justify-center">
                             <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
                                 Book a Service
                             </Button>
@@ -269,9 +268,6 @@ export default function Home() {
                     loop: true,
                 }}
                 plugins={[
-                    Autoplay({
-                        delay: 3000,
-                    }),
                 ]}
                 className="w-full"
             >
