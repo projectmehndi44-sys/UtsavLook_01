@@ -207,10 +207,10 @@ export default function Home() {
                         </div>
                     </div>
                     {/* Right Box: Slideshow */}
-                    <div className="relative aspect-square md:aspect-auto rounded-lg overflow-hidden md:col-span-6">
+                    <div className="relative aspect-square md:aspect-auto rounded-lg overflow-hidden md:col-span-6 shadow-[inset_0_2px_8px_rgba(0,0,0,0.2)]">
                         <Carousel
                             opts={{ align: "start", loop: true }}
-                            plugins={[ Autoplay({ delay: 4000 }) ]}
+                            plugins={[ Autoplay({ delay: 3000 }) ]}
                             className="w-full h-full"
                         >
                             <CarouselContent>
