@@ -29,13 +29,16 @@ export const getFirebaseApp = (): FirebaseApp => {
 }
 
 const app = getFirebaseApp();
-
-// Dynamically set authDomain for Vercel environments
-if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-  getAuth(app).settings.authDomain = window.location.hostname;
-}
-
 const auth = getAuth(app);
+
+
+// Dynamically set authDomain for Vercel and custom domains
+if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('vercel.app') || hostname === 'utsavlook.in') {
+        auth.settings.authDomain = hostname;
+    }
+}
 
 
 // Initialize Firestore with offline persistence enabled.
@@ -92,3 +95,4 @@ declare global {
         grecaptcha?: any;
     }
 }
+
