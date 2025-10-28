@@ -3,14 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
   User,
-  ShieldCheck,
   LogOut,
   LayoutGrid,
   ShoppingBag,
   Palette,
   LogIn,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,8 +42,7 @@ export function Header({
   return (
     <header className="flex items-center justify-between w-full px-4 md:px-8 py-2 bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
       <Link href="/" className="flex items-center gap-2">
-        <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-accent" />
-         <h1 className="font-headline text-xl md:text-3xl font-bold text-accent">
+        <h1 className="font-headline text-xl md:text-3xl font-bold text-accent">
             Utsav<span className="text-primary">Look</span>
         </h1>
       </Link>
