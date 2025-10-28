@@ -44,7 +44,7 @@ const benefitImageSchema = z.object({
   id: z.string(),
   title: z.string(),
   imageUrl: z.string().url('Must be a valid URL'),
-  description: z.string(), // Added description
+  description: z.string(),
 });
 
 const benefitFormSchema = z.object({
@@ -98,16 +98,20 @@ export default function ImageManagementPage() {
             replace(benefitData);
             if (promoData) setPromoImage(promoData.imageUrl);
             setIsLoading(false);
+        }).catch(err => {
+            console.error("Error loading image data:", err);
+            toast({ title: "Error", description: "Could not load site image data.", variant: "destructive"});
+            setIsLoading(false);
         });
-    }, [placeholderForm, replace]);
+    }, [placeholderForm, replace, toast]);
 
     const onPlaceholderSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
             await savePlaceholderImages(data.images);
             toast({ title: 'Placeholder Images Saved', description: 'Your image library has been updated.' });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to save images:", error);
-            toast({ title: 'Error Saving Images', description: 'Could not update the image library.', variant: 'destructive' });
+            toast({ title: 'Error Saving Images', description: error.message || 'Could not update the image library.', variant: 'destructive' });
         }
     };
     
@@ -115,9 +119,9 @@ export default function ImageManagementPage() {
         try {
             await saveBenefitImages(data.benefitImages);
             toast({ title: 'Benefit Images Saved', description: 'The artist benefits images have been updated successfully.' });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to save images:", error);
-            toast({ title: 'Error Saving Images', description: 'Could not update the benefit images.', variant: 'destructive' });
+            toast({ title: 'Error Saving Images', description: error.message || 'Could not update the benefit images.', variant: 'destructive' });
         }
     };
 
@@ -165,9 +169,9 @@ export default function ImageManagementPage() {
         try {
             await savePromotionalImage({ imageUrl: promoImage });
             toast({ title: 'Promotional Image Saved', description: 'The main artist benefits promo image has been updated.' });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to save promo image:", error);
-            toast({ title: 'Error', description: 'Could not save the promotional image.', variant: 'destructive' });
+            toast({ title: 'Error', description: error.message || 'Could not save the promotional image.', variant: 'destructive' });
         } finally {
             setIsSavingPromo(false);
         }
