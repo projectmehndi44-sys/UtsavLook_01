@@ -214,9 +214,9 @@ export default function Home() {
                             className="w-full h-full"
                         >
                             <CarouselContent>
-                                {heroSlideshowImages.length > 0 ? heroSlideshowImages.map((image, index) => (
+                                {heroSlideshowImages.length > 0 ? heroSlideshowImages.map((item, index) => (
                                     <CarouselItem key={index}>
-                                        <Image src={image.imageUrl} alt={image.occasion} fill className="object-cover" />
+                                        <Image src={item.imageUrl} alt={item.occasion} fill className="object-cover" />
                                     </CarouselItem>
                                 )) : (
                                     <CarouselItem>
