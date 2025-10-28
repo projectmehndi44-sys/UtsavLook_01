@@ -360,18 +360,12 @@ export default function CartPage() {
 
     return (
         <div className="bg-background">
-<<<<<<< HEAD
-            <div className="w-full px-4 md:px-8 py-12">
-                 <div className="relative mb-4 text-center">
-                    <h1 className="font-headline text-6xl md:text-8xl text-primary">
-=======
             <div className="container mx-auto px-4 py-12">
                  <div className="flex justify-between items-center mb-4">
                     <Button onClick={() => router.back()} variant="outline">
                         <ArrowLeft className="mr-2 h-4 w-4"/> Back
                     </Button>
                     <h1 className="font-headline text-5xl md:text-7xl text-primary text-center">
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
                         My Cart
                     </h1>
                      <Button asChild variant="outline">

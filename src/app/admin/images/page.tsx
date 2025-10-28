@@ -101,36 +101,25 @@ export default function ImageManagementPage() {
         Promise.all([
             getPlaceholderImages(),
             getBenefitImages(),
-<<<<<<< HEAD
             getPromotionalImage(),
             getHeroSettings()
         ]).then(([placeholderData, benefitData, promoData, heroData]) => {
-            placeholderForm.reset({ images: placeholderData });
-            replace(benefitData);
-            heroSettingsForm.reset(heroData);
-=======
-            getPromotionalImage()
-        ]).then(([placeholderData, benefitData, promoData]) => {
             placeholderForm.reset({ images: placeholderData || [] });
             replace(benefitData || []);
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
             if (promoData) setPromoImage(promoData.imageUrl);
+            heroSettingsForm.reset(heroData);
             setIsLoading(false);
         }).catch(err => {
             console.error("Error loading image data:", err);
             toast({ title: "Error", description: "Could not load site image data.", variant: "destructive"});
             setIsLoading(false);
         });
-<<<<<<< HEAD
-    }, [placeholderForm, replace, heroSettingsForm]);
+    }, [placeholderForm, replace, heroSettingsForm, toast]);
     
     const getFieldsForCategory = (category: string) => {
         const allFields = placeholderForm.getValues('images');
         return allFields.map((img, index) => ({...img, originalIndex: index})).filter(img => img.id.startsWith(category));
     };
-=======
-    }, [placeholderForm, replace, toast]);
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
 
     const onPlaceholderSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
@@ -423,7 +412,6 @@ export default function ImageManagementPage() {
                     
                      {renderPlaceholderCategory('hero-slideshow', 'Hero Slideshow Images', 'Images for the main hero section slideshow.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
                      {renderPlaceholderCategory('our-work', 'Our Works Gallery Images', 'Images for the "Our Works" section.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
-                     {renderPlaceholderlerCategory('hero-background', 'Hero Background Images', 'Images for the hero background.', (img) => placeholderForm.setValue('images', [...placeholderForm.getValues('images'), img]))}
                      
                     <div className="mt-6">
                         <Button type="submit" className="w-full" disabled={placeholderForm.formState.isSubmitting || !hasPermission('settings', 'edit')}>
