@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -34,15 +35,23 @@ export default function PromotionsPage() {
     const { toast } = useToast();
     const { hasPermission } = useAdminAuth();
     const [promotions, setPromotions] = React.useState<Promotion[]>([]);
+    const [isLoading, setIsLoading] = React.useState(false);
 
     const form = useForm<PromotionFormValues>({
         resolver: zodResolver(promotionSchema),
         defaultValues: { code: '', discount: 10, usageLimit: 1 },
     });
+    
+    const fetchPromotions = React.useCallback(async () => {
+        setIsLoading(true);
+        const promos = await getPromotions();
+        setPromotions(promos);
+        setIsLoading(false);
+    }, []);
 
     React.useEffect(() => {
-        getPromotions().then(setPromotions);
-    }, []);
+        fetchPromotions();
+    }, [fetchPromotions]);
     
     const onSubmit: SubmitHandler<PromotionFormValues> = async (data) => {
         if (promotions.some(p => p.code === data.code)) {
@@ -65,11 +74,11 @@ export default function PromotionsPage() {
 
         try {
             await savePromotions([newPromotion, ...promotions]);
+            await fetchPromotions();
             toast({ title: 'Promotion Created', description: `Code ${data.code} has been added.` });
-            setPromotions([newPromotion, ...promotions]);
             form.reset({ code: '', discount: 10, usageLimit: 1, expiryDate: undefined });
         } catch (error) {
-            toast({ title: 'Creation Failed', description: 'Could not create the promotion. Your changes are local and will be overwritten on page refresh.', variant: 'destructive' });
+            toast({ title: 'Creation Failed', description: 'Could not create the promotion.', variant: 'destructive' });
         }
     };
 
@@ -94,7 +103,7 @@ export default function PromotionsPage() {
             setPromotions(updated);
             toast({ title: 'Status Updated' });
         } catch (error) {
-            toast({ title: 'Update Failed', description: 'Could not update the promotion status. Your changes are local and will be overwritten on page refresh.', variant: 'destructive' });
+            toast({ title: 'Update Failed', description: 'Could not update the promotion status.', variant: 'destructive' });
         }
     };
 
@@ -105,7 +114,7 @@ export default function PromotionsPage() {
             setPromotions(updated);
             toast({ title: 'Promotion Deleted', variant: 'destructive' });
         } catch (error) {
-            toast({ title: 'Deletion Failed', description: 'Could not delete the promotion. Your changes are local and will be overwritten on page refresh.', variant: 'destructive' });
+            toast({ title: 'Deletion Failed', description: 'Could not delete the promotion.', variant: 'destructive' });
         }
     };
 
@@ -172,7 +181,9 @@ export default function PromotionsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {promotions.map(promo => (
+                                {isLoading ? (
+                                    <TableRow><TableCell colSpan={6} className="text-center">Loading promotions...</TableCell></TableRow>
+                                ) : promotions.map(promo => (
                                     <TableRow key={promo.id}>
                                         <TableCell className="font-mono">{promo.code}</TableCell>
                                         <TableCell>{promo.discount}%</TableCell>
@@ -199,3 +210,4 @@ export default function PromotionsPage() {
         </>
     );
 }
+

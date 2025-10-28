@@ -7,7 +7,7 @@ import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { masterServicePackages, promotions } from './data';
+import { masterServicePackages } from './data';
 
 // Use the singleton instance of Firestore from the central firebase module
 const getDb = () => db;
@@ -427,7 +427,7 @@ export const deleteTeamMember = async (id: string) => {
 export const getPromotions = async (): Promise<Promotion[]> => {
     const config = await getConfigDocument<{ promos: Promotion[] }>('promotions');
     // Fallback to local data if Firestore fails or is empty
-    return config?.promos || promotions || [];
+    return config?.promos || [];
 };
 
 export const savePromotions = (promos: Promotion[]) => setConfigDocument('promotions', { promos });
