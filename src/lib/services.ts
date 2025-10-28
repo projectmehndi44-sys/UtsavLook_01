@@ -7,7 +7,7 @@ import { getFirebaseApp, callFirebaseFunction, db } from './firebase';
 import { compressImage } from './utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { masterServicePackages } from './data';
+import { masterServicePackages, promotions } from './data';
 
 // Use the singleton instance of Firestore from the central firebase module
 const getDb = () => db;
@@ -425,9 +425,8 @@ export const deleteTeamMember = async (id: string) => {
 
 
 export const getPromotions = async (): Promise<Promotion[]> => {
-    const config = await getConfigDocument<{ promos: Promotion[] }>('promotions');
-    // Fallback to local data if Firestore fails or is empty
-    return config?.promos || [];
+    // This now reads from the local data file instead of Firestore.
+    return Promise.resolve(promotions);
 };
 
 export const savePromotions = (promos: Promotion[]) => setConfigDocument('promotions', { promos });
@@ -486,15 +485,12 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
+    // This now reads from the local data file instead of Firestore.
     return Promise.resolve(masterServicePackages);
 };
 export const saveMasterServices = (packages: MasterServicePackage[]) => {
-    // In a real scenario, this would write to a local file or a secure endpoint.
-    // For this implementation, we'll just log it.
-    console.log("Saving master services is a build-time or admin-only operation and is not implemented on the client.");
-    return Promise.resolve();
+    // This now calls the secure cloud function to update the config.
+    return setConfigDocument('masterServices', { packages });
 };
 
 export { getDb };
-
-    

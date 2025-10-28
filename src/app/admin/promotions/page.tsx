@@ -77,8 +77,8 @@ export default function PromotionsPage() {
             await fetchPromotions();
             toast({ title: 'Promotion Created', description: `Code ${data.code} has been added.` });
             form.reset({ code: '', discount: 10, usageLimit: 1, expiryDate: undefined });
-        } catch (error) {
-            toast({ title: 'Creation Failed', description: 'Could not create the promotion.', variant: 'destructive' });
+        } catch (error: any) {
+            toast({ title: 'Creation Failed', description: error.message || 'Could not create the promotion.', variant: 'destructive' });
         }
     };
 
@@ -102,8 +102,8 @@ export default function PromotionsPage() {
             await savePromotions(updated);
             setPromotions(updated);
             toast({ title: 'Status Updated' });
-        } catch (error) {
-            toast({ title: 'Update Failed', description: 'Could not update the promotion status.', variant: 'destructive' });
+        } catch (error: any) {
+            toast({ title: 'Update Failed', description: error.message || 'Could not update the promotion status.', variant: 'destructive' });
         }
     };
 
@@ -113,8 +113,8 @@ export default function PromotionsPage() {
             await savePromotions(updated);
             setPromotions(updated);
             toast({ title: 'Promotion Deleted', variant: 'destructive' });
-        } catch (error) {
-            toast({ title: 'Deletion Failed', description: 'Could not delete the promotion.', variant: 'destructive' });
+        } catch (error: any) {
+            toast({ title: 'Deletion Failed', description: error.message || 'Could not delete the promotion.', variant: 'destructive' });
         }
     };
 
