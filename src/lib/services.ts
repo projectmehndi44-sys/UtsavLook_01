@@ -484,9 +484,15 @@ export const getBookings = async (): Promise<Booking[]> => getCollection<Booking
 
 
 export const getMasterServices = async (): Promise<MasterServicePackage[]> => {
-    const config = await getConfigDocument<{ packages: MasterServicePackage[] }>('masterServices');
-    return config?.packages ?? masterServicePackages;
+    return Promise.resolve(masterServicePackages);
 };
-export const saveMasterServices = (packages: MasterServicePackage[]) => setConfigDocument('masterServices', { packages });
+export const saveMasterServices = (packages: MasterServicePackage[]) => {
+    // In a real scenario, this would write to a local file or a secure endpoint.
+    // For this implementation, we'll just log it.
+    console.log("Saving master services is a build-time or admin-only operation and is not implemented on the client.");
+    return Promise.resolve();
+};
 
 export { getDb };
+
+    
