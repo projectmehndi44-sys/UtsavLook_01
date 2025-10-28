@@ -27,6 +27,7 @@ import { StyleMatch } from '@/components/utsavlook/StyleMatch';
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 import { ArtistCard } from '@/components/utsavlook/ArtistCard';
+import Autoplay from "embla-carousel-autoplay";
 
 const occasionWords = occasionImages.map(img => img.occasion);
 
@@ -166,54 +167,50 @@ export default function Home() {
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
          <div className="w-full pt-8 md:pt-12">
-            <div className="group relative bg-card shadow-lg transition-shadow hover:shadow-2xl mx-4 md:mx-8 rounded-xl">
-                <div className="grid md:grid-cols-10 gap-4">
-                    {/* Left Box: Text */}
-                    <div className="flex flex-col justify-center p-6 text-center md:text-left md:col-span-4">
-                         <div className="mb-4">
-                            <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
-                                Utsav<span className="text-primary">Look</span>
-                            </h1>
-                            <p className="mt-2 font-dancing-script text-2xl text-foreground/90 md:text-3xl">Your Perfect Look for Every Utsav.</p>
+            <div className="group relative bg-card shadow-lg transition-shadow hover:shadow-2xl mx-4 md:mx-8 rounded-xl overflow-hidden">
+                <div className="absolute inset-0 w-full h-full">
+                    {occasionImages.map((item, index) => (
+                        <Image 
+                            key={item.imageUrl}
+                            src={item.imageUrl} 
+                            alt={item.occasion} 
+                            fill 
+                            className={cn(
+                                "object-cover transition-opacity duration-1000",
+                                index === currentOccasionIndex ? "opacity-100" : "opacity-0"
+                            )}
+                            priority={index === 0}
+                        />
+                    ))}
+                </div>
+                 <div className="relative flex flex-col justify-center p-6 md:p-10 text-center items-center bg-black/50 min-h-[500px] md:min-h-[600px] text-white">
+                    <div className="bg-background/80 backdrop-blur-sm p-8 rounded-lg shadow-2xl text-foreground">
+                        <div className="mb-4">
+                        <h1 className="font-headline text-5xl md:text-6xl lg:text-7xl font-bold text-accent">
+                            Utsav<span className="text-primary">Look</span>
+                        </h1>
+                        <p className="mt-2 font-dancing-script text-2xl md:text-3xl">Your Perfect Look for Every Utsav.</p>
                         </div>
                         
-                        <div className="mt-4">
-                            <div className="whitespace-nowrap text-2xl font-bold text-foreground/80 md:text-3xl">Crafting Memories for Your</div>
+                        <div className="mt-6">
+                            <div className="whitespace-nowrap text-2xl font-bold md:text-3xl">Crafting Memories for Your</div>
                             <div key={animationKey} className="animated-gradient-text fade-in-out text-5xl font-bold md:text-6xl">
                                 {occasionWords[currentOccasionIndex]}
                             </div>
                             <p className="text-lg font-light text-muted-foreground">with UtsavLook</p>
                         </div>
                         
-                        <div className="mt-4 max-w-xl font-body text-base text-foreground/80 md:mx-0 mx-auto">
+                        <div className="mt-4 max-w-xl font-body text-base mx-auto">
                            <p>Book top-rated, verified artists for your special day.</p>
                         </div>
 
-                         <div className="mt-6 flex flex-col sm:flex-row gap-4 md:justify-start justify-center">
+                         <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
                             <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('services')}>
                                 Book a Service
                             </Button>
                              <Button size="lg" className="btn-gradient" onClick={() => handleScrollTo('artists')}>
                                 View Artists
                             </Button>
-                        </div>
-                    </div>
-                    {/* Right Box: Slideshow */}
-                    <div className="relative aspect-square md:aspect-auto rounded-r-lg overflow-hidden md:col-span-6">
-                       <div className="w-full h-full">
-                            {occasionImages.map((item, index) => (
-                                <Image 
-                                    key={item.imageUrl}
-                                    src={item.imageUrl} 
-                                    alt={item.occasion} 
-                                    fill 
-                                    className={cn(
-                                        "object-cover transition-opacity duration-1000",
-                                        index === currentOccasionIndex ? "opacity-100" : "opacity-0"
-                                    )}
-                                    priority={index === 0}
-                                />
-                            ))}
                         </div>
                     </div>
                 </div>
@@ -268,6 +265,9 @@ export default function Home() {
                     loop: true,
                 }}
                 plugins={[
+                    Autoplay({
+                        delay: 5000,
+                    })
                 ]}
                 className="w-full"
             >
