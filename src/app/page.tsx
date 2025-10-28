@@ -59,17 +59,12 @@ export default function Home() {
   const [heroSettings, setHeroSettings] = React.useState<HeroSettings>({ slideshowText: ''});
   
   const [currentOccasionIndex, setCurrentOccasionIndex] = React.useState(0);
-  const [isTextVisible, setIsTextVisible] = React.useState(true);
   
   const { toast } = useToast();
 
   React.useEffect(() => {
     const wordInterval = setInterval(() => {
-        setIsTextVisible(false); // Start fade out
-        setTimeout(() => {
-            setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
-            setIsTextVisible(true); // Start fade in
-        }, 500); // Time for fade-out animation
+        setCurrentOccasionIndex(prev => (prev + 1) % occasionWords.length);
     }, 5000); // Change word every 5 seconds
 
     return () => clearInterval(wordInterval);
@@ -230,7 +225,7 @@ export default function Home() {
                         <div className="whitespace-nowrap text-2xl font-bold md:text-3xl animate-slide-in-left opacity-0 [animation-fill-mode:forwards] [animation-delay:3s]">Crafting Memories for Your</div>
                          <div 
                             key={currentOccasionIndex} 
-                            className={cn("animated-gradient-text fade-and-slide-in text-5xl font-bold md:text-6xl", isTextVisible ? 'opacity-100' : 'opacity-0')}
+                            className={cn("animated-gradient-text fade-and-slide-in text-5xl font-bold md:text-6xl")}
                          >
                             {occasionWords[currentOccasionIndex]}
                         </div>

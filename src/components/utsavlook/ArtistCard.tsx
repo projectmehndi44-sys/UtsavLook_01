@@ -10,6 +10,7 @@ import Link from 'next/link';
 
 interface ArtistCardProps {
   artist: Artist;
+  onViewProfile?: (artist: Artist) => void;
 }
 
 const getServiceIcon = (service: Artist['services'][number]) => {
@@ -25,29 +26,22 @@ const getServiceIcon = (service: Artist['services'][number]) => {
     }
 }
 
-export function ArtistCard({ artist }: ArtistCardProps) {
+export function ArtistCard({ artist, onViewProfile }: ArtistCardProps) {
   const primaryService = artist.services?.[0];
   const baseCharge = (primaryService && artist.charges?.[primaryService]) || artist.charge || 0;
   const primaryWorkImage = artist.workImages?.[0] || 'https://picsum.photos/seed/placeholder/800/600';
 
+  const handleViewProfileClick = (e: React.MouseEvent) => {
+    if (onViewProfile) {
+      e.preventDefault();
+      onViewProfile(artist);
+    }
+  };
+
   return (
-<<<<<<< HEAD
-    <Card className="overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-accent">
-      <CardHeader className="p-0 relative">
-        <div className="aspect-[2/3] w-full relative">
-            <Image
-                src={artist.profilePicture}
-                alt={artist.name}
-                fill
-                className="object-cover"
-                data-ai-hint="artist portrait"
-            />
-        </div>
-         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-=======
     <Card className="overflow-hidden flex flex-col group transition-all duration-300 shadow-brand hover:shadow-brand-lg hover:border-accent">
       <CardContent className="p-0 relative">
-        <Link href={`/artist/${artist.id}`} className="aspect-[4/3] relative block">
+        <Link href={`/artist/${artist.id}`} onClick={handleViewProfileClick} className="aspect-[4/3] relative block">
           <Image
             src={primaryWorkImage}
             alt={`${artist.name}'s work`}
@@ -56,20 +50,16 @@ export function ArtistCard({ artist }: ArtistCardProps) {
             data-ai-hint="mehndi makeup"
           />
            <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
             {artist.verified && (
                 <Badge className="bg-green-600 text-white pl-2 border-green-700 shadow-md">
                     <CheckCircle className="w-3.5 h-3.5 mr-1"/>
                     Verified
-<<<<<<< HEAD
-=======
                 </Badge>
             )}
             {artist.isFoundersClubMember && (
                 <Badge className="bg-amber-500 text-white pl-2 border-amber-600 shadow-md">
                     <Star className="w-3.5 h-3.5 mr-1 fill-current"/>
                     Founder's Club
->>>>>>> eac5ee80131f4a21df1449fd33b40862fc57bb83
                 </Badge>
             )}
           </div>
@@ -120,7 +110,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
       
       <CardFooter className="p-2 bg-background/50">
         <Button asChild className="w-full bg-accent hover:bg-accent/90" size="lg">
-            <Link href={`/artist/${artist.id}`}>View Profile</Link>
+            <Link href={`/artist/${artist.id}`} onClick={handleViewProfileClick}>View Profile</Link>
         </Button>
       </CardFooter>
     </Card>
