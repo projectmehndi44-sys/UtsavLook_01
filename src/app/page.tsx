@@ -414,9 +414,9 @@ export default function Home() {
                 {whyChooseUsFeatures.map((feature) => (
                   <CarouselItem key={feature.title} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
                     <div className="group text-center p-1 h-full">
-                      <Card className="bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
+                      <Card className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
                           <CardContent className="p-0 flex flex-col items-center flex-grow">
-                              <div className="relative aspect-[2/3] w-full mb-4 rounded-t-lg overflow-hidden">
+                              <div className="relative aspect-[2/3] w-full mb-4 rounded-t-2xl overflow-hidden">
                                   <Image 
                                       src={feature.imageUrl}
                                       alt={feature.title}
