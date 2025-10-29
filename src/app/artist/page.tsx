@@ -175,13 +175,13 @@ export default function ArtistHomePage() {
 
                     {/* Text Content */}
                     <div className="relative z-10 flex flex-col items-center justify-center h-full text-center p-4">
-                        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight font-headline animate-fade-in [animation-delay:0.5s]">
+                        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight font-headline animate-slide-down opacity-0 [animation-fill-mode:forwards]">
                             Your Art. Your Business.
                         </h1>
-                        <p className="max-w-2xl mt-4 text-lg md:text-xl text-white/80 animate-fade-in [animation-delay:1s]">
+                        <p className="max-w-2xl mt-4 text-lg md:text-xl text-white/80 animate-slide-up opacity-0 [animation-fill-mode:forwards] [animation-delay:2s]">
                            Join a community that celebrates your talent. We give you the tools to get discovered, manage bookings, and grow your brand—all in one place.
                         </p>
-                        <div className="mt-8 flex gap-4 animate-fade-in [animation-delay:1.5s]">
+                        <div className="mt-8 flex gap-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] [animation-delay:4s]">
                              <Link href="/artist/register">
                                 <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full text-lg px-8 py-6">
                                     Register Now
