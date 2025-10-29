@@ -223,37 +223,37 @@ export default function Home() {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
         description: "Every artist is hand-vetted for quality, professionalism, and skill.",
-        aiHint: "award winning makeup artist"
+        aiHint: "minimalist 3D glass award shield golden checkmark"
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "AI Style Match",
         description: "Upload an outfit photo and get instant style recommendations for your look.",
-        aiHint: "ai style match"
+        aiHint: "abstract 3D glowing neural network diamond"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Effortless Booking",
         description: "Book your preferred artist and time slot in just a few clicks.",
-        aiHint: "easy booking calendar"
+        aiHint: "sleek 3D glass calendar icon"
     },
      {
         icon: <Heart className="w-8 h-8 text-primary" />,
         title: "Curated Selection",
         description: "Discover a curated community of the most talented artists in your city.",
-        aiHint: "curated artist selection"
+        aiHint: "3D open velvet jewelry box glowing orbs"
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
         title: "Secure Payments",
         description: "Your bookings and payments are processed securely for your peace of mind.",
-        aiHint: "secure payment shield"
+        aiHint: "modern 3D golden padlock icon"
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
         title: "Transparent & Fair",
         description: "Enjoy transparent pricing with a direct connection to your chosen artist.",
-        aiHint: "transparent pricing handshake"
+        aiHint: "3D balanced scales matte white golden accents"
     }
   ];
 
@@ -393,38 +393,45 @@ export default function Home() {
              </ClientOnly>
         </div>
 
-        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32">
+        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32 why-choose-us-bg">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
-              <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4">Why Choose UtsavLook?</h2>
+              <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-              {whyChooseUsFeatures.map((feature, index) => (
-                  <div key={feature.title} className="group text-center">
-                    <Card className="bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
-                        <CardContent className="p-4 flex flex-col items-center flex-grow">
-                             <div className="relative aspect-square w-full mb-4 rounded-md overflow-hidden">
-                                <Image 
-                                    src={`https://picsum.photos/seed/${index+1}/200/200`} 
-                                    alt={feature.title}
-                                    fill
-                                    className="object-cover"
-                                    data-ai-hint={feature.aiHint}
-                                />
+            <Carousel
+              opts={{ align: "start", loop: true, }}
+              plugins={[ Autoplay({ delay: 3000, stopOnInteraction: true, }) ]}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {whyChooseUsFeatures.map((feature, index) => (
+                  <CarouselItem key={feature.title} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                    <div className="group text-center p-1 h-full">
+                      <Card className="bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
+                          <CardContent className="p-0 flex flex-col items-center flex-grow">
+                              <div className="relative aspect-square w-full mb-4 rounded-t-lg overflow-hidden">
+                                  <Image 
+                                      src={`https://picsum.photos/seed/${index+20}/200/200`} 
+                                      alt={feature.title}
+                                      fill
+                                      className="object-cover"
+                                      data-ai-hint={feature.aiHint}
+                                  />
+                              </div>
+                            <div className="p-4 pt-0">
+                              <h3 className="text-md font-bold text-primary mb-1">{feature.title}</h3>
+                              <p className="text-xs text-muted-foreground flex-grow">
+                                  {feature.description}
+                              </p>
                             </div>
-                           <div className="inline-block bg-primary/10 p-3 rounded-full w-fit text-primary mb-3">
-                            {feature.icon}
-                          </div>
-                           <h3 className="text-md font-bold text-primary mb-1">{feature.title}</h3>
-                           <p className="text-xs text-muted-foreground flex-grow">
-                               {feature.description}
-                           </p>
-                        </CardContent>
-                    </Card>
-                  </div>
-              ))}
-            </div>
+                          </CardContent>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
           </div>
         </section>
         
