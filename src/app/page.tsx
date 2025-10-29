@@ -223,37 +223,43 @@ export default function Home() {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
         description: "Every artist is hand-vetted for quality, professionalism, and skill.",
-        aiHint: "minimalist 3D glass award shield golden checkmark"
+        imageUrl: "https://picsum.photos/seed/verified/600/400",
+        aiHint: "award winning makeup artist"
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "AI Style Match",
         description: "Upload an outfit photo and get instant style recommendations for your look.",
-        aiHint: "abstract 3D glowing neural network diamond"
+        imageUrl: "https://picsum.photos/seed/stylematch/600/400",
+        aiHint: "ai style match"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Effortless Booking",
         description: "Book your preferred artist and time slot in just a few clicks.",
-        aiHint: "sleek 3D glass calendar icon"
+        imageUrl: "https://picsum.photos/seed/booking/600/400",
+        aiHint: "easy booking calendar"
     },
      {
         icon: <Heart className="w-8 h-8 text-primary" />,
         title: "Curated Selection",
         description: "Discover a curated community of the most talented artists in your city.",
-        aiHint: "3D open velvet jewelry box glowing orbs"
+        imageUrl: "https://picsum.photos/seed/curated/600/400",
+        aiHint: "A group of faint, semi-transparent glass squares are floating in the background. In the foreground, one square is crystal clear and glowing with a soft, internal, golden-bronze light. A simple, elegant heart icon is embossed in the center of the glowing square. The entire scene has a clean, focused, and premium feel, emphasizing the idea of selecting the very best."
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
         title: "Secure Payments",
         description: "Your bookings and payments are processed securely for your peace of mind.",
-        aiHint: "modern 3D golden padlock icon"
+        imageUrl: "https://picsum.photos/seed/secure/600/400",
+        aiHint: "secure payment shield"
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
         title: "Transparent & Fair",
         description: "Enjoy transparent pricing with a direct connection to your chosen artist.",
-        aiHint: "3D balanced scales matte white golden accents"
+        imageUrl: "https://picsum.photos/seed/fair/600/400",
+        aiHint: "transparent pricing handshake"
     }
   ];
 
@@ -405,14 +411,14 @@ export default function Home() {
               className="w-full"
             >
               <CarouselContent className="-ml-4">
-                {whyChooseUsFeatures.map((feature, index) => (
-                  <CarouselItem key={feature.title} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                {whyChooseUsFeatures.map((feature) => (
+                  <CarouselItem key={feature.title} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
                     <div className="group text-center p-1 h-full">
                       <Card className="bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
                           <CardContent className="p-0 flex flex-col items-center flex-grow">
-                              <div className="relative aspect-square w-full mb-4 rounded-t-lg overflow-hidden">
+                              <div className="relative aspect-[2/3] w-full mb-4 rounded-t-lg overflow-hidden">
                                   <Image 
-                                      src={`https://picsum.photos/seed/${index+20}/200/200`} 
+                                      src={feature.imageUrl}
                                       alt={feature.title}
                                       fill
                                       className="object-cover"
@@ -530,3 +536,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
