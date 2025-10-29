@@ -22,7 +22,6 @@ import { Parallax } from 'react-scroll-parallax';
 import { ParallaxProvider } from 'react-scroll-parallax';
 import { occasionImages } from '@/lib/occasion-images';
 
-
 const benefitIcons: { [key: string]: React.ReactNode } = {
     "set-your-own-price": <IndianRupee className="w-8 h-8 text-accent" />,
     "verified-badge": <Award className="w-8 h-8 text-accent" />,
@@ -38,6 +37,7 @@ export default function ArtistHomePage() {
     const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
 
     const [isSharing, setIsSharing] = React.useState(false);
     const [isGenerating, setIsGenerating] = React.useState(false);
@@ -61,6 +61,16 @@ export default function ArtistHomePage() {
             setIsLoading(false);
         });
     }, []);
+
+    // Simplified Hero Slideshow Effect
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex(prevIndex => (prevIndex + 1) % occasionImages.length);
+        }, 4000); // Change image every 4 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
 
     const shareText = "Join UtsavLook and grow your artistry business! We give you the tools to succeed. #UtsavLookArtist #MehndiArtist #MakeupArtist #ArtistPlatform";
 
@@ -144,20 +154,26 @@ export default function ArtistHomePage() {
             <main className="flex-1">
                 {/* Hero Section */}
                 <section className="relative w-full h-[70vh] md:h-screen text-white overflow-hidden">
-                    <Carousel
-                      opts={{ loop: true }}
-                      plugins={[Autoplay({ delay: 5000, stopOnInteraction: false })]}
-                      className="absolute inset-0 w-full h-full z-0"
-                    >
-                      <CarouselContent>
-                        {occasionImages.map((item, i) => (
-                          <CarouselItem key={i}>
-                            <Image src={item.imageUrl} alt={item.occasion} layout="fill" objectFit="cover" className="brightness-50" />
-                          </CarouselItem>
+                    {/* Background Slideshow */}
+                    <div className="absolute inset-0 w-full h-full z-0">
+                        {occasionImages.map((item, index) => (
+                            <Image
+                                key={item.imageUrl}
+                                src={item.imageUrl}
+                                alt={item.occasion}
+                                layout="fill"
+                                objectFit="cover"
+                                className={cn(
+                                    "transition-opacity duration-1000 ease-in-out",
+                                    currentImageIndex === index ? "opacity-100" : "opacity-0"
+                                )}
+                                priority={index === 0}
+                            />
                         ))}
-                      </CarouselContent>
-                    </Carousel>
+                         <div className="absolute inset-0 bg-black/40" />
+                    </div>
 
+                    {/* Text Content */}
                     <div className="relative z-10 flex flex-col items-center justify-center h-full text-center p-4">
                         <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight font-headline animate-fade-in [animation-delay:0.5s]">
                             Your Art. Your Business.
