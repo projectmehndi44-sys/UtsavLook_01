@@ -3,9 +3,10 @@
 
 import * as React from 'react';
 import type { Customer } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/utsavlook/Header';
 import { ClientOnly } from '@/components/ClientOnly';
+import { Footer } from '@/components/utsavlook/Footer';
 
 const PolicySection = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-2">
@@ -98,6 +99,7 @@ export default function PrivacyPolicyPage() {
                     </div>
                 </section>
             </main>
+            <Footer />
         </div>
     );
 }

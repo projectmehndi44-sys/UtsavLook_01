@@ -9,6 +9,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Palette,
   Sparkles,
+  Award,
+  Handshake,
+  Search,
+  BookOpen,
+  CalendarCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -78,30 +83,25 @@ export default function Home() {
       const currentWord = occasionWords[occasionIndex];
       
       if (isDeleting) {
-        // Handle deleting
         if (displayedText.length > 0) {
           timeout = setTimeout(() => {
             setDisplayedText(currentWord.substring(0, displayedText.length - 1));
           }, deletingSpeed);
         } else {
-          // Finished deleting
           setIsDeleting(false);
           setOccasionIndex((prev) => (prev + 1) % occasionWords.length);
-          // When we switch to the next word, we also switch the image
           setImageIndex((prev) => (prev + 1) % occasionImages.length);
-          setImageOpacity(1); // Fade in the new image
+          setImageOpacity(1);
         }
       } else {
-        // Handle typing
         if (displayedText.length < currentWord.length) {
           timeout = setTimeout(() => {
             setDisplayedText(currentWord.substring(0, displayedText.length + 1));
           }, typingSpeed);
         } else {
-          // Finished typing, pause and then start deleting
           timeout = setTimeout(() => {
             setIsDeleting(true);
-            setImageOpacity(0); // Start fading out the image
+            setImageOpacity(0);
           }, pauseDuration);
         }
       }
@@ -132,14 +132,12 @@ export default function Home() {
             setCart(storedCart ? JSON.parse(storedCart) : []);
             localStorage.setItem('currentCustomerId', user.uid);
         } else {
-            // This case might happen if user is authenticated but not in our 'customers' collection
             setIsCustomerLoggedIn(false);
             setCustomer(null);
             setCart([]);
             localStorage.removeItem('currentCustomerId');
         }
       } else {
-        // User is signed out
         setIsCustomerLoggedIn(false);
         setCustomer(null);
         setCart([]);
@@ -174,7 +172,6 @@ export default function Home() {
     };
   }, []);
   
-   // This effect runs only on the client after mount to prevent hydration errors.
   React.useEffect(() => {
       if (artists.length > 0) {
           setTopArtists(prevArtists => [...prevArtists].sort(() => 0.5 - Math.random()));
@@ -218,6 +215,41 @@ export default function Home() {
     );
   }
   
+  const whyChooseUsFeatures = [
+    {
+        icon: <Award className="w-10 h-10 text-accent" />,
+        title: "Verified Professionals",
+        description: "Every artist on our platform is hand-vetted for quality, professionalism, and skill."
+    },
+    {
+        icon: <Sparkles className="w-10 h-10 text-accent" />,
+        title: "AI-Powered Style Matching",
+        description: "Upload a photo of your outfit and let our AI recommend the perfect mehndi and makeup styles."
+    },
+    {
+        icon: <Handshake className="w-10 h-10 text-accent" />,
+        title: "Transparent & Fair",
+        description: "Enjoy transparent pricing and a direct connection to the talent that makes your day special."
+    }
+  ];
+
+  const howItWorksSteps = [
+      {
+        icon: <Search className="w-10 h-10 text-accent"/>,
+        title: "1. Discover",
+        description: "Browse services, view artist portfolios, and find the perfect match for your style and budget."
+      },
+      {
+        icon: <CalendarCheck className="w-10 h-10 text-accent"/>,
+        title: "2. Book",
+        description: "Select your desired date and time, and confirm your booking with a secure advance payment."
+      },
+      {
+        icon: <Sparkles className="w-10 h-10 text-accent"/>,
+        title: "3. Celebrate",
+        description: "Relax and enjoy your special day while our professional artists create your stunning look."
+      }
+  ]
 
   const handleScrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -336,10 +368,32 @@ export default function Home() {
                 </Tabs>
              </ClientOnly>
         </div>
+
+        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">Why Choose UtsavLook?</h2>
+              <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {whyChooseUsFeatures.map(feature => (
+                  <div key={feature.title} className="text-center p-6 bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2">
+                       <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
+                          {feature.icon}
+                       </div>
+                       <h3 className="text-xl font-bold text-primary mb-2">{feature.title}</h3>
+                       <p className="text-muted-foreground">
+                           {feature.description}
+                       </p>
+                  </div>
+              ))}
+            </div>
+          </div>
+        </section>
         
          {topArtists.length > 0 && (
-          <div id="artists" className="py-8 md:py-12 px-4">
-            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-8">Meet Our Top Artists</h2>
+          <div id="artists" className="py-12 md:py-24 px-4">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-12">Meet Our Top Artists</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
               {topArtists.map((artist) => (
                 <ArtistCard key={artist.id} artist={artist} onViewProfile={() => {setSelectedArtist(artist); setIsArtistModalOpen(true);}} />
@@ -347,6 +401,26 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">How It Works</h2>
+              <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">A seamless experience from start to finish.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {howItWorksSteps.map(step => (
+                    <div key={step.title} className="text-center p-6 bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2">
+                        <div className="inline-block bg-accent/10 p-4 rounded-full w-fit mb-4">
+                            {step.icon}
+                        </div>
+                        <h3 className="text-xl font-bold text-primary mb-2">{step.title}</h3>
+                        <p className="text-muted-foreground">{step.description}</p>
+                    </div>
+                ))}
+            </div>
+          </div>
+        </section>
 
         {!isCustomerLoggedIn && (
             <>
@@ -408,7 +482,7 @@ export default function Home() {
           />
         )}
       </main>
-      {!isCustomerLoggedIn && <Footer />}
+      <Footer />
     </div>
   );
 }

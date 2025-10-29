@@ -5,25 +5,13 @@ import React from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
-  ChevronDown,
-  Info
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useRouter } from 'next/navigation';
 
 export function Footer() {
-  const router = useRouter();
 
   return (
     <footer className="w-full bg-secondary text-secondary-foreground mt-16 border-t">
-        <div className="container mx-auto py-8 px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="container mx-auto py-12 px-4 md:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             <div className="flex flex-col gap-2">
                 <Link href="/" className="flex items-center gap-2">
                     <Sparkles className="w-8 h-8 text-accent" />
@@ -55,7 +43,7 @@ export function Footer() {
                 <nav className="flex flex-col gap-1 text-sm">
                     <Link href="/about" className="hover:text-accent">About Us</Link>
                     <Link href="/contact" className="hover:text-accent">Contact Us</Link>
-                    <Link href="/terms" className="hover:text-accent">Terms & Conditions</Link>
+                    <Link href="/terms" className="hover:text-accent">Terms &amp; Conditions</Link>
                     <Link href="/privacy" className="hover:text-accent">Privacy Policy</Link>
                     <Link href="/refund" className="hover:text-accent">Refund Policy</Link>
                 </nav>

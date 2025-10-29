@@ -6,6 +6,7 @@ import type { Customer } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/utsavlook/Header';
 import { ClientOnly } from '@/components/ClientOnly';
+import { Footer } from '@/components/utsavlook/Footer';
 
 const PolicySection = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-2">
@@ -47,7 +48,7 @@ export default function TermsAndConditionsPage() {
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
                     <div className="container px-4 md:px-6 text-center">
                         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline text-primary">
-                            Terms & Conditions
+                            Terms &amp; Conditions
                         </h1>
                         <p className="mx-auto max-w-[700px] text-foreground/80 md:text-xl mt-4">
                            Last Updated: October 26, 2025
@@ -70,7 +71,7 @@ export default function TermsAndConditionsPage() {
                                     <p>All prices are inclusive of applicable taxes (GST). Additional charges, such as for travel or extra guest services, are to be discussed and settled directly with the Artist.</p>
                                 </PolicySection>
                                 <PolicySection title="4. Cancellation and Refunds">
-                                    <p>Our cancellation policy is designed to be fair to both customers and artists whose schedules are reserved. Please refer to our dedicated <a href="/refund" className="underline text-primary">Refund & Cancellation Policy</a> page for detailed information.</p>
+                                    <p>Our cancellation policy is designed to be fair to both customers and artists whose schedules are reserved. Please refer to our dedicated <a href="/refund" className="underline text-primary">Refund &amp; Cancellation Policy</a> page for detailed information.</p>
                                 </PolicySection>
                                 <PolicySection title="5. User Responsibilities">
                                     <p>As a user of UtsavLook, you agree to:</p>
@@ -92,6 +93,7 @@ export default function TermsAndConditionsPage() {
                     </div>
                 </section>
             </main>
+            <Footer />
         </div>
     );
 }

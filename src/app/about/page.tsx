@@ -9,6 +9,7 @@ import { Header } from '@/components/utsavlook/Header';
 import { Award, Handshake, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { ClientOnly } from '@/components/ClientOnly';
+import { Footer } from '@/components/utsavlook/Footer';
 
 export default function AboutUsPage() {
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -120,6 +121,7 @@ export default function AboutUsPage() {
                     </div>
                 </section>
             </main>
+            <Footer />
         </div>
     );
 }

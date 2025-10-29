@@ -5,9 +5,10 @@ import * as React from 'react';
 import type { Customer } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Header } from '@/components/utsavlook/Header';
-import { AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ClientOnly } from '@/components/ClientOnly';
+import { Footer } from '@/components/utsavlook/Footer';
 
 export default function RefundPolicyPage() {
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
@@ -42,7 +43,7 @@ export default function RefundPolicyPage() {
                 <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
                     <div className="container px-4 md:px-6 text-center">
                         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline text-primary">
-                            Refund & Cancellation Policy
+                            Refund &amp; Cancellation Policy
                         </h1>
                         <p className="mx-auto max-w-[700px] text-foreground/80 md:text-xl mt-4">
                            Clear, fair, and simple.
@@ -94,6 +95,7 @@ export default function RefundPolicyPage() {
                     </div>
                 </section>
             </main>
+            <Footer />
         </div>
     );
 }

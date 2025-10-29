@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Mail, Phone, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ClientOnly } from '@/components/ClientOnly';
+import { Footer } from '@/components/utsavlook/Footer';
 
 export default function ContactUsPage() {
     const { toast } = useToast();
@@ -132,6 +133,7 @@ export default function ContactUsPage() {
                     </div>
                 </section>
             </main>
+            <Footer />
         </div>
     );
 }
