@@ -73,21 +73,21 @@ export default function ArtistHomePage() {
         {
             id: 'set-your-own-price',
             title: 'Set Your Own Price',
-            description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates. Your talent, your price.",
+            description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates.",
             imageUrl: 'https://picsum.photos/seed/artist-price/800/600',
-            aiHint: 'rupee arrow price'
+            aiHint: 'rupee arrow'
         },
         {
             id: 'verified-badge',
             title: "'UtsavLook Verified' Badge",
-            description: "Don't get lost in the crowd. Our 'UtsavLook Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings.",
+            description: "Our 'Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings.",
             imageUrl: 'https://picsum.photos/seed/artist-verified/800/600',
-            aiHint: 'gold shield checkmark'
+            aiHint: 'gold shield'
         },
         {
             id: 'intelligent-scheduling',
             title: 'Intelligent Scheduling',
-            description: "Stop the back-and-forth phone calls. Our smart calendar lets you mark unavailable dates, so you only get booking requests for when you're actually free.",
+            description: "Stop the back-and-forth calls. Our smart calendar lets you mark unavailable dates, so you only get requests for when you're free.",
             imageUrl: 'https://picsum.photos/seed/artist-schedule/800/600',
             aiHint: 'calendar clock'
         },
@@ -96,21 +96,21 @@ export default function ArtistHomePage() {
             title: 'Your Own Referral Code',
             description: 'Turn happy clients into your sales team. We provide a unique referral code that gives them a discount and you a confirmed booking.',
             imageUrl: 'https://picsum.photos/seed/artist-referral/800/600',
-            aiHint: 'shaking hands gift'
+            aiHint: 'handshake gift'
         },
         {
             id: 'transparent-payouts',
             title: 'Transparent Payouts',
-            description: 'Track all your bookings and earnings in one professional dashboard. With our clear and timely payouts, accounting is always clean and simple.',
+            description: 'Track all your bookings and earnings in one professional dashboard. With our clear and timely payouts, accounting is simple.',
             imageUrl: 'https://picsum.photos/seed/artist-payout/800/600',
             aiHint: 'chart coins'
         },
         {
             id: 'zero-commission-welcome',
             title: '0% Commission Welcome',
-            description: "We're invested in your success. To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
+            description: "To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
             imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600',
-            aiHint: 'sparkling zero percent'
+            aiHint: 'sparkling zero'
         },
         {
             id: 'ai-promo-tools',
@@ -124,7 +124,7 @@ export default function ArtistHomePage() {
             title: 'Direct Client Communication',
             description: 'Once a booking is confirmed, communicate directly with the client through our platform to finalize details and build rapport.',
             imageUrl: 'https://picsum.photos/seed/artist-chat/800/600',
-            aiHint: 'chat bubbles heart'
+            aiHint: 'chat bubbles'
         }
     ];
 
