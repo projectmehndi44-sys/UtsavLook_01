@@ -183,12 +183,12 @@ export default function ArtistHomePage() {
                         </p>
                         <div className="mt-8 flex gap-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] [animation-delay:4s]">
                              <Link href="/artist/register">
-                                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full text-lg px-8 py-6">
+                                <Button size="lg" className="btn-gradient rounded-full text-lg px-8 py-6">
                                     Register Now
                                 </Button>
                             </Link>
                             <Link href="/artist/login">
-                                <Button size="lg" variant="outline" className="bg-transparent hover:bg-white/10 text-white border-white rounded-full text-lg px-8 py-6">
+                                <Button size="lg" className="btn-gradient rounded-full text-lg px-8 py-6">
                                     Artist Login
                                 </Button>
                             </Link>
