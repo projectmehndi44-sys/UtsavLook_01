@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -218,48 +219,34 @@ export default function Home() {
   }
   
   const whyChooseUsFeatures = [
-    {
-        icon: <Award className="w-8 h-8 text-primary" />,
-        title: "Verified Professionals",
-        description: "Every artist is hand-vetted for quality, professionalism, and skill.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
-        aiHint: "A minimalist 3D glass award shield with a golden bronze checkmark in the center. The shield should be semi-transparent and floating against a soft, out-of-focus background with pastel henna and sand-colored light glows. The overall style should be clean, modern, and trustworthy."
-    },
-    {
-        icon: <Sparkles className="w-8 h-8 text-primary" />,
-        title: "AI Style Match",
-        description: "Upload an outfit photo and get instant style recommendations for your look.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
-        aiHint: "An abstract 3D icon showing interconnected, glowing neural network lines forming the shape of a sparkling diamond. The lines should be a mix of golden bronze and soft white, set against a gentle, sandy-toned gradient background. The image should convey technology, beauty, and intelligence."
-    },
-    {
-        icon: <CalendarCheck className="w-8 h-8 text-primary" />,
-        title: "Effortless Booking",
-        description: "Book your preferred artist and time slot in just a few clicks.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FEffortless%20Booking.png?alt=media&token=904ae217-f00d-4e29-a3c0-6c191188793e",
-        aiHint: "A sleek, minimalist 3D calendar icon made of frosted glass. A single date is elegantly circled in a golden bronze ring. The icon is floating at a slight angle with a soft drop shadow over a smooth, sand-colored surface. The lighting is soft and ambient."
-    },
-     {
-        icon: <Heart className="w-8 h-8 text-primary" />,
-        title: "Curated Selection",
-        description: "Discover a curated community of the most talented artists in your city.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FGemini_Generated_Image_2xjtga2xjtga2xjt.png?alt=media&token=4c811d53-dfad-4aef-90e9-cafe39d54f92",
-        aiHint: "A group of faint, semi-transparent glass squares are floating in the background. In the foreground, one square is crystal clear and glowing with a soft, internal, golden-bronze light. A simple, elegant heart icon is embossed in the center of the glowing square. The entire scene has a clean, focused, and premium feel, emphasizing the idea of selecting the very best."
-    },
-    {
-        icon: <ShieldCheck className="w-8 h-8 text-primary" />,
-        title: "Secure Payments",
-        description: "Your bookings and payments are processed securely for your peace of mind.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
-        aiHint: "A modern, 3D padlock icon with a glossy, golden bronze finish. The padlock is floating and has a subtle, secure glow around it. The background is a clean, off-white with soft, geometric shadows, giving a feeling of safety and professionalism."
-    },
-    {
-        icon: <Handshake className="w-8 h-8 text-primary" />,
-        title: "Transparent & Fair",
-        description: "Enjoy transparent pricing with a direct connection to your chosen artist.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
-        aiHint: "A 3D icon of perfectly balanced scales, crafted from smooth, matte-white material with golden bronze accents on the pans. The scales are in perfect equilibrium, floating against a simple, light-sand colored background. The image should look clean, balanced, and fair."
-    }
+      {
+          icon: <Award className="w-8 h-8 text-primary" />,
+          title: "For Customers: Verified Professionals",
+          description: "Book with confidence. We vet every artist for quality and professionalism, so you can relax knowing you’re in expert hands.",
+          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
+          aiHint: "verified professional"
+      },
+      {
+          icon: <Sparkles className="w-8 h-8 text-primary" />,
+          title: "For Customers: AI Style Match",
+          description: "Unsure of the look you want? Upload an outfit photo and let our AI recommend the perfect mehndi and makeup styles to match.",
+          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
+          aiHint: "ai style"
+      },
+      {
+          icon: <Wallet className="w-8 h-8 text-primary" />,
+          title: "For Artists: A Pro Business Dashboard",
+          description: "Stop the DM chaos. Manage all your bookings, availability, and payments in one professional dashboard. We handle the business so you can create.",
+          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
+          aiHint: "business dashboard"
+      },
+      {
+          icon: <Handshake className="w-8 h-8 text-primary" />,
+          title: "For Artists: Fair & Transparent Payouts",
+          description: "Set your own prices and get timely, transparent payouts. We even offer a 0% commission welcome to help you get started.",
+          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
+          aiHint: "fair transparent"
+      }
   ];
 
   const howItWorksSteps = [
@@ -400,40 +387,28 @@ export default function Home() {
              </ClientOnly>
         </section>
 
-        <section id="why-choose-us" className="w-full py-12 why-choose-us-bg">
+        <section id="why-choose-us" className="w-full py-12 md:py-16 why-choose-us-bg">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
-              <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed mx-auto">We don't just list services; we build trust and create experiences.</p>
             </div>
             <Carousel
-              opts={{ align: "start", loop: true, }}
-              plugins={[ Autoplay({ delay: 3000, stopOnInteraction: true, }) ]}
+              opts={{ align: "start", loop: true }}
               className="w-full"
+              plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
             >
-              <CarouselContent className="-ml-4">
+              <CarouselContent>
                 {whyChooseUsFeatures.map((feature) => (
-                  <CarouselItem key={feature.title} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
-                    <div className="group text-center p-1 h-full">
-                      <Card className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
-                          <CardContent className="p-0 flex flex-col items-center flex-grow">
-                              <div className="relative aspect-[2/3] w-full mb-4 rounded-t-2xl overflow-hidden">
-                                  <Image 
-                                      src={feature.imageUrl}
-                                      alt={feature.title}
-                                      fill
-                                      className="object-cover"
-                                      data-ai-hint={feature.aiHint}
-                                  />
-                              </div>
-                            <div className="p-4 pt-0">
-                              <h3 className="text-md font-bold text-primary mb-1">{feature.title}</h3>
-                              <p className="text-xs text-muted-foreground flex-grow">
-                                  {feature.description}
-                              </p>
-                            </div>
-                          </CardContent>
-                      </Card>
+                  <CarouselItem key={feature.title} className="md:basis-1/2 lg:basis-1/4">
+                    <div className="p-4 h-full">
+                        <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2 flex flex-col text-center items-center h-full">
+                          <div className="relative w-full aspect-video mb-4 rounded-lg overflow-hidden">
+                            <Image src={feature.imageUrl} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint} />
+                          </div>
+                          <h3 className="text-lg font-bold text-primary mb-2">{feature.title}</h3>
+                          <p className="text-sm text-muted-foreground flex-grow">{feature.description}</p>
+                        </div>
                     </div>
                   </CarouselItem>
                 ))}
