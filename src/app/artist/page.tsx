@@ -20,7 +20,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { Parallax } from 'react-scroll-parallax';
 import { ParallaxProvider } from 'react-scroll-parallax';
-import { occasionImages } from '@/lib/occasion-images';
+import { artistHeroImages } from '@/lib/artist-hero-images';
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
     "set-your-own-price": <IndianRupee className="w-8 h-8 text-accent" />,
@@ -65,7 +65,7 @@ export default function ArtistHomePage() {
     // Simplified Hero Slideshow Effect
     React.useEffect(() => {
         const interval = setInterval(() => {
-            setCurrentImageIndex(prevIndex => (prevIndex + 1) % occasionImages.length);
+            setCurrentImageIndex(prevIndex => (prevIndex + 1) % artistHeroImages.length);
         }, 4000); // Change image every 4 seconds
 
         return () => clearInterval(interval);
@@ -156,11 +156,11 @@ export default function ArtistHomePage() {
                 <section className="relative w-full h-[70vh] md:h-screen text-white overflow-hidden">
                     {/* Background Slideshow */}
                     <div className="absolute inset-0 w-full h-full z-0">
-                        {occasionImages.map((item, index) => (
+                        {artistHeroImages.map((item, index) => (
                             <Image
                                 key={item.imageUrl}
                                 src={item.imageUrl}
-                                alt={item.occasion}
+                                alt={item.alt}
                                 layout="fill"
                                 objectFit="cover"
                                 className={cn(
