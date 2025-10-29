@@ -205,10 +205,9 @@ export default function Home() {
     return (
       <div className="space-y-8 mt-4 md:mt-8">
         <Carousel
-            opts={{
-                align: "start",
-            }}
-            className="w-full"
+             opts={{ align: "start", loop: true, }}
+             plugins={[ Autoplay({ delay: 4000, stopOnInteraction: true, }) ]}
+             className="w-full"
         >
             <CarouselContent>
                 <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
@@ -377,29 +376,31 @@ export default function Home() {
         )}
         </ClientOnly>
 
-        <div id="services" className="mt-4 md:mt-8 w-full px-4">
-            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-4 md:mb-8">Our Services</h2>
+        <section id="services" className="w-full">
+            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect">Our Services</h2>
              <ClientOnly>
-                <Tabs defaultValue="mehndi" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto h-auto text-sm sm:text-lg py-2 md:py-3">
-                        <TabsTrigger value="mehndi" className="py-2 flex items-center gap-1 sm:gap-2"><MehndiIcon className="h-5 w-5"/>Mehndi</TabsTrigger>
-                        <TabsTrigger value="makeup" className="py-2 flex items-center gap-1 sm:gap-2"><MakeupIcon className="h-5 w-5"/>Makeup</TabsTrigger>
-                        <TabsTrigger value="photography" className="py-2 flex items-center gap-1 sm:gap-2"><PhotographyIcon className="h-5 w-5" />Photography</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="mehndi">
+                <Tabs defaultValue="mehndi" className="w-full mt-8">
+                    <div className="flex justify-center">
+                        <TabsList className="grid grid-cols-3 max-w-xl mx-auto h-auto rounded-full bg-secondary p-1">
+                            <TabsTrigger value="mehndi" className="py-2.5 rounded-full text-base transition-all duration-300 gradient-tabs-trigger"><MehndiIcon className="h-5 w-5 mr-2"/>Mehndi</TabsTrigger>
+                            <TabsTrigger value="makeup" className="py-2.5 rounded-full text-base transition-all duration-300 gradient-tabs-trigger"><MakeupIcon className="h-5 w-5 mr-2"/>Makeup</TabsTrigger>
+                            <TabsTrigger value="photography" className="py-2.5 rounded-full text-base transition-all duration-300 gradient-tabs-trigger"><PhotographyIcon className="h-5 w-5 mr-2"/>Photography</TabsTrigger>
+                        </TabsList>
+                    </div>
+                    <TabsContent value="mehndi" className="mt-6">
                         <CategoryTabContent serviceType="mehndi" />
                     </TabsContent>
-                    <TabsContent value="makeup">
+                    <TabsContent value="makeup" className="mt-6">
                         <CategoryTabContent serviceType="makeup" />
                     </TabsContent>
-                    <TabsContent value="photography">
+                    <TabsContent value="photography" className="mt-6">
                         <CategoryTabContent serviceType="photography" />
                     </TabsContent>
                 </Tabs>
              </ClientOnly>
-        </div>
+        </section>
 
-        <section id="why-choose-us" className="w-full py-16 why-choose-us-bg">
+        <section id="why-choose-us" className="w-full py-12 why-choose-us-bg">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
