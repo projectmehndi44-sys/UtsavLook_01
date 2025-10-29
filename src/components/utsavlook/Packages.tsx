@@ -18,9 +18,9 @@ interface PackagesProps {
 
 const getServiceIcon = (service: MasterServicePackage['service']) => {
     switch(service) {
-        case 'mehndi': return <MehndiIcon className="w-3.5 h-3.5"/>;
-        case 'makeup': return <MakeupIcon className="w-3.5 h-3.5"/>;
-        case 'photography': return <PhotographyIcon className="w-3.5 h-3.5"/>;
+        case 'mehndi': return <MehndiIcon className="w-8 h-8 text-primary"/>;
+        case 'makeup': return <MakeupIcon className="w-8 h-8 text-primary"/>;
+        case 'photography': return <PhotographyIcon className="w-8 h-8 text-primary"/>;
         default: return null;
     }
 }
@@ -43,39 +43,42 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                 return (
                     <CarouselItem key={service.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                         <div className="p-1 h-full">
-                            <Card className="overflow-hidden flex flex-col group h-full">
-                                <CardContent className="p-0 relative">
-                                    <div className="aspect-[4/3] relative">
-                                    <Image
-                                        src={service.image}
-                                        alt={service.name}
-                                        fill
-                                        className="object-cover"
-                                        data-ai-hint="mehndi makeup"
-                                    />
-                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-[-50%] z-20">
-                                        <div className="w-16 h-16 bg-background rounded-full border-4 border-white object-cover shadow-lg aspect-square flex items-center justify-center">
-                                             {getServiceIcon(service.service)}
+                            <Card 
+                                className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col cursor-pointer group"
+                                onClick={() => onServiceSelect(service)}
+                            >
+                                <CardContent className="p-0 flex flex-col items-center flex-grow">
+                                    <div className="relative w-full mb-4 rounded-t-2xl overflow-hidden">
+                                        <div className="relative aspect-[4/3] w-full">
+                                            <Image
+                                                src={service.image}
+                                                alt={service.name}
+                                                fill
+                                                className="object-cover"
+                                                data-ai-hint="mehndi makeup"
+                                            />
+                                        </div>
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-[-50%] z-20">
+                                            <div className="w-16 h-16 bg-background rounded-full border-4 border-white object-cover shadow-lg aspect-square flex items-center justify-center">
+                                                {getServiceIcon(service.service)}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="p-4 pt-4 text-center flex-grow flex flex-col">
+                                        <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
+                                        <p className="text-sm text-muted-foreground mt-1 flex-grow">
+                                            {service.description}
+                                        </p>
+
+                                        <div className="flex flex-wrap gap-1 justify-center my-3">
+                                            {service.tags.map(tag => (
+                                                <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
+                                                    <span className="capitalize">{tag}</span>
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </div>
                                 </CardContent>
-
-                                <div className="pt-10 p-4 flex flex-col flex-grow text-center">
-                                    <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
-                                    <p className="text-sm text-muted-foreground mt-1 flex-grow">
-                                    {service.description}
-                                    </p>
-
-                                    <div className="flex flex-wrap gap-1 justify-center my-3">
-                                        {service.tags.map(tag => (
-                                            <Badge key={tag} variant="secondary" className="gap-1.5 pl-2">
-                                                <span className="capitalize">{tag}</span>
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                    
-                                </div>
                                 <CardFooter className="p-2 bg-background/50 border-t mt-auto">
                                    <div className="flex justify-between items-center w-full">
                                         <div className="text-lg font-bold text-primary flex flex-col items-start">
@@ -86,7 +89,6 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                             </div>
                                         </div>
                                         <Button 
-                                            onClick={() => onServiceSelect(service)} 
                                             className="bg-accent hover:bg-accent/90"
                                         >
                                             <PackageSearch className="mr-2 h-4 w-4"/>
