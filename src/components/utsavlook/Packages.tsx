@@ -16,16 +16,6 @@ interface PackagesProps {
     onServiceSelect: (service: MasterServicePackage) => void;
 }
 
-const getServiceIcon = (service: MasterServicePackage['service']) => {
-    switch(service) {
-        case 'mehndi': return <MehndiIcon className="w-8 h-8 text-primary"/>;
-        case 'makeup': return <MakeupIcon className="w-8 h-8 text-primary"/>;
-        case 'photography': return <PhotographyIcon className="w-8 h-8 text-primary"/>;
-        default: return null;
-    }
-}
-
-
 export function Packages({ packages, onServiceSelect }: PackagesProps) {
 
     if (packages.length === 0) {
@@ -48,31 +38,26 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                 onClick={() => onServiceSelect(service)}
                             >
                                 <CardContent className="p-0 flex flex-col items-center flex-grow">
-                                    <div className="relative w-full mb-4 rounded-t-2xl overflow-hidden">
+                                    <div className="relative w-full rounded-t-2xl overflow-hidden">
                                         <div className="relative aspect-[4/3] w-full">
                                             <Image
                                                 src={service.image}
                                                 alt={service.name}
                                                 fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                className="object-cover transition-transform duration-500"
                                             />
                                         </div>
-                                        <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-10">
-                                            {service.tags.slice(0, 2).map(tag => (
-                                                <Badge key={tag} variant="secondary" className="capitalize backdrop-blur-sm bg-black/20 text-white border-white/30">{tag}</Badge>
-                                            ))}
-                                        </div>
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20">
-                                            <div className="w-16 h-16 bg-background rounded-full border-4 border-white object-cover shadow-lg aspect-square flex items-center justify-center">
-                                                {getServiceIcon(service.service)}
-                                            </div>
-                                        </div>
                                     </div>
-                                    <div className="p-4 pt-10 text-center flex-grow flex flex-col">
+                                    <div className="p-4 text-center flex-grow flex flex-col">
                                         <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
                                         <p className="text-sm text-muted-foreground mt-1 flex-grow">
                                             {service.description}
                                         </p>
+                                        <div className="flex flex-wrap gap-1 justify-center mt-3">
+                                            {service.tags.map(tag => (
+                                                <Badge key={tag} variant="secondary" className="capitalize">{tag}</Badge>
+                                            ))}
+                                        </div>
                                     </div>
                                 </CardContent>
                                 <CardFooter className="p-4 bg-muted/50 border-t mt-auto">
@@ -85,7 +70,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                             </div>
                                         </div>
                                         <Button 
-                                            className="bg-accent hover:bg-accent/90 rounded-full"
+                                            className="btn-gradient rounded-full"
                                         >
                                             <PackageSearch className="mr-2 h-4 w-4"/>
                                             View Options
