@@ -14,6 +14,9 @@ import {
   Search,
   BookOpen,
   CalendarCheck,
+  ShieldCheck,
+  Heart,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -217,19 +220,34 @@ export default function Home() {
   
   const whyChooseUsFeatures = [
     {
-        icon: <Award className="w-10 h-10 text-accent" />,
+        icon: <Award className="w-8 h-8" />,
         title: "Verified Professionals",
-        description: "Every artist on our platform is hand-vetted for quality, professionalism, and skill."
+        description: "Every artist is hand-vetted for quality, professionalism, and skill."
     },
     {
-        icon: <Sparkles className="w-10 h-10 text-accent" />,
-        title: "AI-Powered Style Matching",
-        description: "Upload a photo of your outfit and let our AI recommend the perfect mehndi and makeup styles."
+        icon: <Sparkles className="w-8 h-8" />,
+        title: "AI Style Match",
+        description: "Upload an outfit photo and get instant style recommendations for your look."
     },
     {
-        icon: <Handshake className="w-10 h-10 text-accent" />,
+        icon: <CalendarCheck className="w-8 h-8" />,
+        title: "Effortless Booking",
+        description: "Book your preferred artist and time slot in just a few clicks."
+    },
+     {
+        icon: <Heart className="w-8 h-8" />,
+        title: "Curated Selection",
+        description: "Discover a curated community of the most talented artists in your city."
+    },
+    {
+        icon: <ShieldCheck className="w-8 h-8" />,
+        title: "Secure Payments",
+        description: "Your bookings and payments are processed securely for your peace of mind."
+    },
+    {
+        icon: <Handshake className="w-8 h-8" />,
         title: "Transparent & Fair",
-        description: "Enjoy transparent pricing and a direct connection to the talent that makes your day special."
+        description: "Enjoy transparent pricing with a direct connection to your chosen artist."
     }
   ];
 
@@ -375,16 +393,23 @@ export default function Home() {
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">Why Choose UtsavLook?</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {whyChooseUsFeatures.map(feature => (
-                  <div key={feature.title} className="text-center p-6 bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2">
-                       <div className="inline-block bg-primary/10 p-4 rounded-full w-fit mb-4">
-                          {feature.icon}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {whyChooseUsFeatures.map((feature, index) => (
+                  <div key={feature.title} 
+                       className="fade-and-slide-in group"
+                       style={{ animationDelay: `${index * 150}ms` }}
+                  >
+                    <div className="text-left p-6 bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2 h-full flex flex-col">
+                       <div className="flex-shrink-0 mb-4 flex items-center gap-4">
+                          <div className="inline-block bg-primary/10 p-4 rounded-full w-fit text-primary">
+                            {feature.icon}
+                          </div>
+                          <h3 className="text-xl font-bold text-primary">{feature.title}</h3>
                        </div>
-                       <h3 className="text-xl font-bold text-primary mb-2">{feature.title}</h3>
-                       <p className="text-muted-foreground">
+                       <p className="text-muted-foreground flex-grow">
                            {feature.description}
                        </p>
+                    </div>
                   </div>
               ))}
             </div>
