@@ -223,43 +223,43 @@ export default function Home() {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
         description: "Every artist is hand-vetted for quality, professionalism, and skill.",
-        imageUrl: "https://picsum.photos/seed/verified/600/400",
-        aiHint: "award winning makeup artist"
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
+        aiHint: "A minimalist 3D glass award shield with a golden bronze checkmark in the center. The shield should be semi-transparent and floating against a soft, out-of-focus background with pastel henna and sand-colored light glows. The overall style should be clean, modern, and trustworthy."
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "AI Style Match",
         description: "Upload an outfit photo and get instant style recommendations for your look.",
-        imageUrl: "https://picsum.photos/seed/stylematch/600/400",
-        aiHint: "ai style match"
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
+        aiHint: "An abstract 3D icon showing interconnected, glowing neural network lines forming the shape of a sparkling diamond. The lines should be a mix of golden bronze and soft white, set against a gentle, sandy-toned gradient background. The image should convey technology, beauty, and intelligence."
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Effortless Booking",
         description: "Book your preferred artist and time slot in just a few clicks.",
-        imageUrl: "https://picsum.photos/seed/booking/600/400",
-        aiHint: "easy booking calendar"
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FEffortless%20Booking.png?alt=media&token=904ae217-f00d-4e29-a3c0-6c191188793e",
+        aiHint: "A sleek, minimalist 3D calendar icon made of frosted glass. A single date is elegantly circled in a golden bronze ring. The icon is floating at a slight angle with a soft drop shadow over a smooth, sand-colored surface. The lighting is soft and ambient."
     },
      {
         icon: <Heart className="w-8 h-8 text-primary" />,
         title: "Curated Selection",
         description: "Discover a curated community of the most talented artists in your city.",
-        imageUrl: "https://picsum.photos/seed/curated/600/400",
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FGemini_Generated_Image_2xjtga2xjtga2xjt.png?alt=media&token=4c811d53-dfad-4aef-90e9-cafe39d54f92",
         aiHint: "A group of faint, semi-transparent glass squares are floating in the background. In the foreground, one square is crystal clear and glowing with a soft, internal, golden-bronze light. A simple, elegant heart icon is embossed in the center of the glowing square. The entire scene has a clean, focused, and premium feel, emphasizing the idea of selecting the very best."
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
         title: "Secure Payments",
         description: "Your bookings and payments are processed securely for your peace of mind.",
-        imageUrl: "https://picsum.photos/seed/secure/600/400",
-        aiHint: "secure payment shield"
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
+        aiHint: "A modern, 3D padlock icon with a glossy, golden bronze finish. The padlock is floating and has a subtle, secure glow around it. The background is a clean, off-white with soft, geometric shadows, giving a feeling of safety and professionalism."
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
         title: "Transparent & Fair",
         description: "Enjoy transparent pricing with a direct connection to your chosen artist.",
-        imageUrl: "https://picsum.photos/seed/fair/600/400",
-        aiHint: "transparent pricing handshake"
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
+        aiHint: "A 3D icon of perfectly balanced scales, crafted from smooth, matte-white material with golden bronze accents on the pans. The scales are in perfect equilibrium, floating against a simple, light-sand colored background. The image should look clean, balanced, and fair."
     }
   ];
 
@@ -536,5 +536,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
