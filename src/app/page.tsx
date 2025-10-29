@@ -342,7 +342,7 @@ export default function Home() {
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-8">Meet Our Top Artists</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
               {topArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} />
+                <ArtistCard key={artist.id} artist={artist} onViewProfile={() => {setSelectedArtist(artist); setIsArtistModalOpen(true);}} />
               ))}
             </div>
           </div>
