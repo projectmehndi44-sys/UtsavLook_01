@@ -31,4 +31,24 @@ export const artistHeroImages: ArtistHeroImage[] = [
     // Replace this placeholder URL
     imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist-page-hero%2Fartist-hero-4.jpg?alt=media'
   },
+  {
+    alt: 'Artist smiling in a well-lit, authentic workspace',
+    // Replace this placeholder URL for your 5th image
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/artist-page-hero%2Fartist-hero-5.jpg?alt=media'
+  },
+  {
+    alt: 'Close-up of intricate mehndi details being applied',
+    // Replace this placeholder URL for your 6th image
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/artist-page-hero%2Fartist-hero-6.jpg?alt=media'
+  },
+  {
+    alt: 'Candid shot of a photographer interacting with a client during a shoot',
+    // Replace this placeholder URL for your 7th image
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/artist-page-hero%2Fartist-hero-7.jpg?alt=media'
+  },
+  {
+    alt: 'Flat lay of makeup tools and products on a rustic table',
+    // Replace this placeholder URL for your 8th image
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/artist-page-hero%2Fartist-hero-8.jpg?alt=media'
+  }
 ];
