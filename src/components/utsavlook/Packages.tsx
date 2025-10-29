@@ -34,7 +34,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                     <CarouselItem key={service.id} className="basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                         <div className="p-2 h-full">
                             <Card 
-                                className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col cursor-pointer group"
+                                className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 h-full flex flex-col cursor-pointer group"
                                 onClick={() => onServiceSelect(service)}
                             >
                                 <CardContent className="p-0 flex flex-col items-center flex-grow">
@@ -44,7 +44,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                                 src={service.image}
                                                 alt={service.name}
                                                 fill
-                                                className="object-cover transition-transform duration-500"
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
                                         </div>
                                     </div>
