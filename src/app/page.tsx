@@ -222,32 +222,38 @@ export default function Home() {
     {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
-        description: "Every artist is hand-vetted for quality, professionalism, and skill."
+        description: "Every artist is hand-vetted for quality, professionalism, and skill.",
+        aiHint: "award winning makeup artist"
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "AI Style Match",
-        description: "Upload an outfit photo and get instant style recommendations for your look."
+        description: "Upload an outfit photo and get instant style recommendations for your look.",
+        aiHint: "ai style match"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Effortless Booking",
-        description: "Book your preferred artist and time slot in just a few clicks."
+        description: "Book your preferred artist and time slot in just a few clicks.",
+        aiHint: "easy booking calendar"
     },
      {
         icon: <Heart className="w-8 h-8 text-primary" />,
         title: "Curated Selection",
-        description: "Discover a curated community of the most talented artists in your city."
+        description: "Discover a curated community of the most talented artists in your city.",
+        aiHint: "curated artist selection"
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
         title: "Secure Payments",
-        description: "Your bookings and payments are processed securely for your peace of mind."
+        description: "Your bookings and payments are processed securely for your peace of mind.",
+        aiHint: "secure payment shield"
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
         title: "Transparent & Fair",
-        description: "Enjoy transparent pricing with a direct connection to your chosen artist."
+        description: "Enjoy transparent pricing with a direct connection to your chosen artist.",
+        aiHint: "transparent pricing handshake"
     }
   ];
 
@@ -387,26 +393,35 @@ export default function Home() {
              </ClientOnly>
         </div>
 
-        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32 section-gradient-3d">
-          <div className="container px-4 md:px-6 relative z-10">
+        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
-              <h2 className="animated-gradient-text title-3d text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 transition-transform duration-500 hover:scale-105">Why Choose UtsavLook?</h2>
-              <p className="max-w-[700px] text-foreground/80 md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
+              <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4">Why Choose UtsavLook?</h2>
+              <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {whyChooseUsFeatures.map((feature) => (
-                  <div key={feature.title} className="group">
-                    <div className="text-left p-6 bg-background/50 backdrop-blur-sm rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2 aspect-[2/3] flex flex-col">
-                       <div className="flex-shrink-0 mb-4">
-                          <div className="inline-block bg-primary/10 p-4 rounded-full w-fit text-primary group-hover:scale-110 transition-transform duration-300">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+              {whyChooseUsFeatures.map((feature, index) => (
+                  <div key={feature.title} className="group text-center">
+                    <Card className="bg-background rounded-lg shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
+                        <CardContent className="p-4 flex flex-col items-center flex-grow">
+                             <div className="relative aspect-square w-full mb-4 rounded-md overflow-hidden">
+                                <Image 
+                                    src={`https://picsum.photos/seed/${index+1}/200/200`} 
+                                    alt={feature.title}
+                                    fill
+                                    className="object-cover"
+                                    data-ai-hint={feature.aiHint}
+                                />
+                            </div>
+                           <div className="inline-block bg-primary/10 p-3 rounded-full w-fit text-primary mb-3">
                             {feature.icon}
                           </div>
-                       </div>
-                       <h3 className="text-xl font-bold text-primary mb-2">{feature.title}</h3>
-                       <p className="text-muted-foreground flex-grow">
-                           {feature.description}
-                       </p>
-                    </div>
+                           <h3 className="text-md font-bold text-primary mb-1">{feature.title}</h3>
+                           <p className="text-xs text-muted-foreground flex-grow">
+                               {feature.description}
+                           </p>
+                        </CardContent>
+                    </Card>
                   </div>
               ))}
             </div>
