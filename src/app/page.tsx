@@ -219,34 +219,38 @@ export default function Home() {
   }
   
   const whyChooseUsFeatures = [
-      {
-          icon: <Award className="w-8 h-8 text-primary" />,
-          title: "For Customers: Verified Professionals",
-          description: "Book with confidence. We vet every artist for quality and professionalism, so you can relax knowing you’re in expert hands.",
-          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
-          aiHint: "verified professional"
-      },
-      {
-          icon: <Sparkles className="w-8 h-8 text-primary" />,
-          title: "For Customers: AI Style Match",
-          description: "Unsure of the look you want? Upload an outfit photo and let our AI recommend the perfect mehndi and makeup styles to match.",
-          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
-          aiHint: "ai style"
-      },
-      {
-          icon: <Wallet className="w-8 h-8 text-primary" />,
-          title: "For Artists: A Pro Business Dashboard",
-          description: "Stop the DM chaos. Manage all your bookings, availability, and payments in one professional dashboard. We handle the business so you can create.",
-          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
-          aiHint: "business dashboard"
-      },
-      {
-          icon: <Handshake className="w-8 h-8 text-primary" />,
-          title: "For Artists: Fair & Transparent Payouts",
-          description: "Set your own prices and get timely, transparent payouts. We even offer a 0% commission welcome to help you get started.",
-          imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
-          aiHint: "fair transparent"
-      }
+    {
+      icon: <Award className="w-8 h-8 text-primary" />,
+      title: "For Customers: Verified Professionals",
+      description:
+        "Book with confidence. We vet every artist for quality and professionalism, so you can relax knowing you’re in expert hands.",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
+      aiHint: "verified professional",
+    },
+    {
+      icon: <Sparkles className="w-8 h-8 text-primary" />,
+      title: "For Customers: AI Style Match",
+      description:
+        "Unsure of the look you want? Upload an outfit photo and let our AI recommend the perfect mehndi and makeup styles to match.",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
+      aiHint: "ai style",
+    },
+    {
+      icon: <Wallet className="w-8 h-8 text-primary" />,
+      title: "For Artists: A Pro Business Dashboard",
+      description:
+        "Stop the DM chaos. Manage all your bookings, availability, and payments in one professional dashboard. We handle the business so you can create.",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
+      aiHint: "business dashboard",
+    },
+    {
+      icon: <Handshake className="w-8 h-8 text-primary" />,
+      title: "For Artists: Fair & Transparent Payouts",
+      description:
+        "Set your own prices and get timely, transparent payouts. We even offer a 0% commission welcome to help you get started.",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
+      aiHint: "fair transparent",
+    },
   ];
 
   const howItWorksSteps = [
@@ -403,7 +407,7 @@ export default function Home() {
                   <CarouselItem key={feature.title} className="md:basis-1/2 lg:basis-1/4">
                     <div className="p-4 h-full">
                         <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2 flex flex-col text-center items-center h-full">
-                          <div className="relative w-full aspect-video mb-4 rounded-lg overflow-hidden">
+                          <div className="relative w-full aspect-square mb-4 rounded-lg overflow-hidden">
                             <Image src={feature.imageUrl} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint} />
                           </div>
                           <h3 className="text-lg font-bold text-primary mb-2">{feature.title}</h3>
