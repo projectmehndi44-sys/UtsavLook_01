@@ -44,7 +44,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                                 src={service.image}
                                                 alt={service.name}
                                                 fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
                                             />
                                         </div>
                                     </div>
@@ -85,3 +85,4 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
         </>
     );
 }
+
