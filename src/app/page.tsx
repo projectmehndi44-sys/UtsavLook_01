@@ -399,7 +399,7 @@ export default function Home() {
              </ClientOnly>
         </div>
 
-        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32 why-choose-us-bg">
+        <section id="why-choose-us" className="w-full py-16 why-choose-us-bg">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
