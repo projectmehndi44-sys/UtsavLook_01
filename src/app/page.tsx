@@ -244,7 +244,7 @@ export default function Home() {
         icon: <Wallet className="w-8 h-8 text-primary" />,
         title: "Transparent Pricing",
         description: "See clear, upfront pricing for all services. No hidden fees or surprises.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20Pricing.png?alt=media&token=25062a74-d450-482a-92e1-c85244e8bd5e",
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FGemini_Generated_Image_58049v58049v5804.png?alt=media&token=eacc7206-7cc2-4abb-94e6-c639acc122c6",
         aiHint: "wallet money"
     },
     {
@@ -546,4 +546,3 @@ export default function Home() {
     </div>
   );
 }
-
