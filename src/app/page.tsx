@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Heart,
   Wallet,
+  IndianRupee,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -221,44 +222,44 @@ export default function Home() {
     {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
-        description: "Every artist is hand-vetted for quality, professionalism, and skill.",
+        description: "Every artist is hand-vetted for quality, professionalism, and skill, so you can book with confidence.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
-        aiHint: "A minimalist 3D glass award shield with a golden bronze checkmark in the center. The shield should be semi-transparent and floating against a soft, out-of-focus background with pastel henna and sand-colored light glows. The overall style should be clean, modern, and trustworthy."
+        aiHint: "award shield"
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "AI Style Match",
-        description: "Upload an outfit photo and get instant style recommendations for your look.",
+        description: "Upload a photo of your outfit and get instant, personalized recommendations for the perfect look.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
-        aiHint: "An abstract 3D icon showing interconnected, glowing neural network lines forming the shape of a sparkling diamond. The lines should be a mix of golden bronze and soft white, set against a gentle, sandy-toned gradient background. The image should convey technology, beauty, and intelligence."
+        aiHint: "diamond sparkles"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
         title: "Effortless Booking",
-        description: "Book your preferred artist and time slot in just a few clicks.",
+        description: "Book your preferred artist and time slot in just a few clicks. No more endless phone calls or DMs.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FEffortless%20Booking.png?alt=media&token=904ae217-f00d-4e29-a3c0-6c191188793e",
-        aiHint: "A sleek, minimalist 3D calendar icon made of frosted glass. A single date is elegantly circled in a golden bronze ring. The icon is floating at a slight angle with a soft drop shadow over a smooth, sand-colored surface. The lighting is soft and ambient."
+        aiHint: "calendar checkmark"
     },
      {
         icon: <Heart className="w-8 h-8 text-primary" />,
         title: "Curated Selection",
-        description: "Discover a curated community of the most talented artists in your city.",
+        description: "Discover a hand-picked community of the most talented and trusted artists in your city.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FGemini_Generated_Image_2xjtga2xjtga2xjt.png?alt=media&token=4c811d53-dfad-4aef-90e9-cafe39d54f92",
-        aiHint: "A group of faint, semi-transparent glass squares are floating in the background. In the foreground, one square is crystal clear and glowing with a soft, internal, golden-bronze light. A simple, elegant heart icon is embossed in the center of the glowing square. The entire scene has a clean, focused, and premium feel, emphasizing the idea of selecting the very best."
+        aiHint: "glowing heart"
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
         title: "Secure Payments",
-        description: "Your bookings and payments are processed securely for your peace of mind.",
+        description: "Your bookings and payments are processed securely for your peace of mind. No surprises.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
-        aiHint: "A modern, 3D padlock icon with a glossy, golden bronze finish. The padlock is floating and has a subtle, secure glow around it. The background is a clean, off-white with soft, geometric shadows, giving a feeling of safety and professionalism."
+        aiHint: "secure padlock"
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
         title: "Transparent & Fair",
-        description: "Enjoy transparent pricing with a direct connection to your chosen artist.",
+        description: "Enjoy transparent pricing with a direct connection to your chosen artist. No hidden fees.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
-        aiHint: "A 3D icon of perfectly balanced scales, crafted from smooth, matte-white material with golden bronze accents on the pans. The scales are in perfect equilibrium, floating against a simple, light-sand colored background. The image should look clean, balanced, and fair."
+        aiHint: "balanced scales"
     }
   ];
 
@@ -376,7 +377,7 @@ export default function Home() {
         )}
         </ClientOnly>
 
-        <section id="services" className="w-full">
+        <section id="services" className="w-full py-12 why-choose-us-bg">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect">Our Services</h2>
              <ClientOnly>
                 <Tabs defaultValue="mehndi" className="w-full mt-8">
@@ -400,7 +401,7 @@ export default function Home() {
              </ClientOnly>
         </section>
 
-        <section id="why-choose-us" className="w-full py-12 why-choose-us-bg">
+        <section id="why-choose-us" className="w-full py-12">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
@@ -417,7 +418,7 @@ export default function Home() {
                     <div className="group text-center p-1 h-full">
                       <Card className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
                           <CardContent className="p-0 flex flex-col items-center flex-grow">
-                              <div className="relative aspect-[2/3] w-full mb-4 rounded-t-2xl overflow-hidden">
+                              <div className="relative aspect-[4/5] w-full mb-4 rounded-t-2xl overflow-hidden">
                                   <Image 
                                       src={feature.imageUrl}
                                       alt={feature.title}
@@ -442,6 +443,8 @@ export default function Home() {
           </div>
         </section>
         
+        <Separator />
+
          {topArtists.length > 0 && (
           <div id="artists" className="py-12 md:py-24 px-4">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-12">Meet Our Top Artists</h2>
@@ -453,7 +456,7 @@ export default function Home() {
           </div>
         )}
 
-        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
+        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 why-choose-us-bg">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">How It Works</h2>
