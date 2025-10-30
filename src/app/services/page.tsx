@@ -143,7 +143,7 @@ export default function ServicesPage() {
           <div className="container mx-auto px-4 md:px-6 py-12">
              <h1 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect mb-4">Our Services</h1>
              <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Explore our full range of professional services. Use the filters to find exactly what you need for your special occasion.
+                Find the perfect professional service for your special occasion.
             </p>
 
             <div className="sticky top-20 bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-md z-30 mb-8 max-w-4xl mx-auto">
