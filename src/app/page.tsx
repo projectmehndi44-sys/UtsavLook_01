@@ -219,7 +219,7 @@ export default function Home() {
   }
   
   const whyChooseUsFeatures = [
-    {
+      {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
         description: "Every artist is hand-vetted for quality, professionalism, and skill, so you can book with confidence.",
@@ -297,8 +297,8 @@ export default function Home() {
       />
       <main className="flex flex-1 flex-col gap-4 md:gap-8">
         {!isCustomerLoggedIn && (
-            <div className="w-full">
-                <div className="group relative rounded-b-2xl overflow-hidden">
+            <div className="w-full why-choose-us-bg">
+                <div className="group relative overflow-hidden">
                     <div className="absolute inset-0 w-full h-full">
                         {occasionImages.map((item, index) => (
                             <Image
@@ -377,7 +377,7 @@ export default function Home() {
         )}
         </ClientOnly>
 
-        <section id="services" className="w-full py-12 why-choose-us-bg">
+        <section id="services" className="w-full pt-12 why-choose-us-bg">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect">Our Services</h2>
              <ClientOnly>
                 <Tabs defaultValue="mehndi" className="w-full mt-8">
