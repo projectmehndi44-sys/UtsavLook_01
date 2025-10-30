@@ -362,11 +362,11 @@ export default function Home() {
                         </div>
 
                         <div className="mt-6 flex flex-col items-center sm:flex-row gap-4 justify-center md:justify-start opacity-0 animate-fade-in [animation-delay:4s] [animation-fill-mode:forwards]">
-                            <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('services')}>
-                                Book a Service
+                            <Button size="lg" className="btn-gradient rounded-full w-fit" asChild>
+                                <Link href="/services">Book a Service</Link>
                             </Button>
-                            <Button size="lg" className="btn-gradient rounded-full w-fit" onClick={() => handleScrollTo('artists')}>
-                                View Artists
+                            <Button size="lg" className="btn-gradient rounded-full w-fit" asChild>
+                                <Link href="/artists">View Artists</Link>
                             </Button>
                         </div>
                         <div className="mt-8 text-center md:text-left animate-slide-up opacity-0 [animation-fill-mode:forwards] [animation-delay:5s]">
@@ -425,6 +425,11 @@ export default function Home() {
                     </TabsContent>
                 </Tabs>
              </ClientOnly>
+             <div className="text-center mt-8">
+                <Button asChild variant="outline">
+                    <Link href="/services">View More Services</Link>
+                </Button>
+            </div>
           </div>
         </section>
 
@@ -494,6 +499,11 @@ export default function Home() {
                   {topArtists.map((artist) => (
                     <ArtistCard key={artist.id} artist={artist} onViewProfile={() => {setSelectedArtist(artist); setIsArtistModalOpen(true);}} />
                   ))}
+                </div>
+                 <div className="text-center mt-8">
+                    <Button asChild variant="outline">
+                        <Link href="/artists">View All Artists</Link>
+                    </Button>
                 </div>
             </div>
           </div>
