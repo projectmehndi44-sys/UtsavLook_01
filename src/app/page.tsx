@@ -215,8 +215,12 @@ export default function Home() {
              plugins={[ Autoplay({ delay: 4000, stopOnInteraction: false, stopOnFocusIn: false }) ]}
              className="w-full"
         >
-            <CarouselContent>
-                <Packages packages={relevantPackages} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+            <CarouselContent className="-ml-4">
+              {relevantPackages.map((pkg) => (
+                <CarouselItem key={pkg.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <Packages packages={[pkg]} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+                </CarouselItem>
+              ))}
             </CarouselContent>
         </Carousel>
       </div>
@@ -595,3 +599,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
