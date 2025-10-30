@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { ClientOnly } from '@/components/ClientOnly';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Carousel, CarouselApi, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { Parallax } from 'react-scroll-parallax';
@@ -49,6 +49,11 @@ export default function ArtistHomePage() {
     const [isCustomerLoggedIn, setIsCustomerLoggedIn] = React.useState(false);
     const [customer, setCustomer] = React.useState<Customer | null>(null);
     const [cartCount, setCartCount] = React.useState(0);
+
+    // Carousel state
+    const [benefitsApi, setBenefitsApi] = React.useState<CarouselApi>();
+    const [benefitsScrollSnaps, setBenefitsScrollSnaps] = React.useState<number[]>([]);
+    const [benefitsSelectedIndex, setBenefitsSelectedIndex] = React.useState(0);
     
     React.useEffect(() => {
         setIsLoading(true);
@@ -72,6 +77,23 @@ export default function ArtistHomePage() {
 
         return () => clearInterval(interval);
     }, []);
+
+    const onBenefitsSelect = React.useCallback((emblaApi: CarouselApi) => {
+        if (!emblaApi) return;
+        setBenefitsSelectedIndex(emblaApi.selectedScrollSnap());
+    }, []);
+
+    const scrollToBenefit = React.useCallback(
+        (index: number) => benefitsApi && benefitsApi.scrollTo(index),
+        [benefitsApi]
+    );
+
+    React.useEffect(() => {
+        if (!benefitsApi) return;
+        setBenefitsScrollSnaps(benefitsApi.scrollSnapList());
+        benefitsApi.on("select", onBenefitsSelect);
+        benefitsApi.on("reInit", onBenefitsSelect);
+    }, [benefitsApi, onBenefitsSelect]);
 
 
     const shareText = "Join UtsavLook and grow your artistry business! We give you the tools to succeed. #UtsavLookArtist #MehndiArtist #MakeupArtist #ArtistPlatform";
@@ -199,7 +221,7 @@ export default function ArtistHomePage() {
                 </section>
 
                 {/* Benefits Section */}
-                <section className="w-full py-16 md:py-24 lg:py-32 why-choose-us-bg">
+                <section className="w-full py-16 why-choose-us-bg">
                      <div className="container px-4 md:px-6">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">
@@ -210,6 +232,7 @@ export default function ArtistHomePage() {
                             </p>
                         </div>
                         <Carousel
+                            setApi={setBenefitsApi}
                             opts={{
                                 align: "start",
                                 loop: true,
@@ -250,12 +273,25 @@ export default function ArtistHomePage() {
                                 ))}
                             </CarouselContent>
                         </Carousel>
+                        <div className="flex justify-center gap-2 mt-4">
+                            {benefitsScrollSnaps.map((_, index) => (
+                                <button
+                                key={index}
+                                onClick={() => scrollToBenefit(index)}
+                                className={cn(
+                                    'h-2 w-2 rounded-full transition-all duration-300',
+                                    benefitsSelectedIndex === index ? 'w-6 bg-primary' : 'bg-primary/20'
+                                )}
+                                aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </section>
                 
                 {/* Artist Spotlight */}
                 {artists.length > 0 && (
-                <section className="py-16 md:py-24 lg:py-32 why-choose-us-bg">
+                <section className="py-16 why-choose-us-bg">
                     <div className="container px-4 md:px-6">
                         <h2 className="text-3xl font-bold tracking-tighter text-center sm:text-5xl text-primary font-headline mb-12">
                             Success Stories
@@ -287,7 +323,7 @@ export default function ArtistHomePage() {
 
 
                  {/* Call to Action Section */}
-                <section className="w-full py-16 md:py-24 lg:py-32 why-choose-us-bg">
+                <section className="w-full py-16 why-choose-us-bg">
                     <Parallax speed={-10}>
                     <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
                         <div className="space-y-3">

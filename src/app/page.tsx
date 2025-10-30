@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Carousel, CarouselApi, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Packages } from '@/components/utsavlook/Packages';
@@ -79,6 +79,12 @@ export default function Home() {
   const pauseDuration = 2000;
   
   const { toast } = useToast();
+
+    // Why Choose Us Carousel State
+  const [whyChooseUsApi, setWhyChooseUsApi] = React.useState<CarouselApi>();
+  const [whyChooseUsScrollSnaps, setWhyChooseUsScrollSnaps] = React.useState<number[]>([]);
+  const [whyChooseUsSelectedIndex, setWhyChooseUsSelectedIndex] = React.useState(0);
+
 
   React.useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -219,7 +225,7 @@ export default function Home() {
   }
   
   const whyChooseUsFeatures = [
-      {
+    {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
         description: "Book with confidence knowing every artist is vetted for quality and professionalism.",
@@ -240,7 +246,7 @@ export default function Home() {
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FEffortless%20Booking.png?alt=media&token=904ae217-f00d-4e29-a3c0-6c191188793e",
         aiHint: "calendar checkmark"
     },
-     {
+    {
         icon: <Wallet className="w-8 h-8 text-primary" />,
         title: "Transparent Pricing",
         description: "See clear, upfront pricing for all services. No hidden fees or surprises.",
@@ -284,6 +290,26 @@ export default function Home() {
   const handleScrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+  
+    const onWhyChooseUsSelect = React.useCallback((emblaApi: CarouselApi) => {
+    if (!emblaApi) return;
+    setWhyChooseUsSelectedIndex(emblaApi.selectedScrollSnap());
+  }, []);
+
+  const scrollToWhyChooseUs = React.useCallback(
+    (index: number) => whyChooseUsApi && whyChooseUsApi.scrollTo(index),
+    [whyChooseUsApi]
+  );
+  
+  React.useEffect(() => {
+    if (!whyChooseUsApi) {
+      return;
+    }
+    setWhyChooseUsScrollSnaps(whyChooseUsApi.scrollSnapList());
+    whyChooseUsApi.on("select", onWhyChooseUsSelect);
+    whyChooseUsApi.on("reInit", onWhyChooseUsSelect);
+  }, [whyChooseUsApi, onWhyChooseUsSelect]);
+
 
   return (
     <div className="flex min-h-screen w-full flex-col relative bg-background">
@@ -378,7 +404,7 @@ export default function Home() {
         </ClientOnly>
 
         <section id="services" className="w-full why-choose-us-bg">
-          <div className="container mx-auto px-4 md:px-6 py-12 md:py-24">
+          <div className="container mx-auto px-4 md:px-6 py-12">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect">Our Services</h2>
              <ClientOnly>
                 <Tabs defaultValue="mehndi" className="w-full mt-8">
@@ -404,12 +430,13 @@ export default function Home() {
         </section>
 
         <section id="why-choose-us" className="w-full why-choose-us-bg">
-          <div className="container px-4 md:px-6 py-12 md:py-24">
+          <div className="container px-4 md:px-6 py-12">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
             </div>
             <Carousel
+              setApi={setWhyChooseUsApi}
               opts={{ align: "start", loop: true, }}
               plugins={[ Autoplay({ delay: 3000, stopOnInteraction: true, }) ]}
               className="w-full"
@@ -442,13 +469,26 @@ export default function Home() {
                 ))}
               </CarouselContent>
             </Carousel>
+             <div className="flex justify-center gap-2 mt-4">
+              {whyChooseUsScrollSnaps.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollToWhyChooseUs(index)}
+                  className={cn(
+                    'h-2 w-2 rounded-full transition-all duration-300',
+                    whyChooseUsSelectedIndex === index ? 'w-6 bg-primary' : 'bg-primary/20'
+                  )}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </section>
         
         <Separator />
 
          {topArtists.length > 0 && (
-          <div id="artists" className="py-12 md:py-24 px-4 why-choose-us-bg">
+          <div id="artists" className="py-12 px-4 why-choose-us-bg">
             <div className="container mx-auto px-4 md:px-6">
                 <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-12">Meet Our Top Artists</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
@@ -461,7 +501,7 @@ export default function Home() {
         )}
 
         <section id="how-it-works" className="w-full why-choose-us-bg">
-           <div className="container px-4 md:px-6 py-12 md:py-24">
+           <div className="container px-4 md:px-6 py-12">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">How It Works</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">A seamless experience from start to finish.</p>
@@ -484,7 +524,7 @@ export default function Home() {
             <>
                 <Separator className="my-8"/>
                 <div className="px-4 why-choose-us-bg">
-                  <div className="container mx-auto px-4 md:px-6 py-12 md:py-24">
+                  <div className="container mx-auto px-4 md:px-6 py-12">
                     <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
                     <Carousel
                         opts={{
