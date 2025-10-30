@@ -9,8 +9,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getPromotionalImage, getBenefitImages, getArtists } from '@/lib/services';
-import type { BenefitImage, Customer, Artist } from '@/lib/types';
+import { getPromotionalImage, getArtists } from '@/lib/services';
+import type { Customer, Artist } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,20 +23,19 @@ import { ParallaxProvider } from 'react-scroll-parallax';
 import { artistHeroImages } from '@/lib/artist-hero-images';
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
-    "set-your-own-price": <IndianRupee className="w-8 h-8 text-accent" />,
-    "verified-badge": <Award className="w-8 h-8 text-accent" />,
-    "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-accent" />,
-    "referral-code": <UserPlus className="w-8 h-8 text-accent" />,
-    "transparent-payouts": <BarChart className="w-8 h-8 text-accent" />,
-    "zero-commission-welcome": <Sparkles className="w-8 h-8 text-accent" />,
-    "ai-promo-tools": <Sparkles className="w-8 h-8 text-accent"/>,
-    "direct-client-chat": <MessageSquare className="w-8 h-8 text-accent"/>
+    "set-your-own-price": <IndianRupee className="w-8 h-8 text-primary" />,
+    "verified-badge": <Award className="w-8 h-8 text-primary" />,
+    "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
+    "referral-code": <UserPlus className="w-8 h-8 text-primary" />,
+    "transparent-payouts": <BarChart className="w-8 h-8 text-primary" />,
+    "zero-commission-welcome": <Sparkles className="w-8 h-8 text-primary" />,
+    "ai-promo-tools": <Sparkles className="w-8 h-8 text-primary" />,
+    "direct-client-chat": <MessageSquare className="w-8 h-8 text-primary" />,
 };
 
 export default function ArtistHomePage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [benefits, setBenefits] = React.useState<BenefitImage[]>([]);
     const [artists, setArtists] = React.useState<Artist[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
@@ -57,11 +56,8 @@ export default function ArtistHomePage() {
     
     React.useEffect(() => {
         setIsLoading(true);
-        Promise.all([
-            getBenefitImages(),
-            getArtists()
-        ]).then(([benefitData, artistData]) => {
-            setBenefits(benefitData);
+        getArtists()
+        .then((artistData) => {
             setArtists(artistData.filter(a => a.rating > 4.5).slice(0, 3)); // Get top 3 artists
             setIsLoading(false);
         }).catch(() => {
@@ -77,6 +73,65 @@ export default function ArtistHomePage() {
 
         return () => clearInterval(interval);
     }, []);
+    
+    const benefits = [
+        {
+            id: 'set-your-own-price',
+            title: 'Set Your Own Price',
+            description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates.",
+            imageUrl: 'https://picsum.photos/seed/artist-price/800/600',
+            aiHint: 'rupee arrow'
+        },
+        {
+            id: 'verified-badge',
+            title: "'UtsavLook Verified' Badge",
+            description: "Our 'Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings.",
+            imageUrl: 'https://picsum.photos/seed/artist-verified/800/600',
+            aiHint: 'gold shield'
+        },
+        {
+            id: 'intelligent-scheduling',
+            title: 'Intelligent Scheduling',
+            description: "Stop the back-and-forth calls. Our smart calendar lets you mark unavailable dates, so you only get requests for when you're free.",
+            imageUrl: 'https://picsum.photos/seed/artist-schedule/800/600',
+            aiHint: 'calendar clock'
+        },
+        {
+            id: 'referral-code',
+            title: 'Your Own Referral Code',
+            description: 'Turn happy clients into your sales team. We provide a unique referral code that gives them a discount and you a confirmed booking.',
+            imageUrl: 'https://picsum.photos/seed/artist-referral/800/600',
+            aiHint: 'handshake gift'
+        },
+        {
+            id: 'transparent-payouts',
+            title: 'Transparent Payouts',
+            description: 'Track all your bookings and earnings in one professional dashboard. With our clear and timely payouts, accounting is simple.',
+            imageUrl: 'https://picsum.photos/seed/artist-payout/800/600',
+            aiHint: 'chart coins'
+        },
+        {
+            id: 'zero-commission-welcome',
+            title: '0% Commission Welcome',
+            description: "To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
+            imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600',
+            aiHint: 'sparkling zero'
+        },
+        {
+            id: 'ai-promo-tools',
+            title: 'AI-Powered Promotion',
+            description: 'Your profile deserves to be seen. Use our AI tools to generate stunning promotional images for your social media in one click.',
+            imageUrl: 'https://picsum.photos/seed/artist-promo/800/600',
+            aiHint: 'megaphone stars'
+        },
+        {
+            id: 'direct-client-chat',
+            title: 'Direct Client Communication',
+            description: 'Once a booking is confirmed, communicate directly with the client through our platform to finalize details and build rapport.',
+            imageUrl: 'https://picsum.photos/seed/artist-chat/800/600',
+            aiHint: 'chat bubbles'
+        }
+    ];
 
     const onBenefitsSelect = React.useCallback((emblaApi: CarouselApi) => {
         if (!emblaApi) return;
