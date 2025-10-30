@@ -240,7 +240,8 @@ export default function ArtistHomePage() {
                             plugins={[
                                 Autoplay({
                                     delay: 3000,
-                                    stopOnInteraction: true,
+                                    stopOnInteraction: false,
+                                    stopOnFocusIn: false
                                 })
                             ]}
                             className="w-full"

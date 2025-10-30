@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Heart,
   Wallet,
-  IndianRupee,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -213,7 +212,7 @@ export default function Home() {
       <div className="space-y-8 mt-4 md:mt-8">
         <Carousel
              opts={{ align: "start", loop: true, }}
-             plugins={[ Autoplay({ delay: 4000, stopOnInteraction: true, }) ]}
+             plugins={[ Autoplay({ delay: 4000, stopOnInteraction: false, stopOnFocusIn: false }) ]}
              className="w-full"
         >
             <CarouselContent>
@@ -438,7 +437,7 @@ export default function Home() {
             <Carousel
               setApi={setWhyChooseUsApi}
               opts={{ align: "start", loop: true, }}
-              plugins={[ Autoplay({ delay: 3000, stopOnInteraction: true, }) ]}
+              plugins={[ Autoplay({ delay: 3000, stopOnInteraction: false, stopOnFocusIn: false }) ]}
               className="w-full"
             >
               <CarouselContent className="-ml-4">
