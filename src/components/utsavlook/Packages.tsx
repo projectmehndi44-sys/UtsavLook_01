@@ -25,7 +25,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
             {packages.map((service) => {
                 const lowestPrice = Math.min(...service.categories.map(c => c.basePrice));
                 return (
-                    <div key={service.id} className="h-full">
+                    <div key={service.id} className="h-full p-1">
                         <Card 
                             className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 h-full flex flex-col cursor-pointer group hover:scale-105"
                             onClick={() => onServiceSelect(service)}
