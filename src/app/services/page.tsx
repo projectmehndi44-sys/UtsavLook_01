@@ -119,7 +119,14 @@ export default function ServicesPage() {
           <div className="container mx-auto px-4 md:px-6 py-12">
             <h1 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect mb-12">Our Services</h1>
              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <Packages packages={masterServices} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+                <Carousel
+                    opts={{ align: "start", loop: false }}
+                    className="w-full col-span-full"
+                >
+                    <CarouselContent className="-ml-6">
+                        <Packages packages={masterServices} onServiceSelect={(service) => { setSelectedService(service); setIsServiceModalOpen(true); }} />
+                    </CarouselContent>
+                </Carousel>
             </div>
           </div>
         </section>
@@ -138,4 +145,3 @@ export default function ServicesPage() {
     </div>
   );
 }
-
