@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Heart,
   Wallet,
+  IndianRupee,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -42,7 +43,6 @@ import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 import Autoplay from "embla-carousel-autoplay";
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { IndianRupee } from 'lucide-react';
 
 const occasionWords = occasionImages.map(img => img.occasion);
 
@@ -222,42 +222,42 @@ export default function Home() {
       {
         icon: <Award className="w-8 h-8 text-primary" />,
         title: "Verified Professionals",
-        description: "Every artist is hand-vetted for quality, professionalism, and skill, so you can book with confidence.",
+        description: "Book with confidence knowing every artist is vetted for quality and professionalism.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
         aiHint: "award shield"
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
         title: "AI Style Match",
-        description: "Upload a photo of your outfit and get instant, personalized recommendations for the perfect look.",
+        description: "Get personalized style recommendations by uploading a photo of your outfit.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
         aiHint: "diamond sparkles"
     },
     {
         icon: <CalendarCheck className="w-8 h-8 text-primary" />,
-        title: "Effortless Booking",
-        description: "Book your preferred artist and time slot in just a few clicks. No more endless phone calls or DMs.",
+        title: "Hassle-Free Booking",
+        description: "Discover, compare, and book top-rated artists in one seamless experience.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FEffortless%20Booking.png?alt=media&token=904ae217-f00d-4e29-a3c0-6c191188793e",
         aiHint: "calendar checkmark"
     },
      {
-        icon: <Heart className="w-8 h-8 text-primary" />,
-        title: "Curated Selection",
-        description: "Discover a hand-picked community of the most talented and trusted artists in your city.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FGemini_Generated_Image_2xjtga2xjtga2xjt.png?alt=media&token=4c811d53-dfad-4aef-90e9-cafe39d54f92",
-        aiHint: "glowing heart"
+        icon: <Wallet className="w-8 h-8 text-primary" />,
+        title: "Transparent Pricing",
+        description: "See clear, upfront pricing for all services. No hidden fees or surprises.",
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20Pricing.png?alt=media&token=25062a74-d450-482a-92e1-c85244e8bd5e",
+        aiHint: "wallet money"
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
         title: "Secure Payments",
-        description: "Your bookings and payments are processed securely for your peace of mind. No surprises.",
+        description: "Your bookings are confirmed instantly with secure advance payments for peace of mind.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
         aiHint: "secure padlock"
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
-        title: "Transparent & Fair",
-        description: "Enjoy transparent pricing with a direct connection to your chosen artist. No hidden fees.",
+        title: "Direct Communication",
+        description: "Chat directly with your confirmed artist to finalize details and discuss your vision.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
         aiHint: "balanced scales"
     }
@@ -295,7 +295,7 @@ export default function Home() {
         customer={customer}
         cartCount={cart.length}
       />
-      <main className="flex flex-1 flex-col gap-4 md:gap-8">
+      <main className="flex flex-1 flex-col">
         {!isCustomerLoggedIn && (
             <div className="w-full why-choose-us-bg">
                 <div className="group relative overflow-hidden">
@@ -377,7 +377,8 @@ export default function Home() {
         )}
         </ClientOnly>
 
-        <section id="services" className="w-full pt-12 why-choose-us-bg">
+        <section id="services" className="w-full why-choose-us-bg">
+          <div className="container mx-auto px-4 md:px-6 py-12 md:py-24">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary title-3d-effect">Our Services</h2>
              <ClientOnly>
                 <Tabs defaultValue="mehndi" className="w-full mt-8">
@@ -399,10 +400,11 @@ export default function Home() {
                     </TabsContent>
                 </Tabs>
              </ClientOnly>
+          </div>
         </section>
 
-        <section id="why-choose-us" className="w-full py-12 why-choose-us-bg">
-          <div className="container px-4 md:px-6">
+        <section id="why-choose-us" className="w-full why-choose-us-bg">
+          <div className="container px-4 md:px-6 py-12 md:py-24">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">Your one-stop destination for premium event artistry.</p>
@@ -447,17 +449,19 @@ export default function Home() {
 
          {topArtists.length > 0 && (
           <div id="artists" className="py-12 md:py-24 px-4 why-choose-us-bg">
-            <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-12">Meet Our Top Artists</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
-              {topArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} onViewProfile={() => {setSelectedArtist(artist); setIsArtistModalOpen(true);}} />
-              ))}
+            <div className="container mx-auto px-4 md:px-6">
+                <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-12">Meet Our Top Artists</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                  {topArtists.map((artist) => (
+                    <ArtistCard key={artist.id} artist={artist} onViewProfile={() => {setSelectedArtist(artist); setIsArtistModalOpen(true);}} />
+                  ))}
+                </div>
             </div>
           </div>
         )}
 
-        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 why-choose-us-bg">
-          <div className="container px-4 md:px-6">
+        <section id="how-it-works" className="w-full why-choose-us-bg">
+           <div className="container px-4 md:px-6 py-12 md:py-24">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary font-headline mb-4">How It Works</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed mx-auto">A seamless experience from start to finish.</p>
@@ -479,7 +483,8 @@ export default function Home() {
         {!isCustomerLoggedIn && (
             <>
                 <Separator className="my-8"/>
-                <div className="py-8 md:py-12 px-4 why-choose-us-bg">
+                <div className="px-4 why-choose-us-bg">
+                  <div className="container mx-auto px-4 md:px-6 py-12 md:py-24">
                     <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
                     <Carousel
                         opts={{
@@ -514,6 +519,7 @@ export default function Home() {
                             ))}
                         </CarouselContent>
                     </Carousel>
+                  </div>
                 </div>
                 <PwaInstallBanner />
             </>
@@ -540,3 +546,4 @@ export default function Home() {
     </div>
   );
 }
+
