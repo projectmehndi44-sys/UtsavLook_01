@@ -34,6 +34,9 @@ export default function ServicesPage() {
   
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeTab, setActiveTab] = React.useState('all');
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [isSuggestionsVisible, setIsSuggestionsVisible] = React.useState(false);
+
 
   const { toast } = useToast();
 
@@ -107,6 +110,23 @@ export default function ServicesPage() {
         service.description.toLowerCase().includes(lowercasedTerm) ||
         service.tags.some(tag => tag.toLowerCase().includes(lowercasedTerm))
       );
+
+       // Generate suggestions
+      const potentialSuggestions = new Set<string>();
+      masterServices.forEach(service => {
+        if (service.name.toLowerCase().includes(lowercasedTerm)) {
+          potentialSuggestions.add(service.name);
+        }
+        service.tags.forEach(tag => {
+          if (tag.toLowerCase().includes(lowercasedTerm)) {
+            potentialSuggestions.add(tag);
+          }
+        });
+      });
+      setSuggestions(Array.from(potentialSuggestions).slice(0, 5));
+
+    } else {
+        setSuggestions([]);
     }
     
     setFilteredServices(servicesToFilter);
@@ -129,6 +149,12 @@ export default function ServicesPage() {
     localStorage.setItem(`cart_${customer.id}`, JSON.stringify(newCart));
     toast({ title: 'Added to cart!', description: `${item.servicePackage.name} (${item.selectedTier.name}) has been added.`});
   };
+  
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchTerm(suggestion);
+    setSuggestions([]);
+    setIsSuggestionsVisible(false);
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col relative why-choose-us-bg">
@@ -147,14 +173,36 @@ export default function ServicesPage() {
             </p>
 
             <div className="bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-md mb-8 max-w-4xl mx-auto">
-                <div className="relative mb-4">
+                <div 
+                    className="relative mb-4"
+                    onFocus={() => setIsSuggestionsVisible(true)}
+                    onBlur={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget)) {
+                           setTimeout(() => setIsSuggestionsVisible(false), 150);
+                        }
+                    }}
+                >
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
                         placeholder="Search services by name, style, or occasion..."
                         className="pl-10 h-12 text-lg"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        autoComplete="off"
                     />
+                     {isSuggestionsVisible && suggestions.length > 0 && searchTerm && (
+                        <ul className="absolute top-full mt-2 w-full bg-background border rounded-md shadow-lg z-50">
+                            {suggestions.map((suggestion, index) => (
+                                <li
+                                    key={index}
+                                    className="px-4 py-2 cursor-pointer hover:bg-muted"
+                                    onMouseDown={() => handleSuggestionClick(suggestion)}
+                                >
+                                    {suggestion}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-4">

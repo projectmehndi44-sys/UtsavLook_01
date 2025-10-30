@@ -32,6 +32,8 @@ export default function ArtistsPage() {
   const [isArtistModalOpen, setIsArtistModalOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeTab, setActiveTab] = React.useState('all');
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [isSuggestionsVisible, setIsSuggestionsVisible] = React.useState(false);
 
 
   const { toast } = useToast();
@@ -91,11 +93,36 @@ export default function ArtistsPage() {
         artist.location.toLowerCase().includes(lowercasedTerm) ||
         artist.styleTags?.some(tag => tag.toLowerCase().includes(lowercasedTerm))
       );
+      
+      // Generate suggestions based on the current search term
+      const potentialSuggestions = new Set<string>();
+      allArtists.forEach(artist => {
+          if (artist.name.toLowerCase().includes(lowercasedTerm)) {
+              potentialSuggestions.add(artist.name);
+          }
+          if (artist.location.toLowerCase().includes(lowercasedTerm)) {
+              potentialSuggestions.add(artist.location);
+          }
+          artist.styleTags?.forEach(tag => {
+              if (tag.toLowerCase().includes(lowercasedTerm)) {
+                  potentialSuggestions.add(tag);
+              }
+          });
+      });
+      setSuggestions(Array.from(potentialSuggestions).slice(0, 5)); // Limit to 5 suggestions
+    } else {
+        setSuggestions([]);
     }
     
     setFilteredArtists(artistsToFilter);
 
   }, [searchTerm, activeTab, allArtists]);
+  
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchTerm(suggestion);
+    setSuggestions([]);
+    setIsSuggestionsVisible(false);
+  };
 
 
   return (
@@ -114,17 +141,40 @@ export default function ArtistsPage() {
               Discover verified and top-rated professionals for your special day. Search by name or location, or filter by service to find your perfect match.
             </p>
             
-            <div className="sticky top-20 bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-md z-30 mb-8 max-w-4xl mx-auto">
-                <div className="relative mb-4">
+            <div className="bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-md mb-8 max-w-4xl mx-auto">
+                <div 
+                    className="relative"
+                    onFocus={() => setIsSuggestionsVisible(true)}
+                    onBlur={(e) => {
+                        // Use a timeout to allow click on suggestion to register
+                        if (!e.currentTarget.contains(e.relatedTarget)) {
+                            setTimeout(() => setIsSuggestionsVisible(false), 150);
+                        }
+                    }}
+                >
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
                         placeholder="Search artists by name, location, or style..."
                         className="pl-10 h-12 text-lg"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        autoComplete="off"
                     />
+                     {isSuggestionsVisible && suggestions.length > 0 && searchTerm && (
+                        <ul className="absolute top-full mt-2 w-full bg-background border rounded-md shadow-lg z-50">
+                            {suggestions.map((suggestion, index) => (
+                                <li
+                                    key={index}
+                                    className="px-4 py-2 cursor-pointer hover:bg-muted"
+                                    onMouseDown={() => handleSuggestionClick(suggestion)} // Use onMouseDown to fire before blur
+                                >
+                                    {suggestion}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
-                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="all">All</TabsTrigger>
                         <TabsTrigger value="mehndi"><MehndiIcon className="w-4 h-4 mr-2"/>Mehndi</TabsTrigger>
