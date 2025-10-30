@@ -43,7 +43,7 @@ export function Packages({ packages, onServiceSelect }: PackagesProps) {
                                 </div>
                                 <div className="p-4 text-center flex-grow flex flex-col">
                                     <h3 className="text-xl font-headline text-primary font-bold">{service.name}</h3>
-                                    <p className="text-sm text-muted-foreground mt-1 flex-grow">
+                                    <p className="text-sm text-muted-foreground mt-1 flex-grow line-clamp-3">
                                         {service.description}
                                     </p>
                                     <div className="flex flex-wrap gap-1 justify-center mt-3">
