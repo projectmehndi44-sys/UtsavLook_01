@@ -79,56 +79,56 @@ export default function ArtistHomePage() {
             id: 'set-your-own-price',
             title: 'Set Your Own Price',
             description: "You know the value of your art. On UtsavLook, you're in control. Set your own prices for each service tier, no unfair fixed rates.",
-            imageUrl: 'https://picsum.photos/seed/artist-price/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FSet%20Your%20Own%20Price.png?alt=media&token=f86d8bd8-d50b-429a-93b3-0858592c6576',
             aiHint: 'rupee arrow'
         },
         {
             id: 'verified-badge',
             title: "'UtsavLook Verified' Badge",
             description: "Our 'Verified' badge shows customers you're a trusted professional, leading to more high-quality bookings.",
-            imageUrl: 'https://picsum.photos/seed/artist-verified/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FUtsavLook%20Verified%27%20Badge.png?alt=media&token=e4c9da55-d5f4-459d-ae94-269f9d6530fe',
             aiHint: 'gold shield'
         },
         {
             id: 'intelligent-scheduling',
             title: 'Intelligent Scheduling',
             description: "Stop the back-and-forth calls. Our smart calendar lets you mark unavailable dates, so you only get requests for when you're free.",
-            imageUrl: 'https://picsum.photos/seed/artist-schedule/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FIntelligent%20Scheduling.png?alt=media&token=7da7a0e4-fc2e-4e26-ad2c-d8a056b84db7',
             aiHint: 'calendar clock'
         },
         {
             id: 'referral-code',
             title: 'Your Own Referral Code',
             description: 'Turn happy clients into your sales team. We provide a unique referral code that gives them a discount and you a confirmed booking.',
-            imageUrl: 'https://picsum.photos/seed/artist-referral/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FYour%20Own%20Referral%20Code.png?alt=media&token=a2f11b63-aae7-493d-aafb-da35262734cc',
             aiHint: 'handshake gift'
         },
         {
             id: 'transparent-payouts',
             title: 'Transparent Payouts',
             description: 'Track all your bookings and earnings in one professional dashboard. With our clear and timely payouts, accounting is simple.',
-            imageUrl: 'https://picsum.photos/seed/artist-payout/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FTransparent%20Payouts.png?alt=media&token=53eb60bc-6477-4c32-8454-5a5fd8156626',
             aiHint: 'chart coins'
         },
         {
             id: 'zero-commission-welcome',
             title: '0% Commission Welcome',
             description: "To welcome you, we take zero commission on your first 5 bookings through the platform. It's all yours.",
-            imageUrl: 'https://picsum.photos/seed/artist-welcome/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2F0%25%20Commission%20Welcome%20Offer.png?alt=media&token=18e7c1cc-c842-4253-913e-a6d396bf3ad0',
             aiHint: 'sparkling zero'
         },
         {
             id: 'ai-promo-tools',
             title: 'AI-Powered Promotion',
             description: 'Your profile deserves to be seen. Use our AI tools to generate stunning promotional images for your social media in one click.',
-            imageUrl: 'https://picsum.photos/seed/artist-promo/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FAI-Powered%20Promotion%20Tools.png?alt=media&token=8bb4c98e-7254-48de-b4cc-0578aae722f8',
             aiHint: 'megaphone stars'
         },
         {
             id: 'direct-client-chat',
             title: 'Direct Client Communication',
             description: 'Once a booking is confirmed, communicate directly with the client through our platform to finalize details and build rapport.',
-            imageUrl: 'https://picsum.photos/seed/artist-chat/800/600',
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/artist_benifit-icons%2FDirect%20Client%20Communication.png?alt=media&token=e0e80753-3540-454e-902e-0cd0092ce315',
             aiHint: 'chat bubbles'
         }
     ];
