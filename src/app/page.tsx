@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Heart,
   Wallet,
-  IndianRupee,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/utsavlook/Header';
@@ -43,6 +42,7 @@ import { occasionImages, type OccasionImage } from '@/lib/occasion-images';
 import Autoplay from "embla-carousel-autoplay";
 import { ArtistProfileModal } from '@/components/utsavlook/ArtistProfileModal';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { IndianRupee } from 'lucide-react';
 
 const occasionWords = occasionImages.map(img => img.occasion);
 
@@ -401,7 +401,7 @@ export default function Home() {
              </ClientOnly>
         </section>
 
-        <section id="why-choose-us" className="w-full py-12">
+        <section id="why-choose-us" className="w-full py-12 why-choose-us-bg">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
@@ -414,7 +414,7 @@ export default function Home() {
             >
               <CarouselContent className="-ml-4">
                 {whyChooseUsFeatures.map((feature) => (
-                  <CarouselItem key={feature.title} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+                  <CarouselItem key={feature.title} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                     <div className="group text-center p-1 h-full">
                       <Card className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
                           <CardContent className="p-0 flex flex-col items-center flex-grow">
@@ -446,7 +446,7 @@ export default function Home() {
         <Separator />
 
          {topArtists.length > 0 && (
-          <div id="artists" className="py-12 md:py-24 px-4">
+          <div id="artists" className="py-12 md:py-24 px-4 why-choose-us-bg">
             <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary mb-12">Meet Our Top Artists</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
               {topArtists.map((artist) => (
@@ -479,7 +479,7 @@ export default function Home() {
         {!isCustomerLoggedIn && (
             <>
                 <Separator className="my-8"/>
-                <div className="py-8 md:py-12 px-4">
+                <div className="py-8 md:py-12 px-4 why-choose-us-bg">
                     <h2 className="text-center font-headline text-4xl sm:text-5xl text-primary">Our Works</h2>
                     <Carousel
                         opts={{
