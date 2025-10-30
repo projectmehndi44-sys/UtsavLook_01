@@ -146,7 +146,7 @@ export default function ServicesPage() {
                 Find the perfect professional service for your special occasion.
             </p>
 
-            <div className="sticky top-20 bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-md z-30 mb-8 max-w-4xl mx-auto">
+            <div className="bg-background/80 backdrop-blur-sm p-4 rounded-lg shadow-md mb-8 max-w-4xl mx-auto">
                 <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
