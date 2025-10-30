@@ -226,81 +226,33 @@ export default function Home() {
   
   const whyChooseUsFeatures = [
     {
-<<<<<<< HEAD
         icon: <Award className="w-8 h-8 text-primary" />,
-        title: "Verified Professionals",
-        description: "Book with confidence knowing every artist is vetted for quality and professionalism.",
+        title: "For Customers: Verified Professionals",
+        description: "Book with confidence. We vet every artist for quality and professionalism, so you can relax knowing you’re in expert hands.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
-        aiHint: "award shield"
+        aiHint: "verified professional",
     },
     {
         icon: <Sparkles className="w-8 h-8 text-primary" />,
-        title: "AI Style Match",
-        description: "Get personalized style recommendations by uploading a photo of your outfit.",
+        title: "For Customers: AI Style Match",
+        description: "Unsure of the look you want? Upload an outfit photo and let our AI recommend the perfect mehndi and makeup styles to match.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
-        aiHint: "diamond sparkles"
-    },
-    {
-        icon: <CalendarCheck className="w-8 h-8 text-primary" />,
-        title: "Hassle-Free Booking",
-        description: "Discover, compare, and book top-rated artists in one seamless experience.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FEffortless%20Booking.png?alt=media&token=904ae217-f00d-4e29-a3c0-6c191188793e",
-        aiHint: "calendar checkmark"
+        aiHint: "ai style",
     },
     {
         icon: <Wallet className="w-8 h-8 text-primary" />,
-        title: "Transparent Pricing",
-        description: "See clear, upfront pricing for all services. No hidden fees or surprises.",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FGemini_Generated_Image_58049v58049v5804.png?alt=media&token=eacc7206-7cc2-4abb-94e6-c639acc122c6",
-        aiHint: "wallet money"
-    },
-    {
-        icon: <ShieldCheck className="w-8 h-8 text-primary" />,
-        title: "Secure Payments",
-        description: "Your bookings are confirmed instantly with secure advance payments for peace of mind.",
+        title: "For Artists: A Pro Business Dashboard",
+        description: "Stop the DM chaos. Manage all your bookings, availability, and payments in one professional dashboard. We handle the business so you can create.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
-        aiHint: "secure padlock"
+        aiHint: "business dashboard",
     },
     {
         icon: <Handshake className="w-8 h-8 text-primary" />,
-        title: "Direct Communication",
-        description: "Chat directly with your confirmed artist to finalize details and discuss your vision.",
+        title: "For Artists: Fair & Transparent Payouts",
+        description: "Set your own prices and get timely, transparent payouts. We even offer a 0% commission welcome to help you get started.",
         imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
-        aiHint: "balanced scales"
-    }
-=======
-      icon: <Award className="w-8 h-8 text-primary" />,
-      title: "For Customers: Verified Professionals",
-      description:
-        "Book with confidence. We vet every artist for quality and professionalism, so you can relax knowing you’re in expert hands.",
-      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FVerified%20Professionals.png?alt=media&token=f76482cd-dfaf-4e4c-9347-1d96688be5d7",
-      aiHint: "verified professional",
+        aiHint: "fair transparent",
     },
-    {
-      icon: <Sparkles className="w-8 h-8 text-primary" />,
-      title: "For Customers: AI Style Match",
-      description:
-        "Unsure of the look you want? Upload an outfit photo and let our AI recommend the perfect mehndi and makeup styles to match.",
-      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FAI%20style%20match.png?alt=media&token=d5b28e82-2591-4bfd-9466-924a7bf93df3",
-      aiHint: "ai style",
-    },
-    {
-      icon: <Wallet className="w-8 h-8 text-primary" />,
-      title: "For Artists: A Pro Business Dashboard",
-      description:
-        "Stop the DM chaos. Manage all your bookings, availability, and payments in one professional dashboard. We handle the business so you can create.",
-      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FSecure%20Payments.png?alt=media&token=5bd6438c-e8c7-4a9a-af8f-3d08017e8c41",
-      aiHint: "business dashboard",
-    },
-    {
-      icon: <Handshake className="w-8 h-8 text-primary" />,
-      title: "For Artists: Fair & Transparent Payouts",
-      description:
-        "Set your own prices and get timely, transparent payouts. We even offer a 0% commission welcome to help you get started.",
-      imageUrl: "https://firebasestorage.googleapis.com/v0/b/studio-163529036-f9a8c.firebasestorage.app/o/why-choose-us-icons%2FTransparent%20%26%20Fair.png?alt=media&token=3b8be75d-58c7-4bb3-851d-92190c1fec05",
-      aiHint: "fair transparent",
-    },
->>>>>>> d68218cde412ed2cb11057c39e8dd59b41173dbb
   ];
 
   const howItWorksSteps = [
@@ -468,53 +420,19 @@ export default function Home() {
           </div>
         </section>
 
-<<<<<<< HEAD
-        <section id="why-choose-us" className="w-full why-choose-us-bg">
-          <div className="container px-4 md:px-6 py-12">
-=======
         <section id="why-choose-us" className="w-full py-12 md:py-16 why-choose-us-bg">
           <div className="container px-4 md:px-6">
->>>>>>> d68218cde412ed2cb11057c39e8dd59b41173dbb
             <div className="text-center mb-12">
               <h2 className="animated-gradient-text text-3xl font-bold tracking-tighter sm:text-5xl font-headline mb-4 title-3d-effect">Why Choose UtsavLook?</h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed mx-auto">We don't just list services; we build trust and create experiences.</p>
             </div>
             <Carousel
-<<<<<<< HEAD
-              setApi={setWhyChooseUsApi}
-              opts={{ align: "start", loop: true, }}
-              plugins={[ Autoplay({ delay: 3000, stopOnInteraction: false, stopOnFocusIn: false }) ]}
-=======
               opts={{ align: "start", loop: true }}
->>>>>>> d68218cde412ed2cb11057c39e8dd59b41173dbb
               className="w-full"
               plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
             >
               <CarouselContent>
                 {whyChooseUsFeatures.map((feature) => (
-<<<<<<< HEAD
-                  <CarouselItem key={feature.title} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                    <div className="group text-center p-1 h-full">
-                      <Card className="bg-background rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 h-full flex flex-col">
-                          <CardContent className="p-0 flex flex-col items-center flex-grow">
-                              <div className="relative aspect-[4/5] w-full mb-4 rounded-t-2xl overflow-hidden">
-                                  <Image 
-                                      src={feature.imageUrl}
-                                      alt={feature.title}
-                                      fill
-                                      className="object-cover"
-                                      data-ai-hint={feature.aiHint}
-                                  />
-                              </div>
-                            <div className="p-4 pt-0">
-                              <h3 className="text-md font-bold text-primary mb-1">{feature.title}</h3>
-                              <p className="text-xs text-muted-foreground flex-grow">
-                                  {feature.description}
-                              </p>
-                            </div>
-                          </CardContent>
-                      </Card>
-=======
                   <CarouselItem key={feature.title} className="md:basis-1/2 lg:basis-1/4">
                     <div className="p-4 h-full">
                         <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2 flex flex-col text-center items-center h-full">
@@ -524,7 +442,6 @@ export default function Home() {
                           <h3 className="text-lg font-bold text-primary mb-2">{feature.title}</h3>
                           <p className="text-sm text-muted-foreground flex-grow">{feature.description}</p>
                         </div>
->>>>>>> d68218cde412ed2cb11057c39e8dd59b41173dbb
                     </div>
                   </CarouselItem>
                 ))}

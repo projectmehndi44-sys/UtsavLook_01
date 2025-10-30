@@ -23,16 +23,6 @@ import { ParallaxProvider } from 'react-scroll-parallax';
 import { artistHeroImages } from '@/lib/artist-hero-images';
 
 const benefitIcons: { [key: string]: React.ReactNode } = {
-<<<<<<< HEAD
-    "set-your-own-price": <IndianRupee className="w-8 h-8 text-accent" />,
-    "verified-badge": <Award className="w-8 h-8 text-accent" />,
-    "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-accent" />,
-    "referral-code": <UserPlus className="w-8 h-8 text-accent" />,
-    "transparent-payouts": <BarChart className="w-8 h-8 text-accent" />,
-    "zero-commission-welcome": <Sparkles className="w-8 h-8 text-accent" />,
-    "ai-promo-tools": <Sparkles className="w-8 h-8 text-accent"/>,
-    "direct-client-chat": <MessageSquare className="w-8 h-8 text-accent"/>
-=======
     "set-your-own-price": <IndianRupee className="w-8 h-8 text-primary" />,
     "verified-badge": <Award className="w-8 h-8 text-primary" />,
     "intelligent-scheduling": <CalendarCheck className="w-8 h-8 text-primary" />,
@@ -41,7 +31,6 @@ const benefitIcons: { [key: string]: React.ReactNode } = {
     "zero-commission-welcome": <Sparkles className="w-8 h-8 text-primary" />,
     "ai-promo-tools": <Sparkles className="w-8 h-8 text-primary" />,
     "direct-client-chat": <MessageSquare className="w-8 h-8 text-primary" />,
->>>>>>> d68218cde412ed2cb11057c39e8dd59b41173dbb
 };
 
 export default function ArtistHomePage() {
@@ -298,7 +287,6 @@ export default function ArtistHomePage() {
                             </p>
                         </div>
                         <Carousel
-<<<<<<< HEAD
                             setApi={setBenefitsApi}
                             opts={{
                                 align: "start",
@@ -352,28 +340,8 @@ export default function ArtistHomePage() {
                                 )}
                                 aria-label={`Go to slide ${index + 1}`}
                                 />
-=======
-                          opts={{ align: "start", loop: true }}
-                          className="w-full"
-                          plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
-                        >
-                          <CarouselContent>
-                            {benefits.map((feature) => (
-                              <CarouselItem key={feature.title} className="md:basis-1/2 lg:basis-1/4">
-                                <div className="p-4 h-full">
-                                    <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-brand hover:shadow-brand-lg transition-all duration-300 hover:-translate-y-2 flex flex-col text-center items-center h-full">
-                                      <div className="relative w-full aspect-square mb-4 rounded-lg overflow-hidden">
-                                        <Image src={feature.imageUrl} alt={feature.title} fill className="object-cover" data-ai-hint={feature.aiHint} />
-                                      </div>
-                                      <h3 className="text-lg font-bold text-primary mb-2">{feature.title}</h3>
-                                      <p className="text-sm text-muted-foreground flex-grow">{feature.description}</p>
-                                    </div>
-                                </div>
-                              </CarouselItem>
->>>>>>> d68218cde412ed2cb11057c39e8dd59b41173dbb
                             ))}
-                          </CarouselContent>
-                        </Carousel>
+                        </div>
                     </div>
                 </section>
                 
